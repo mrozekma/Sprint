@@ -1,0 +1,519 @@
+* {
+	font-family: Verdana;
+}
+
+body {
+	text-align: center;
+	background-color: #EEE;
+}
+
+#frame {
+	margin: auto;
+	width: 90%;
+	text-align: left;
+	font: 90% Arial;
+}
+
+#main_a {
+	background-color: #0152A1;
+	width: 100%;
+	height: 75px;
+}
+
+#main_b {
+	background-color: #4C4C4C;
+	width: 100%;
+	height: 5px;
+}
+
+#main_c {
+	width: 100%; /* Old size: 1000 frame width - 10 left padding - 10 right padding - 1 left border - 1 right border */
+}
+
+#main_d {
+	border: 1px solid #4C4C4C;
+	padding: 0px 30px;
+	min-height: 800px;
+	background-color: #FFF;
+}
+
+.footer_timestamp {
+	font-size: 70%;
+}
+
+a {
+	text-decoration: none;
+	color: #00F;
+}
+
+.navigation {
+	float: right;
+	color: #FFF;
+	height: 65px;
+	margin: 5px;
+	text-align: right;
+
+/*
+	border: 1px solid #000;
+	background-color: #FFF;
+	width: 300px;
+*/
+}
+
+.navigation a {
+	color: #FFF;
+}
+
+.navigation .ident {
+	padding-bottom: 30px;
+}
+
+img.avatar {
+	float: right;
+	padding: 5px;
+}
+
+/* .username.me { */
+	/* color: #C00; */
+	/* font-weight: bold; */
+/* } */
+
+.box {
+	margin: 5px 0px 5px 0px;
+	border: 1px solid #000;
+	background: #fff url(/static/images/corner2.png) no-repeat right bottom;
+}
+
+.box .title {
+	padding: 2px 2px 2px 5px;
+	border-bottom: 1px solid #000;
+	background: #000;
+	background-repeat: no-repeat;
+	background-position: 2px 4px;
+}
+
+.box span {
+	display: block;
+	padding: 2px;
+}
+
+.box.black {
+	border-color: #000;
+}
+
+.box.black .title {
+	background-color: #000;
+	color: #FFF;
+}
+
+.box.red {
+	border-color: #F00;
+}
+
+.box.red .title {
+	background-color: #F00;
+	border-bottom-color: #F00;
+	color: #000;
+}
+
+.box.yellow {
+	border-color: #FF0;
+}
+
+.box.yellow .title {
+	background-color: #FF0;
+	border-bottom-color: #FF0;
+	color: #000;
+}
+
+.box.green {
+	border-color: #0F0;
+}
+
+.box.green .title {
+	background-color: #0F0;
+	border-bottom-color: #0F0;
+	color: #000;
+}
+
+.box.blue {
+	border-color: #0152A1;
+}
+
+.box.blue .title {
+	background-color: #0152A1;
+	border-bottom-color: #0152A1;
+	color: #FFF;
+}
+
+.box.error .title {
+	background-image: url(/static/images/icons/error.png);
+	padding-left: 20px;
+}
+
+.box.warning .title {
+	background-image: url(/static/images/icons/warning.png);
+	padding-left: 20px;
+}
+
+.box.success .title {
+	background-image: url(/static/images/icons/success.png);
+	padding-left: 20px;
+}
+
+.box.login .title {
+	background-image: url(/static/images/icons/login.png);
+	padding-left: 20px;
+}
+
+.tint {
+	margin: 6px;
+	padding: 6px;
+	text-align: center;
+	border: 1px solid #000;
+}
+
+.tint.black {
+	background-color: #F2DEE8;
+	border-color: #630;
+}
+
+.tint.red {
+	background-color: #FCC;
+	border-color: #C00;
+}
+
+.tint.yellow {
+	background-color: #FFC;
+	border-color: #FC0;
+}
+
+.tint.green {
+	background-color: #CFC;
+	border-color: #090;
+}
+
+.tint.blue {
+	background-color: #DEE;
+	border-color: #00C;
+}
+
+.tint.blood {
+	background-color: #F33;
+	border-color: #F33;
+	font-weight: bold;
+}
+
+table.list {
+	padding: 0;
+	margin: 0;
+	border: 0;
+}
+
+table.list td.left {
+	text-align: right;
+	font-weight: bold;
+	padding-right: 5px;
+	vertical-align: top;
+}
+
+table.list td.required {
+	color: #F00;
+}
+
+table.list td.right {
+	text-align: left;
+}
+
+table.list td.right input.username {
+	background: url(/static/images/user-online.png) no-repeat 2px;
+	padding-left: 24px;
+}
+
+table.list td.right input.password {
+	background: url(/static/images/key.png) no-repeat 2px;
+	padding-left: 24px;
+}
+
+table tr.hl_on {
+	border: 1px solid #000;
+	background-color: #7F7;
+	cursor: pointer;
+}
+
+img.user, img.project, img.sprint {
+	position: relative;
+	top: 2px;
+	padding-right: 3px;
+}
+
+.indented {
+	margin-left: 30px;
+}
+
+.project-summary {
+	border-left: 4px solid #999;
+	border-top: 1px dotted #999;
+	border-bottom: 1px dotted #999;
+	padding: 0px 5px 3px 5px;
+	margin: 0px 0px 15px 10px;
+}
+
+.project-summary.active {
+	border-left-color: #A00 !important;
+}
+
+.project-summary .project-name {
+	float: left;
+	font-weight: bold;
+	margin-right: 10px;
+}
+
+.project-summary .project-members {
+	float: right;
+	min-width: 120px;
+}
+
+.project-summary .project-members .member.scrummaster a {
+	color: #F00;
+}
+
+.project-summary .sprint-summaries {
+	/* clear: both; */
+	margin: 30px 0px 0px 10px;
+}
+
+.project-summary .sprint-summaries .sprint-summary {
+}
+
+.project-summary .sprint-summaries .sprint-summary .sprint-time {
+	font-size: 80%;
+}
+
+.project-summary .project-buttons {
+	float: left;
+}
+
+.sprint-name.active {
+	font-weight: bold;
+}
+
+.group-buttons {
+	float: right;
+	margin-bottom: 15px;
+}
+
+table.tasks tr.dateline {
+	font-weight: bold;
+	text-align: center;
+}
+
+table.tasks tr.dateline2 {
+	font-size: 70%;
+	text-align: center;
+}
+
+table.tasks tr.group span {
+	font-weight: bold;
+}
+
+table.tasks tr.group td > img {
+	position: relative;
+	top: 2px;
+	left: -5px;
+	cursor: pointer;
+}
+
+table.tasks tr.task:hover {
+	background-color: rgba(0, 0, 255, .1);
+}
+
+/*
+table.tasks tr.task.dragging {
+	background-color: rgba(0, 0, 0, .2) !important;
+}
+*/
+
+table.tasks tr.dirty {
+	background-color: rgba(255, 0, 0, .3);
+}
+
+table.tasks tr.task input {
+	width: 90%;
+}
+
+table.tasks tr.task td.name {
+	/* width: 40%; */
+	padding-right: 10px;
+	width: 100%;
+}
+
+table.tasks tr.task td.name > img {
+	position: relative;
+	top: 2px;
+	left: 5px;
+	cursor: pointer;
+}
+
+table.tasks tr.task td.assigned {
+	/* width: 10%; */
+	white-space: nowrap;
+}
+
+table.tasks tr.task td.assigned > img {
+	position: relative;
+	top: 2px;
+	left: 2px;
+}
+
+table.tasks tr.task td.hours {
+	/* width: 7%; */
+	text-align: center;
+}
+
+table.tasks tr.task td.hours img {
+	cursor: pointer;
+}
+
+table.tasks tr.task td.hours input {
+	width: 32px;
+}
+
+table.tasks tr td.ereyesterday {
+	color: #AAA;
+}
+
+table.tasks tr td.yesterday {
+	color: #777;
+}
+
+table.tasks tr.task td.hours.changed {
+	color: #F00;
+}
+
+table.tasks tr.task td.ereyesterday.changed {
+	color: #FAA;
+	font-weight: bold;
+}
+
+table.tasks tr.task td.yesterday.changed {
+	color: #F77;
+	font-weight: bold;
+}
+
+table.tasks tr.task td.actions {
+	width: 10%;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+table.tasks tr.task td.actions a img {
+	border: 0px;
+}
+
+/*
+table.tasks tr.task td.hours img[src="/static/images/arrow-top.png"],
+table.tasks tr.task td.hours img[src="/static/images/arrow-up.png"]
+{
+	position: relative;
+	top: 2px;
+}
+
+table.tasks tr.task td.hours img[src="/static/images/arrow-bottom.png"],
+table.tasks tr.task td.hours img[src="/static/images/arrow-down.png"]
+{
+	position: relative;
+	top: -2px;
+}
+*/
+
+.buttons {
+	float: left;
+}
+
+button.fancy, a.fancy {
+	cursor: pointer;
+    background-color: #f5f5f5;
+    border: 1px solid #dedede;
+    border-top: 1px solid #eee;
+    border-left :1px solid #eee;
+    font-family: "Lucida Grande", Tahoma, Arial, Verdana, sans-serif;
+}
+
+button.fancy>img, a.fancy>img {
+	position: relative;
+	top: 2px;
+	border: 0px;
+}
+
+button.fancy.mini, a.fancy.mini {
+	position: relative;
+	top: -1px;
+    font-size: 70%;
+}
+
+a.fancy {
+	color: #000;
+	padding: 1px 9px;
+}
+
+button.fancy img {
+	position: relative;
+	top: 3px;
+}
+
+a.fancy:hover, button.fancy:hover {
+    background-color: #dff4ff;
+    border: 1px solid #c2e1ef;
+    color: #336699;
+}
+
+a.fancy:active, a.fancy.selected {
+    background-color:#6299c5;
+    border:1px solid #6299c5;
+    color:#fff;
+}
+
+a.fancy.selected {
+	font-weight: bold;
+}
+
+a.fancy.positive, button.fancy.positive {
+    color: #529214;
+}
+
+a.fancy.positive:hover, button.fancy.positive:hover {
+    background-color: #E6EFC2;
+    border: 1px solid #C6D880;
+    color: #529214;
+}
+
+a.fancy.positive:active, button.fancy.positive:active {
+    background-color: #529214;
+    border: 1px solid #529214;
+    color: #fff;
+}
+
+a.fancy.negative, button.fancy.negative {
+    color: #d12f19;
+}
+
+a.fancy.negative:hover, button.fancy.negative:hover {
+    background: #fbe3e4;
+    border: 1px solid #fbc2c4;
+    color: #d12f19;
+}
+
+a.fancy.negative:active, button.fancy.negative:active {
+    background-color: #d12f19;
+    border: 1px solid #d12f19;
+    color: #fff;
+}
+
+div.clear {
+	clear: both;
+}
+
+.hide-temp {
+	display: none;
+}
