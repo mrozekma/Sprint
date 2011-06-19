@@ -204,6 +204,11 @@ img.avatar {
 	font-weight: bold;
 }
 
+.rounded {
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+}
+
 table.list {
 	padding: 0;
 	margin: 0;

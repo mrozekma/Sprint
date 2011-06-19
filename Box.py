@@ -9,12 +9,13 @@ from ResponseWriter import ResponseWriter
 	# }
 
 class Box:
-	def __init__(self, title, text, scheme = 'black', id = None, tinted = False):
+	def __init__(self, title, text, scheme = 'black', id = None, tinted = False, rounded = True):
 		self.title = title
 		self.text = text
 		self.scheme = scheme
 		self.id = id
 		self.tinted = tinted
+		self.rounded = rounded
 
 	def extraClasses(self):
 		return []
@@ -24,6 +25,8 @@ class Box:
 
 		classes = []
 		classes.append('tint' if self.tinted else 'box')
+		if self.rounded:
+			classes.append('rounded')
 		if self.scheme:
 			classes.append(self.scheme)
 		classes += self.extraClasses()
