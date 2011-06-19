@@ -43,8 +43,12 @@ class Box:
 		return w.done()
 
 class TintedBox(Box):
-	def __init__(self, text, scheme = 'black', id = None):
+	def __init__(self, text, scheme = 'black', id = None, centered = True):
 		Box.__init__(self, None, text, id = id, scheme = scheme, tinted = True)
+		self.centered = centered
+
+	def extraClasses(self):
+		return ['center'] if self.centered else []
 
 ##########################
 

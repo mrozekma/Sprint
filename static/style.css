@@ -169,8 +169,11 @@ img.avatar {
 .tint {
 	margin: 6px;
 	padding: 6px;
-	text-align: center;
 	border: 1px solid #000;
+}
+
+.tint.center {
+	text-align: center;
 }
 
 .tint.black {
