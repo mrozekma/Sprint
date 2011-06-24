@@ -1,5 +1,5 @@
 from DB import ActiveRecord
-from Box import LoginBox, ErrorBox
+from Box import LoginBox, ErrorBox, TintedBox
 from utils import *
 
 class Privilege(ActiveRecord):
@@ -26,6 +26,13 @@ def requirePriv(handler, priv):
 
 	if not handler.session['user'].hasPrivilege(priv):
 		print ErrorBox('Forbidden', "You need the <b>%s</b> privilege" % priv)
+		done()
+
+def dev(handler):
+	if handler.session['user'].hasPrivilege('Dev'):
+		print TintedBox('Under development', scheme = 'yellow')
+	else:
+		print TintedBox('This feature is still under development and is disabled', scheme = 'yellow')
 		done()
 
 # print map(str, User.loadAll())
