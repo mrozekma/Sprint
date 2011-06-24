@@ -89,12 +89,12 @@ img.avatar {
 	border-bottom: 1px solid #000;
 	background: #000;
 	background-repeat: no-repeat;
-	background-position: 2px 4px;
+	background-position: 2px 3px;
 }
 
-.box span {
+.box span.boxBody {
 	display: block;
-	padding: 2px;
+	padding: 6px;
 }
 
 .box.black {
@@ -148,22 +148,22 @@ img.avatar {
 
 .box.error .title {
 	background-image: url(/static/images/icons/error.png);
-	padding-left: 20px;
+	padding-left: 24px;
 }
 
 .box.warning .title {
 	background-image: url(/static/images/icons/warning.png);
-	padding-left: 20px;
+	padding-left: 24px;
 }
 
 .box.success .title {
 	background-image: url(/static/images/icons/success.png);
-	padding-left: 20px;
+	padding-left: 24px;
 }
 
 .box.login .title {
 	background-image: url(/static/images/icons/login.png);
-	padding-left: 20px;
+	padding-left: 24px;
 }
 
 .tint {
@@ -177,8 +177,14 @@ img.avatar {
 }
 
 .tint.black {
+/*
 	background-color: #F2DEE8;
 	border-color: #630;
+*/
+
+	background-color: #000;
+	color: #FFF;
+	border-color: #AAA;
 }
 
 .tint.red {
@@ -205,6 +211,11 @@ img.avatar {
 	background-color: #F33;
 	border-color: #F33;
 	font-weight: bold;
+}
+
+.tint.grey {
+	background-color: #EEE;
+	border-color: #666;
 }
 
 .rounded {

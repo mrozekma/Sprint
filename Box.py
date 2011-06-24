@@ -37,7 +37,7 @@ class Box:
 		print "class=\"%s\">" % ' '.join(classes)
 		if self.title:
 			print "<div class=\"title\">%s</div>" % self.title
-		print "<span>%s</span>" % self.text
+		print "<span class=\"boxBody\">%s</span>" % self.text
 		print "</div>"
 
 		return w.done()
