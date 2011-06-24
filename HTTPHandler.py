@@ -15,19 +15,19 @@ from utils import *
 
 handlers = {'get': {}, 'post': {}}
 
+@globalize
 def get(index):
 	def wrap(f):
 		handlers['get'][index] = f
 		return f
 	return wrap
-globalize(get)
 
+@globalize
 def post(index):
 	def wrap(f):
 		handlers['post'][index] = f
 		return f
 	return wrap
-globalize(post)
 
 def log(str, target = sys.stdout):
 	print >> target, str

@@ -37,6 +37,7 @@ def pluralize(num, singular, plural):
 
 def globalize(f):
 	__builtins__[f.func_name] = f
+	return f
 
 def tsToDate(timestamp): return datetime.fromtimestamp(timestamp)
 def dateToTs(d): return mktime(d.timetuple())
