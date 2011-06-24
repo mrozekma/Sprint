@@ -2,6 +2,7 @@ import re
 import hashlib
 from datetime import datetime, date, timedelta
 from time import mktime
+from os.path import dirname
 
 DATE_FMT = '%d %b %Y'
 
@@ -57,6 +58,9 @@ def ormap(f, l):
 		if f(i):
 			return True
 	return False
+
+def basePath():
+	return dirname(__file__)
 
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/410692
 class switch(object):
