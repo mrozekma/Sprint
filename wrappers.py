@@ -1,7 +1,9 @@
 from datetime import datetime
 from random import randint
+import os
 import HTTPHandler
 import menu
+from utils import *
 
 class LeftMenu:
 	def __init__(self):
@@ -87,7 +89,14 @@ def footer(handler, path):
 	# print "<br style=\"clear:both\">"
 
 	print "</div>"
-	print "<div class=\"footer_timestamp\">Current system time is %s</div>" % datetime.now()
+
+	revisionHash, revisionDate, revisionRelative = os.popen('git log -n 1 --format=format:"%H %ct %cr"').read().split(' ', 2)
+	revisionDate = tsToDate(int(revisionDate)).strftime('%d %b %Y %H:%M:%S')
+	print "<div class=\"footer_timestamp\">"
+	print "Current system time: %s<br>" % datetime.now()
+	print "Current revision: <a href=\"http://work.mrozekma.com:8080/?p=Sprint;a=commitdiff;h=%s\">%s</a> (<span title=\"%s\">%s</span>)" % (revisionHash, revisionHash, revisionDate, revisionRelative)
+	print "</div>"
+	
 	print "</body>"
 	print "</html>"
 
