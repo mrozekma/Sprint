@@ -1,0 +1,191 @@
+/* Generic */
+
+.code_default {
+	font-family: "Courier New", Courier, monospace;
+	font-size: 10pt;
+}
+
+.code_default .code_header {
+	font-weight: bold;
+}
+
+.selected_line .icon {
+	background: black url(/static/images/smallbox.jpg) no-repeat 0px 6px;
+}
+
+.selected_line .p_linum {
+	font-weight: bold;
+}
+
+.p_linum {
+	text-align: right;
+	padding-right: 10px;
+}
+
+.p_classname {
+	font-weight: bold;
+}
+
+.p_commentblock {
+	font-style: italic;
+}
+
+.p_commentline {
+	font-style: italic;
+}
+
+.p_defname {
+	font-weight: bold;
+}
+
+.p_word {
+	font-weight: bold;
+}
+
+/* Light */
+
+.code_default.light .p_character {
+    color: olive;
+}
+
+.code_default.light .p_classname {
+    color: blue;
+    font-weight: bold;
+}
+
+.code_default.light .p_commentblock {
+    color: gray;
+    font-style: italic;
+}
+
+.code_default.light .p_commentline {
+    color: green;
+    font-style: italic;
+}
+
+.code_default.light .p_default {
+}
+
+.code_default.light .p_defname {
+    color: #009999;
+    font-weight: bold;
+}
+
+.code_default.light .p_identifier {
+    color: black;
+}
+
+.code_default.light .p_number {
+    color: #009999;
+}
+
+.code_default.light .p_operator {
+    color: black;
+}
+
+.code_default.light .p_string {
+    color: olive;
+}
+
+.code_default.light .p_stringeol {
+    color: olive;
+}
+
+.code_default.light .p_word2 {
+    color: purple;
+}
+
+.code_default.light .p_decorator {
+    color: maroon;
+}
+
+.code_default.light .p_triple {
+    color: olive;
+}
+
+.code_default.light .p_tripledouble {
+    color: olive;
+}
+
+.code_default.light .p_word {
+    color: navy;
+    font-weight: bold;
+}
+
+/* Dark */
+
+.code_default.dark {
+	background-color: black;
+}
+
+.code_default.dark .code_header {
+	color: white;
+}
+
+.code_default.dark .p_linum {
+	color: yellow;
+}
+
+.code_default.dark .p_linum a {
+	color: yellow;
+}
+
+.code_default.dark .p_character {
+	color: #ffa07a;
+}
+
+.code_default.dark .p_classname {
+	color: #98fb98;
+}
+
+.code_default.dark .p_commentblock {
+	color: red;
+}
+
+.code_default.dark .p_commentline {
+	color: red;
+}
+
+.code_default.dark .p_defname {
+	color: #87cefa;
+}
+
+.code_default.dark .p_identifier {
+	color: white;
+}
+
+.code_default.dark .p_number {
+	color: yellow;
+}
+
+.code_default.dark .p_operator {
+	color: white;
+}
+
+.code_default.dark .p_string {
+	color: #ffa07a;
+}
+
+.code_default.dark .p_stringeol {
+	color: #ffa07a;
+}
+
+.code_default.dark .p_word2 {
+	color: #0ff;
+}
+
+.code_default.dark .p_decorator {
+	color: #98fb98;
+}
+
+.code_default.dark .p_triple {
+	color: #ffa07a;
+}
+
+.code_default.dark .p_tripledouble {
+	color: #ffa07a;
+}
+
+.code_default.dark .p_word {
+	color: #0ff;
+}

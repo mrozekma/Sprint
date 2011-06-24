@@ -10,6 +10,7 @@ import sys
 from sqlite3 import OperationalError
 import traceback
 
+from code import showCode, highlightCode
 from ResponseWriter import ResponseWriter
 from utils import *
 
@@ -139,12 +140,12 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			over = givenS - expectedS
 			log("givenS (%s) - expectedS (%s) = %s" % (givenS, expectedS, over))
 			if len(over):
-				self.error("Invalid request", "Unexpected request arguments: %s" % ', '.join(over))
+				self.error("Invalid request", "Unexpected request argument%s: %s" % ('s' if len(over) > 1 else '', ', '.join(over)))
 
 			under = requiredS - givenS
 			log("requiredS (%s) - givenS (%s) = %s" % (requiredS, givenS, under))
 			if len(under):
-				self.error("Invalid request", "Missing expected request arguments: %s" % ', '.join(under))
+				self.error("Invalid request", "Missing expected request argument%s: %s" % ('s' if len(under) > 1 else '', ', '.join(under)))
 
 			path = path[1:]
 			request['path'] = path
@@ -165,10 +166,20 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			self.title('Unhandled Error')
 
 			writer2 = ResponseWriter()
-			traceback.print_tb(sys.exc_info()[2], None, writer2)
+			lpad = len(basePath()) + 1
+			print "<br>"
+			print "<div class=\"code_default light\" style=\"padding: 4px\">"
+			for filename, line, fn, stmt in traceback.extract_tb(sys.exc_info()[2]):
+				print "<div class=\"code_header\">%s:%s(%d)</div>" % (filename[lpad:], fn, line)
+				print "<div style=\"padding: 0px 0px 10px 20px\">"
+				print highlightCode(stmt)
+				print "</div>"
+			print "</div>"
+			# traceback.print_tb(sys.exc_info()[2], None, writer2)
 			ex = writer2.done()
 
-			print ErrorBox('Unhandled Error', "<b>%s</b><br><pre>%s</pre>" % (sys.exc_info()[1], stripTags(ex)))
+			print ErrorBox('Unhandled Error', "<b>%s</b><br>%s" % (sys.exc_info()[1], ex))
+			showCode(filename, line, 5)
 
 		self.response = writer.done()
 
