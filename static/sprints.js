@@ -2,6 +2,17 @@ $(document).ready(function() {
 	// TODO if grouping stays disabled, this can be pulled back out of a function
 	fancy_cells('#all-tasks');
 
+	setupHoursEvents();
+	setupTaskDragging();
+	setupSaveButton();
+	setupTaskButtons();
+	setupFilterButtons();
+	setupGroupArrows();
+
+	$('#post-status').hide();
+});
+
+function setupHoursEvents() {
 	$('td.hours img').css('opacity', 0);
 
 	$('td.hours').hover(
@@ -37,13 +48,9 @@ $(document).ready(function() {
 	$("td.hours input").keydown(function(event) {
 		dirty($(this));
 	});
+}
 
-	/*
-	$('#filter').keyup(function() {
-		$.uiTableFilter($('table.tasks'), this.value);
-	})
-	*/
-
+function setupTaskDragging() {
 	$('table.tasks').tableDnD({
 		onDragStart: function(tbl, row) {
 			if($(row).hasClass('group')) { // Moving a group
@@ -76,7 +83,9 @@ $(document).ready(function() {
 			}
 		}
 	});
+}
 
+function setupSaveButton() {
 	$('#save-button').click(function() {
 		// Fix new rows that are missing values
 		$('tr.task[taskid="new"] td.name input')
@@ -118,7 +127,9 @@ $(document).ready(function() {
 			box.fadeIn();
 		});
 	});
+}
 
+function setupTaskButtons() {
 	$('.actions img.task-new').click(function() {
 		curRow = $(this).parents('tr.task');
 		newRow = $("<tr class=\"task\" taskid=\"new\" groupid=\"" + curRow.attr('groupid') + "\" status=\"not started\" assigned=\"\">" +
@@ -132,40 +143,9 @@ $(document).ready(function() {
 		curRow.after(newRow);
 		$('input:first', newRow).focus();
 	});
+}
 
-	// resort_tasks('status');
-	// resort_tasks('owner');
-
-	/*
-	$('#filter-assigned a').click(function(e) {
-		username = $(this).attr('assigned');
-
-		if(e.ctrlKey) {
-			if($(this).hasClass('selected')) { // Disabling
-				$(this).removeClass('selected');
-				if($('#filter-assigned a.selected').length == 0) // No filtering left
-					$('tr.task').show();
-				else
-					$('tr.task[assigned="' + username + '"]').hide();
-			} else { // Enabling
-				$(this).addClass('selected');
-				if($('#filter-assigned a.selected').length == 1) // Started filtering
-					$('tr.task:not([assigned="' + username + '"])').hide();
-				else
-					$('tr.task[assigned="' + username + '"]').show();
-			}
-		} else {
-			$('#filter-assigned a').removeClass('selected');
-			$(this).addClass('selected');
-
-			$('tr.task:not([assigned="' + username + '"])').hide();
-			$('tr.task[assigned="' + username + '"]').show();
-		}
-
-		return false;
-	});
-	*/
-
+function setupFilterButtons() {
 	$.each(['#filter-assigned', '#filter-status'], function(_, selector) {
 		$(selector + ' a:gt(0)').click(function(e) {
 			if(e.ctrlKey) {
@@ -185,7 +165,9 @@ $(document).ready(function() {
 			return false;
 		});
 	});
+}
 
+function setupGroupArrows() {
 	$('tr.group img').click(function(e) {
 		switch($(this).attr('src')) {
 		case '/static/images/collapse.png':
@@ -200,9 +182,7 @@ $(document).ready(function() {
 			break;
 		}
 	});
-
-	$('#post-status').hide();
-});
+}
 
 function dirty(cell) {
 	cell.parents('tr.task').addClass('dirty');
