@@ -30,7 +30,7 @@ def header(handler, path):
 	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/style.css\">"
 	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/syntax-highlighting.css\">"
 	print "<script src=\"/static/jquery.js\" type=\"text/javascript\"></script>"
-	# print "<script src=\"/static/jquery-ui-1.8.2.custom.min.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/jquery-ui-1.8.2.custom.min.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/jquery.contextMenu.js\"></script>"
 	print "<link href=\"/static/jquery.contextMenu.css\" rel=\"stylesheet\" type=\"text/css\" />"
 	print "<script src=\"/static/script.js?v=%d\" type=\"text/javascript\"></script>" % randint(0, 1000000) # TODO Remove

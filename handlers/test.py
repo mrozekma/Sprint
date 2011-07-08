@@ -6,7 +6,15 @@ from pylab import figure, pie, axes, title
 from Task import Task
 from Button import *
 from Box import ErrorBox
+from code import showCode
 from utils import *
+
+@get('code')
+def code(handler, request, filename, line):
+	handler.title('Code')
+	dev(handler)
+
+	showCode(filename, int(line), 2)
 
 @get('test')
 def test(handler, request):
@@ -22,6 +30,10 @@ def test(handler, request):
 @post('test')
 def testPost(handler, request, p_test):
 	print p_test
+
+@get('test2')
+def test2(handler, request):
+	raise Exception("Lorem ipsum dolor sit amet, consectetur adipiscing elit")
 
 # @get('test')
 # def test(handler, request):

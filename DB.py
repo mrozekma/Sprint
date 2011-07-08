@@ -163,6 +163,9 @@ class ActiveRecord(object):
 	def __eq__(self, other):
 		return self.id == other.id
 
+	def __ne__(self, other):
+		return not (self == other)
+
 class Safe(object):
 	def __init__(self, ar):
 		self.ar = ar

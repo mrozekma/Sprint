@@ -2,17 +2,15 @@ $(document).ready(function() {
 	// TODO if grouping stays disabled, this can be pulled back out of a function
 	fancy_cells('#all-tasks');
 
-	setupHoursEvents();
-	setupTaskDragging();
-	setupSaveButton();
-	setupTaskButtons();
-	setupFilterButtons();
-	setupGroupArrows();
+	setup_hours_events();
+	setup_task_buttons();
+	setup_filter_buttons();
+	setup_group_arrows();
 
 	$('#post-status').hide();
 });
 
-function setupHoursEvents() {
+function setup_hours_events() {
 	$('td.hours img').css('opacity', 0);
 
 	$('td.hours').hover(
@@ -36,47 +34,68 @@ function setupHoursEvents() {
 	);
 
 	$('td.hours img').click(function() {
+		task = $(this).parents('tr.task');
         field = $('input', $(this).parents('.hours'));
 		val = parseInt(field.val(), 10);
 		val += parseInt($(this).attr('amt'), 10);
-		if(val < 0)
+		if(val < 0) {
 			val = 0;
+		}
 		field.val('' + val)
-		dirty($(this));
+		// dirty($(this));
+		saveTask(task, 'hours', val);
 	});
 
-	$("td.hours input").keydown(function(event) {
-		dirty($(this));
+	// $("td.hours input").keydown(function(event) {
+		// dirty($(this));
+	// });
+
+	$("td.hours input").blur(function(event) {
+		task = $(this).parents('tr.task');
+        field = $('input', $(this).parents('.hours'));
+		val = parseInt(field.val(), 10);
+		saveTask(task, 'hours', val);
 	});
 }
 
-function setupTaskDragging() {
+/*
+function setup_task_dragging() {
+	$('table.tasks').sortable({'items': 'tr'});
+	return;
+
 	$('table.tasks').tableDnD({
 		onDragStart: function(tbl, row) {
-			if($(row).hasClass('group')) { // Moving a group
+			row = $(row);
+			if(row.hasClass('group')) { // Moving a group
 				$('tr.task', $(tbl)).addClass('hide-temp');
-			} else if($(row).hasClass('task')) { // Moving a task
+			} else if(row.hasClass('task')) { // Moving a task
 			}
 		},
 
 		onDrop: function(tbl, row) {
 			row = $(row);
 			$('tr.task.hide-temp').removeClass('hide-temp');
-			row.addClass('dirty');
+			// row.addClass('dirty');
 			if(row.hasClass('group')) {
+				// Move all the group's tasks under the group header row
 				$('tr.group').each(function() {
 					groupid = $(this).attr('groupid');
 					$('tr.task[groupid=' + groupid + ']').insertAfter($(this));
 				});
+
+				//TODO Save new group position
+				unimplemented('Group move');
 			} else if(row.hasClass('task')) {
-				newGroupID = row.prevAll('tr.group').attr('groupid');
-				row.attr('groupid', newGroupID);
+				new_group_id = row.prevAll('tr.group').attr('groupid');
+				row.attr('groupid', new_group_id);
 
 				pred = row.prev();
 				if(pred.hasClass('task')) { // Inserted after a task
-					$('form').append($('<input>').attr('type', 'hidden').attr('name', 'taskmove').attr('value', row.attr('taskid') + ':' + pred.attr('taskid')));
+					// $('form').append($('<input>').attr('type', 'hidden').attr('name', 'taskmove').attr('value', row.attr('taskid') + ':' + pred.attr('taskid')));
+					saveTask(row, 'taskmove', pred.attr('taskid'));
 				} else if(pred.hasClass('group')) { // Inserted after a group header (top of the group)
-					$('form').append($('<input>').attr('type', 'hidden').attr('name', 'taskmove').attr('value', row.attr('taskid') + ':[' + pred.attr('groupid') + ']'));
+					//TODO Save
+					unimplemented('Index 0 task move');
 				} else {
 					//FAIL
 				}
@@ -85,7 +104,7 @@ function setupTaskDragging() {
 	});
 }
 
-function setupSaveButton() {
+function setup_save_button() {
 	$('#save-button').click(function() {
 		// Fix new rows that are missing values
 		$('tr.task[taskid="new"] td.name input')
@@ -106,9 +125,9 @@ function setupSaveButton() {
 				box.attr('class', 'tint green');
 				$('span', box).html(data);
 
-				$('.dirty').each(function() {
-					$(this).removeClass('dirty');
-				});
+				// $('.dirty').each(function() {
+					// $(this).removeClass('dirty');
+				// });
 				break;
 			case 298:
 				box.attr('class', 'tint yellow');
@@ -128,8 +147,9 @@ function setupSaveButton() {
 		});
 	});
 }
+*/
 
-function setupTaskButtons() {
+function setup_task_buttons() {
 	$('.actions img.task-new').click(function() {
 		curRow = $(this).parents('tr.task');
 		newRow = $("<tr class=\"task\" taskid=\"new\" groupid=\"" + curRow.attr('groupid') + "\" status=\"not started\" assigned=\"\">" +
@@ -145,7 +165,7 @@ function setupTaskButtons() {
 	});
 }
 
-function setupFilterButtons() {
+function setup_filter_buttons() {
 	$.each(['#filter-assigned', '#filter-status'], function(_, selector) {
 		$(selector + ' a:gt(0)').click(function(e) {
 			if(e.ctrlKey) {
@@ -167,7 +187,7 @@ function setupFilterButtons() {
 	});
 }
 
-function setupGroupArrows() {
+function setup_group_arrows() {
 	$('tr.group img').click(function(e) {
 		switch($(this).attr('src')) {
 		case '/static/images/collapse.png':
@@ -184,9 +204,9 @@ function setupGroupArrows() {
 	});
 }
 
-function dirty(cell) {
-	cell.parents('tr.task').addClass('dirty');
-}
+// function dirty(cell) {
+	// cell.parents('tr.task').addClass('dirty');
+// }
 
 function apply_filters() {
 	assigned = $('#filter-assigned a.selected');
@@ -271,14 +291,59 @@ function resort_tasks(sort) {
 }
 
 function fancy_cells(table_selector) {
-	$(table_selector).tableDnD({onDragClass: 'dragging'});
+	$(table_selector).sortable({
+		items: 'tr',
+		start: function(event, ui) {
+			row = $(ui.item[0]);
+			if(row.hasClass('group')) { // Moving a group
+				$('tr.task', $(table_selector)).addClass('hide-temp');
+			} else if(row.hasClass('task')) { // Moving a task
+			}
+		},
+		update: function(event, ui) {
+			row = $(ui.item[0]);
+			$('tr.task.hide-temp').removeClass('hide-temp');
+			// row.addClass('dirty');
+			if(row.hasClass('group')) {
+				// Move all the group's tasks under the group header row
+				$('tr.group').each(function() {
+					groupid = $(this).attr('groupid');
+					$('tr.task[groupid=' + groupid + ']').insertAfter($(this));
+				});
+
+				//TODO Save new group position
+				unimplemented('Group move');
+			} else if(row.hasClass('task')) {
+				new_group = row.prevAll('tr.group');
+				new_group_id = new_group.length ? new_group.attr('groupid') : 0;
+				row.attr('groupid', new_group_id);
+
+				pred = row.prev();
+				if(!pred.length) { // First row in the table
+					saveTask(row, 'taskmove', '[0]');
+				} else if(pred.hasClass('task')) { // Inserted after a task
+					saveTask(row, 'taskmove', pred.attr('taskid'));
+				} else if(pred.hasClass('group')) { // Inserted after a group header (top of the group)
+					//TODO Save
+					saveTask(row, 'taskmove', '[' + new_group_id + ']');
+				} else {
+					//FAIL
+				}
+			}
+		}
+	});
+
+	// $(table_selector).tableDnD({onDragClass: 'dragging'});
 	// return;
 	$('td.name > span', $(table_selector)).editable({
 		onSubmit: function(c) {
 			id = $(this).attr('id').replace('name_span_', '');
 			$('[name="name[' + id + ']"]').val(c.current);
-			if(c.previous != c.current)
-				dirty($(this));
+			if(c.previous != c.current) {
+				task = $(this).parents('tr.task');
+				// dirty($(this));
+				saveTask(task, 'name', c.current);
+			}
 		}
 	});
 
@@ -288,30 +353,69 @@ function fancy_cells(table_selector) {
 			$('[name="assigned[' + id + ']"]').val(c.current);
 			$('tr', $(this)).attr('assigned', c.current);
 			$(this).attr('username', c.current);
-			if(c.previous != c.current)
-				dirty($(this));
+			if(c.previous != c.current) {
+				task = $(this).parents('tr.task');
+				// dirty($(this));
+				saveTask(task, 'assigned', c.current);
+			}
 		}
 	});
 
 	$('td.name img').contextMenu({
 		menu: 'status-menu'
 	}, function(action, el, pos) {
+		task = $(el).parents('tr.task');
 		id = $(el).attr('id').replace('status_', '');
 		field = $('[name="status[' + id + ']"]');
 		if(field.val() != action) {
-			$(el).parents('tr').attr('status', action);
+			task.attr('status', action);
 			field.val(action);
 			$(el).attr('src', '/static/images/status-' + action.replace(' ', '-') + '.png');
-			dirty($(el));
+			// dirty($(el));
+			saveTask(task, 'status', action);
+		}
+	});
+}
+
+function saveTask(task, field, value) {
+	saveFields(task.attr('taskid'), task.attr('revid'), field, value);
+}
+
+function saveFields(task_id, old_rev_id, field, value) {
+	//TODO
+	console.log("Saving change to " + task_id + "(" + old_rev_id + "): " + field + " <- " + value);
+	$.post("/sprints/" + sprintid + "/post", {'id': task_id, 'rev_id': old_rev_id, 'field': field, 'value': value}, function(data, text, request) {
+		box = $('#post-status')
+		switch(request.status) {
+		case 200:
+			box.attr('class', 'tint green');
+			$('span', box).html(data);
+
+			// $('.dirty').each(function() {
+			// $(this).removeClass('dirty');
+			// });
+			break;
+		case 298:
+			box.attr('class', 'tint yellow');
+			$('span', box).html(data);
+			break;
+		case 299:
+			box.attr('class', 'tint red');
+			$('span', box).html(data);
+			break;
+		default:
+			box.attr('class', 'tint blood');
+			$('span', box).html("Unexpected response code " + request.status)
+			break;
 		}
 
-		/*
-		alert(
-			'Action: ' + action + '\n\n' +
-				'Element ID: ' + $(el).attr('id') + '\n\n' + 
-				'X: ' + pos.x + '  Y: ' + pos.y + ' (relative to element)\n\n' + 
-				'X: ' + pos.docX + '  Y: ' + pos.docY+ ' (relative to document)'
-		);
-		*/
+		box.fadeIn();
 	});
+}
+
+function unimplemented(what) {
+	box = $('#post-status');
+	box.attr('class', 'tint yellow');
+	$('span', box).html("<b>Unimplemented</b>: " + what);
+	box.fadeIn();
 }
