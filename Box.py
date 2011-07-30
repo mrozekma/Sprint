@@ -100,3 +100,11 @@ class LoginBox(Box):
 		print "</form>"
 
 		return writer.done()
+
+class CollapsibleBox(Box):
+	def __init__(self, title, text, expanded = False, id = None):
+		Box.__init__(self, title, text, scheme = '', id = id)
+		self.expanded = expanded
+
+	def extraClasses(self):
+		return ['collapsible'] + (['expanded'] if self.expanded else [])
