@@ -6,11 +6,13 @@ from Sprint import Sprint
 class Group(ActiveRecord):
 	sprint = ActiveRecord.idObjLink(Sprint, 'sprintid')
 
-	def __init__(self, sprintid, seq, name, id = None):
+	def __init__(self, sprintid, name, seq = None, deletable = True, id = None):
+		ActiveRecord.__init__(self)
 		self.id = id
 		self.sprintid = sprintid
-		self.seq = seq
 		self.name = name
+		self.seq = seq if seq else maxOr(group.seq for group in self.sprint.getGroups())+1
+		self.deletable = to_bool(deletable)
 
 	def __str__(self):
 		return self.safe.name
