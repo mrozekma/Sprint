@@ -1,5 +1,6 @@
 from __future__ import with_statement
 from utils import *
+from Session import undelay
 from Privilege import requirePriv
 from Project import Project
 from Sprint import Sprint
@@ -10,9 +11,11 @@ from Button import Button
 def projects(handler, request):
 	requirePriv(handler, 'User')
 	handler.title("Projects")
-	showProjects()
+	showProjects(handler)
 
-def showProjects():
+def showProjects(handler):
+	undelay(handler)
+
 	print "<div class=\"indented\">"
 	for project in Project.loadAll():
 		sprints = project.getSprints()
