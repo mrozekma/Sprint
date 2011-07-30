@@ -167,7 +167,7 @@ class ActiveRecord(object):
 			db().update("INSERT INTO %s(%s, %s) VALUES(?, ?)" % (table, col, otherCol), self.id, i.id)
 
 	def __eq__(self, other):
-		return self.id == other.id
+		return self and other and self.id == other.id
 
 	def __ne__(self, other):
 		return not (self == other)
