@@ -50,7 +50,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		writer = ResponseWriter()
 
 		request = {'path': [], 'wrappers': True, 'code': 200}
- 		try: # raise DoneRendering; starts here to catch self.error calls
+		try: # raise DoneRendering; starts here to catch self.error calls
 			self.title(None)
 
 			# Pull out get variables
@@ -235,7 +235,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		self.wfile.write(self.response)
 
 	def do_POST(self):
-		form = cgi.FieldStorage(fp = self.rfile, headers = self.headers, environ={'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': self.headers['Content-Type']})
+		form = cgi.FieldStorage(fp = self.rfile, headers = self.headers, environ={'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': self.headers['Content-Type']}, keep_blank_values = True)
 		data = dict([(k, map(lambda v: v.value, form[k]) if type(form[k]) is list else form[k].value) for k in form])
 		print "DEBUG: %s" % self.rfile
 		self.do_HEAD('post', data)
