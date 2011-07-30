@@ -90,6 +90,15 @@ class Task(ActiveRecord):
 		return super(Task, cls).loadAll(groupby = 'id', orderby = orderby, **attrs)
 
 	def save(self):
+		if not self.id:
+			# Pre-insert since tasks.id isn't autoincrementing
+			rows = db().select("SELECT MAX(id) FROM tasks");
+			rows = [x for x in rows]
+			self.id = rows[0]['MAX(id)'] + 1
+			db().update("INSERT INTO tasks(id, revision) VALUES(?, ?)", self.id, 1)
+
+			# Shift everything after this sequence
+			db().update("UPDATE tasks SET seq = seq + 1 WHERE seq >= ?", self.seq)
 		return ActiveRecord.save(self, pks = ['id', 'revision'])
 
 	# @classmethod
