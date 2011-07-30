@@ -162,7 +162,7 @@ class ActiveRecord(object):
 		return map(lambda x: otherCls.load(x[otherCol]), rows)
 
 	def saveLink(self, link, table, col, otherCls, otherCol):
-		if not self.id: raise ValuerError("Attempted to save link before saving object")
+		if not self.id: raise ValueError("Attempted to save link before saving object")
 		for i in link:
 			db().update("INSERT INTO %s(%s, %s) VALUES(?, ?)" % (table, col, otherCol), self.id, i.id)
 
