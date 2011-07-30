@@ -26,7 +26,7 @@ def showProjects(handler):
 		print "<div id=\"project-summary-%d\" class=\"%s\">" % (project.id, ' '.join(classes))
 		print "<div class=\"project-name\">%s</div>" % project.name
 		print "<div class=\"buttons\">"
-		print Button("new sprint", "/sprint/new?project=%d" % project.id).mini()
+		print Button("new sprint", "/sprints/new?project=%d" % project.id).mini()
 		print Button("other", "#").mini()
 		print "</div>"
 
