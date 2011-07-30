@@ -1,4 +1,5 @@
 from ResponseWriter import ResponseWriter
+from utils import *
 
 # colorSchemes = {
 	# 'black':  {'solid': '#000',    'contrast': '#FFF', 'tint': '#F2DEE8', 'border': '#630'},
@@ -58,6 +59,11 @@ class ErrorBox(Box):
 
 	def extraClasses(self):
 		return ['error']
+
+	@staticmethod
+	def die(*args):
+		print ErrorBox(*args)
+		done()
 
 class WarningBox(Box):
 	def __init__(self, title, text):
