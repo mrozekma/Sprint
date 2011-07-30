@@ -123,6 +123,12 @@ class ActiveRecord(object):
 			placeholders = ', '.join(map(lambda x: "?", fields))
 			db().update("INSERT INTO %s(%s) VALUES(%s)" % (cls.table(), ', '.join(fields), placeholders), *boundArgs)
 
+			# Damn triggers mess this up :(
+			# rows = [x for x in db().select("SELECT last_insert_rowid()")]
+			# self.id = rows[0]['last_insert_rowid()']
+
+			self.id = cls.loadAll(orderby = None)[-1].id
+
 	@staticmethod
 	def saveAll(objs):
 		for obj in objs:
