@@ -17,5 +17,11 @@ class Group(ActiveRecord):
 	def getTasks(self):
 		return filter(lambda t: t.group and t.group == self, self.sprint.getTasks())
 
+	def save(self):
+		if not self.id:
+			# Shift everything after this sequence
+			db().update("UPDATE groups SET seq = seq + 1 WHERE seq >= ?", self.seq)
+		return ActiveRecord.save(self)
+
 	def __str__(self):
 		return self.safe.name
