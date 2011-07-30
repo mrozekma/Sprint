@@ -29,13 +29,13 @@ class Sprint(ActiveRecord):
 		now = dateToTs(datetime.now())
 		return self.start <= now <= self.end
 
-	def getTasks(self):
+	def getTasks(self, orderby = 'seq ASC'):
 		from Task import Task
-		return Task.loadAll(sprintid = self.id, orderby = 'seq ASC')
+		return Task.loadAll(sprintid = self.id, orderby = orderby)
 
-	def getGroups(self):
+	def getGroups(self, orderby = 'seq ASC'):
 		from Group import Group
-		return Group.loadAll(sprintid = self.id, orderby = 'seq ASC')
+		return Group.loadAll(sprintid = self.id, orderby = orderby)
 
 	def getFormattedName(self):
 		cls = 'sprint-name active' if self.isActive() else 'sprint-name'
