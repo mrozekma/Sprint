@@ -4,45 +4,29 @@ from HTTPHandler import handlers
 from ResponseWriter import ResponseWriter
 
 class Tabs:
-	def __init__(self, defaultTab = None):
+	def __init__(self):
 		self.tabs = []
-		self.argsStore = {}
-		self.defaultTab = defaultTab
+		self.currentTab = None
 
-	def tab(self, path, label, args = []):
-		def wrap(f):
-			handlers['get'][path] = f # Modifying handlers from here is kind of hackish
-			self.tabs.append({'path': path, 'label': label, 'func': f.func_name, 'args': args})
-			return f
-		return wrap
+	def __setitem__(self, name, value):
+		if isinstance(value, tuple):
+			displayName, path = value
+		else:
+			displayName = name.capitalize()
+			path = value
+		self.tabs.append({'name': name, 'displayName': displayName, 'path': path})
 
-	def args(self, **kw):
-		self.argsStore = kw
+	def __lshift__(self, name):
+		self.currentTab = name
+		return self
 
-	def __str__(self):
-		def getCurrentTab():
-			# -1: getCurrentTab
-			# -2: __str__
-			# -3: @tab
-			_, _, fn, _ = traceback.extract_stack()[-3]
-			for tab in self.tabs:
-				if tab['func'] == fn:
-					return tab['label']
-			return self.defaultTab if self.defaultTab else self.tabs[0]['func']
-
+	def __str__(self): return self % None
+	def __mod__(self, fmt):
 		w = ResponseWriter()
 		try:
-			currentTab = getCurrentTab()
 			print "<div class=\"tabs\">"
 			for tab in self.tabs:
-				url = "/%s" % tab['path']
-				if len(tab['args']):
-					sep = '?'
-					for arg in tab['args']:
-						if arg in self.argsStore:
-							url += "%s%s=%s" % (sep, arg, self.argsStore[arg])
-							sep = '&'
-				print "<a href=\"%s\"%s>%s</a>" % (url, ' class="current"' if tab['label'] == currentTab else '', tab['label'])
+				print "<a href=\"%s\"%s>%s</a>" % ((tab['path'] % fmt) if fmt else tab['path'], ' class="current"' if tab['name'] == self.currentTab else '', tab['displayName'])
 			print "</div>"
 			return w.done()
 		except:
