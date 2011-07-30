@@ -18,7 +18,10 @@ class Button:
 		if self.type == 'link':
 			return "<a %shref=\"%s\" class=\"%s\">%s</a>" % (id, self.url, self.clazz, body)
 		if self.type == 'button':
-			return "<button %sclass=\"%s\" onClick=\"document.location='%s'\">%s</button>" % (id, self.clazz, self.url, body)
+			if self.url == '#':
+				return "<button %sclass=\"%s\">%s</button>" % (id, self.clazz, body)
+			else:
+				return "<button %sclass=\"%s\" onClick=\"document.location='%s'\">%s</button>" % (id, self.clazz, self.url, body)
 		if self.type == 'submit':
 			return "<button %sclass=\"%s\" onClick=\"$('form').submit();\">%s</button>" % (id, self.clazz, body)
 		raise ValueError, "Unknown type '%s'" % self.type
