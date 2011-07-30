@@ -14,5 +14,8 @@ class Group(ActiveRecord):
 		self.seq = seq if seq else maxOr(group.seq for group in self.sprint.getGroups())+1
 		self.deletable = to_bool(deletable)
 
+	def getTasks(self):
+		return filter(lambda t: t.group and t.group == self, self.sprint.getTasks())
+
 	def __str__(self):
 		return self.safe.name
