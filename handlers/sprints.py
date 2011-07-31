@@ -1,7 +1,9 @@
 from __future__ import with_statement
 from utils import *
-from datetime import datetime
+from datetime import datetime, date
 import itertools
+from Session import delay, undelay
+from ResponseWriter import ResponseWriter
 from Privilege import requirePriv
 from Project import Project
 from Sprint import Sprint
@@ -10,8 +12,13 @@ from Button import Button
 from Table import Table
 from Task import Task, statuses, statusMenu
 from User import User
+from Group import Group
+from Tabs import Tabs
 
 # groupings = ['status', 'owner', 'hours']
+
+tabs = Tabs()
+tabs['backlog'] = '/sprints/%d'
 
 @get('sprints')
 def sprint(handler, request, assigned = None):
@@ -72,6 +79,8 @@ def showSprint(handler, request, id, assigned):
 	tasks = sprint.getTasks()
 	groups = sprint.getGroups()
 
+	undelay(handler)
+
 	print "<ul id=\"status-menu\" class=\"contextMenu\">"
 	for statusBlock in statusMenu:
 		for statusName in statusBlock:
@@ -92,39 +101,53 @@ def showSprint(handler, request, id, assigned):
 		print "<a class=\"fancy\" status=\"%s\" href=\"#\"><img src=\"%s\">%s</a>" % (status.name, status.getIcon(), status.text)
 	print "</div><br>"
 
+	print (tabs << 'backlog') % id
+
 	print "<form method=\"post\" action=\"/sprints/%d/post\">" % id
 	# print Button('Save', image = 'tick.png', id = 'save-button').positive()
 
-	for task in tasks:
-		print "<input type=\"hidden\" name=\"revision[%d]\" value=\"%d\">" % (task.id, task.revision)
-		print "<input type=\"hidden\" name=\"status[%d]\" value=\"%s\">" % (task.id, task.status)
-		print "<input type=\"hidden\" name=\"name[%d]\" value=\"%s\">" % (task.id, task.name)
-		print "<input type=\"hidden\" name=\"assigned[%d]\" value=\"%s\">" % (task.id, task.assigned.username)
+	# for task in tasks:
+		# print "<input type=\"hidden\" name=\"revision[%d]\" value=\"%d\">" % (task.id, task.revision)
+		# print "<input type=\"hidden\" name=\"status[%d]\" value=\"%s\">" % (task.id, task.status)
+		# print "<input type=\"hidden\" name=\"name[%d]\" value=\"%s\">" % (task.id, task.name)
+		# print "<input type=\"hidden\" name=\"assigned[%d]\" value=\"%s\">" % (task.id, task.assigned.username)
 
 	print "<table border=0 id=\"all-tasks\" class=\"tasks\">"
 	print "<thead>"
-	print "<tr class=\"dateline nodrop nodrag\"><td colspan=2>&nbsp;</td>" + ''.join(map(lambda (x,y): "<td class=\"%s\">%s</td>" % (x, x), days)) + "<td>&nbsp;</td></tr>"
-	print "<tr class=\"dateline2 nodrop nodrag\"><td colspan=2>&nbsp;</td>" + ''.join(map(lambda (x,y): "<td class=\"%s\">%s</td>" % (x, formatDate(y)), days)) + "<td>&nbsp;</td></tr>"
+	print "<tr class=\"dateline nodrop nodrag\"><td colspan=\"3\">&nbsp;</td>" + ''.join(map(lambda (x,y): "<td class=\"%s\">%s</td>" % (x, x), days)) + "<td>&nbsp;</td></tr>"
+	print "<tr class=\"dateline2 nodrop nodrag\"><td colspan=\"3\">&nbsp;</td>" + ''.join(map(lambda (x,y): "<td class=\"%s\">%s</td>" % (x, formatDate(y)), days)) + "<td>&nbsp;</td></tr>"
 	print "</thead>"
 	print "<tbody>"
 
 	for group in groups:
-		print "<tr class=\"group\" groupid=\"%d\"><td colspan=\"7\"><img src=\"/static/images/collapse.png\">&nbsp;<span>%s</span></td></tr>" % (group.id, group.name)
-		for task in filter(lambda t: t.group and t.group == group, tasks):
+		print "<tr class=\"group\" id=\"group%d\" groupid=\"%d\">" % (group.id, group.id)
+		print "<td colspan=\"6\"><img src=\"/static/images/collapse.png\">&nbsp;<span>%s</span></td>" % group.name
+		print "<td class=\"actions\">"
+		print "<a href=\"/groups/new?after=%d\"><img src=\"/static/images/group-new.png\" title=\"New Group\"></a>" % group.id
+		print "<a href=\"/tasks/new?group=%d\"><img src=\"/static/images/task-new.png\" title=\"New Task\"></a>" % group.id
+		print "</td>"
+		print "</tr>"
+		for task in group.getTasks():
 			printTask(task, days, group = task.group)
-			# print "<tr><td colspan=\"7\">x</td></tr>"
 
-	print "<tr class=\"group\" groupid=\"0\"><td colspan=\"7\"><img src=\"/static/images/collapse.png\">&nbsp;<span>Other</span></td></tr>"
-	for task in filter(lambda t: not t.group, tasks):
-		printTask(task, days)
+	# print "<tr class=\"group\" groupid=\"0\"><td colspan=\"7\"><img src=\"/static/images/collapse.png\">&nbsp;<span>Other</span></td></tr>"
+	# for task in filter(lambda t: not t.group, tasks):
+		# printTask(task, days)
 
 	print "</tbody>"
 	print "</table>"
 	print "</form>"
 
 def printTask(task, days, group = None):
-	print "<tr class=\"task\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" status=\"%s\" assigned=\"%s\">" % (task.id, task.revision, group.id if group else 0, task.stat.name, task.assigned.username)
-	print "<td class=\"name\"><img id=\"status_%d\" src=\"%s\">&nbsp;<span id=\"name_span_%d\">(%d,%d) %s</span></td>" % (task.id, task.stat.icon, task.id, task.id, task.seq, task.name)
+	print "<tr class=\"task\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" status=\"%s\" assigned=\"%s\">" % (task.id, task.id, task.revision, group.id if group else 0, task.stat.name, task.assigned.username)
+
+	print "<td class=\"flags\">"
+	if task.id == 11:
+		print "<img src=\"/static/images/star.png\">&nbsp;"
+	print "<img src=\"/static/images/tag-blue.png\">&nbsp;<img id=\"status_%d\" class=\"status\" src=\"%s\">" % (task.id, task.stat.icon)
+	print "</td>"
+
+	print "<td class=\"name\"><span id=\"name_span_%d\">%s</span></td>" % (task.id, task.name)
 	# print "<td class=\"assigned\">%s</td>" % task.assigned.str('member')
 	print "<td class=\"assigned\">%s</td>" % (task.assigned.str('member', False, "assigned_span_%d" % task.id))
 	for lbl, day in days:
@@ -154,15 +177,7 @@ def printTask(task, days, group = None):
 			print "<td class=\"%s\">%s</td>" % (' '.join(classes), dayTask.hours)
 	print "<td class=\"actions\">"
 	print "<a href=\"/tasks/%d\" target=\"_new\"><img src=\"/static/images/task-history.png\" title=\"History\"></a>" % task.id
-	print "<img class=\"task-new\" src=\"/static/images/task-new.png\" title=\"New Task\">"
-	print "<img src=\"/static/images/task-history.png\">"
-	print "<img src=\"/static/images/task-history.png\">"
-	print "<img src=\"/static/images/task-history.png\">"
-	# print "(actions)"
-	# print Button('history', "/tasks/%d" % task.id, image = 'sprint-history.png')
-	# print Button('temp1', '#', image = 'sprint.png')
-	# print Button('temp2', '#', image = 'sprint.png')
-	# print Button('temp3', '#', image = 'sprint.png')
+	print "<a href=\"javascript:delete_task(%d);\"><img src=\"/static/images/task-delete.png\" title=\"Delete Task\"></a>" % task.id
 	print "</td>"
 	print "</tr>"
 
@@ -233,3 +248,93 @@ def sprintPost(handler, request, p_id, p_rev_id, p_field, p_value):
 	# 299 - error
 	request['code'] = 200
 	print "Done"
+
+@get('sprints/new')
+def newSprint(handler, request, project):
+	id = int(project)
+	handler.title('New Sprint')
+	requirePriv(handler, 'User')
+	project = Project.load(id)
+	if not project:
+		print ErrorBox('Invalid project', "No project with ID <b>%d</b>" % id)
+		done()
+
+	from Privilege import dev
+	dev(handler)
+
+	print "<style type=\"text/css\">"
+	print "#post-status {display: none}"
+	print "table.list td.left {position: relative; top: 4px;}"
+	print "table.list td.right > * {width: 400px;}"
+	print "table.list td.right button {width: 200px;}" # Half of the above value
+	print "</style>"
+	print "<script src=\"/static/sprints-new.js\" type=\"text/javascript\"></script>"
+
+	print TintedBox('', scheme = 'blue', id = 'post-status')
+
+	print "<form method=\"post\" action=\"/sprints/new\">"
+	print "<table class=\"list\">"
+	print "<tr><td class=\"left\">Project:</td><td class=\"right\">"
+	print "<select id=\"select-project\" name=\"project\">"
+	for thisProject in Project.loadAll():
+		print "<option value=\"%d\"%s>%s</option>" % (thisProject.id, ' selected' if thisProject == project else '', thisProject.safe.name)
+	print "</select>"
+	print "</td></tr>"
+	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\" id=\"defaultfocus\"></td></tr>"
+	print "<tr><td class=\"left\">Start:</td><td class=\"right\"><input type=\"text\" name=\"start\" class=\"date\"></td></tr>"
+	print "<tr><td class=\"left\">End:</td><td class=\"right\"><input type=\"text\" name=\"end\" class=\"date\"></td></tr>"
+	print "<tr><td class=\"left\">Members:</td><td class=\"right\">"
+	print "<select name=\"members\" id=\"select-members\" multiple>"
+	for user in sorted(User.loadAll()):
+		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user == handler.session['user'] else '', user.safe.username)
+	print "</select>"
+	print "</td></tr>"
+	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
+	print Button('Save', id = 'save-button', type = 'button').positive()
+	print Button('Cancel', id = 'cancel-button', type = 'button').negative()
+	print "</td></tr>"
+	print "</table>"
+	print "</form>"
+
+@post('sprints/new')
+def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members):
+	def die(msg):
+		print msg
+		done()
+
+	request['wrappers'] = False
+
+	project = Project.load(p_project)
+	if not project:
+		die("Unknown project ID: %d" % p_project)
+
+	try:
+		start = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_start)
+		if not start:
+			raise ValueError
+		month, day, year = map(int, start.groups())
+		start = date(year, month, day)
+	except ValueError:
+		die("Malformed start date: %s" % stripTags(p_start))
+
+	try:
+		end = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_end)
+		if not end:
+			raise ValueError
+		month, day, year = map(int, end.groups())
+		end = date(year, month, day)
+	except ValueError:
+		die("Malformed end date: %s" % stripTags(p_end))
+
+	members = map(User.load, p_members)
+	if None in members:
+		die("Unknown username")
+
+	sprint = Sprint(project.id, p_name, dateToTs(start), dateToTs(end))
+	sprint.members += members
+	sprint.save()
+	# Make a default 'Miscellaneous' group so there's something to add tasks to
+	Group(sprint.id, 'Miscellaneous', 1, False).save()
+
+	request['code'] = 299
+	delay(handler, TintedBox("Added sprint <b>%s</b>" % sprint.safe.name, 'green'))
