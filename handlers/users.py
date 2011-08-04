@@ -6,6 +6,6 @@ def users(handler, request):
 	handler.title('Users')
 	tbl = Table()
 	tbl *= ('ID', 'Username')
-	for user in User.loadAll():
+	for user in User.loadAll(orderby = 'username'):
 		tbl += (user.id, user)
 	print tbl

@@ -35,6 +35,21 @@ def testPost(handler, request, p_test):
 def test2(handler, request):
 	raise Exception("Lorem ipsum dolor sit amet, consectetur adipiscing elit")
 
+@get('chosen')
+def chosen(handler, request):
+	handler.title('Test')
+	from Privilege import dev
+	dev(handler)
+	print "<script type=\"text/javascript\">"
+	print "$(document).ready(function() {"
+	print "$('select').css('width', '500px').chosen();"
+	print "});"
+	print "</script>"
+	print "<select id=\"one\"><option>one</option><option>two</option><option>three</option></select>"
+	print "<select id=\"two\"><option>one</option><option>two</option><option>three</option></select>"
+	print "<select id=\"three\"><option>one</option><option>two</option><option>three</option></select>"
+	print "<select id=\"four\"><option>one</option><option>two</option><option>three</option></select>"
+
 # @get('test')
 # def test(handler, request):
 	# print """

@@ -1,6 +1,11 @@
 $(document).ready(function () {
-	if(document.getElementById('defaultfocus'))
+	if(document.getElementById('defaultfocus')) {
 		document.getElementById('defaultfocus').focus();
+	}
+
+	$('.box.collapsible .title').click(function(event) {
+		$(this).parents('.box.collapsible').toggleClass('expanded');
+	});
 });
 
 $.expr[":"].econtains = function(obj, index, meta, stack) {

@@ -7,7 +7,7 @@ from ResponseWriter import ResponseWriter
 from Privilege import requirePriv
 from Project import Project
 from Sprint import Sprint
-from Box import ErrorBox, TintedBox
+from Box import CollapsibleBox, ErrorBox, TintedBox
 from Button import Button
 from Table import Table
 from Task import Task, statuses, statusMenu
@@ -18,18 +18,19 @@ from Tabs import Tabs
 # groupings = ['status', 'owner', 'hours']
 
 tabs = Tabs()
+tabs['info'] = '/sprints/%d/info'
 tabs['backlog'] = '/sprints/%d'
 
 @get('sprints')
-def sprint(handler, request, assigned = None):
+def sprint(handler, request):
 	for case in switch(len(request['path'])):
 		if case(0):
 			redirect('/projects')
-			break
-		if case(1):
-			showSprint(handler, request, int(request['path'][0]), assigned)
-			break
-		if case(2):
+		elif case(1):
+			showSprint(handler, request, int(request['path'][0]), None)
+		elif case(2) and request['path'][1] == 'info':
+			showInfo(handler, request, int(request['path'][0]))
+		else:
 			print ErrorBox('Sprints', "Unable to handle request for <b>%s</b>" % stripTags('/'.join(request['path'])))
 			break
 
@@ -222,6 +223,8 @@ def sprintPost(handler, request, p_id, p_rev_id, p_field, p_value):
 				break
 			elif case('assigned'):
 				parsedValue = User.load(username = p_value)
+				if not parsedValue:
+					die("Unknown user: <b>%s</b>" % stripTags(p_value))
 				break
 			elif case('hours'):
 				parsedValue = int(p_value)
@@ -248,6 +251,33 @@ def sprintPost(handler, request, p_id, p_rev_id, p_field, p_value):
 	# 299 - error
 	request['code'] = 200
 	print "Done"
+
+def showInfo(handler, request, id):
+	requirePriv(handler, 'User')
+	sprint = Sprint.load(id)
+	if not sprint:
+		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
+		done()
+	tasks = sprint.getTasks()
+
+	handler.title(sprint.safe.name)
+
+	print (tabs << 'info') % id
+
+	print "<b>Hours</b><br>"
+	print "Remaining: %d<br>" % sum(task.hours for task in tasks)
+	print "<br>"
+	print "<b>Sprint goals</b><br>"
+	print "<table border=0>"
+	for clr in ['red', 'orange', 'yellow', 'green', 'blue', 'purple']:
+		print "<tr><td><img src=\"/static/images/tag-%s.png\"></td><td>Sprint goal %s</td></tr>" % (clr, clr)
+	print "</table>"
+	print "<br>"
+	print "<b>Members</b><br>"
+	print "<select name=\"members\" id=\"select-members\" multiple>"
+	for user in sorted(User.loadAll()):
+		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user in sprint.members else '', user.safe.username)
+	print "</select>"
 
 @get('sprints/new')
 def newSprint(handler, request, project):

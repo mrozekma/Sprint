@@ -43,7 +43,7 @@ function setup_hours_events() {
 		}
 		field.val('' + val)
 		// dirty($(this));
-		saveTask(task, 'hours', val);
+		save_task(task, 'hours', val);
 	});
 
 	// $("td.hours input").keydown(function(event) {
@@ -54,7 +54,7 @@ function setup_hours_events() {
 		task = $(this).parents('tr.task');
         field = $('input', $(this).parents('.hours'));
 		val = parseInt(field.val(), 10);
-		saveTask(task, 'hours', val);
+		save_task(task, 'hours', val);
 	});
 }
 
@@ -92,7 +92,7 @@ function setup_task_dragging() {
 				pred = row.prev();
 				if(pred.hasClass('task')) { // Inserted after a task
 					// $('form').append($('<input>').attr('type', 'hidden').attr('name', 'taskmove').attr('value', row.attr('taskid') + ':' + pred.attr('taskid')));
-					saveTask(row, 'taskmove', pred.attr('taskid'));
+					save_task(row, 'taskmove', pred.attr('taskid'));
 				} else if(pred.hasClass('group')) { // Inserted after a group header (top of the group)
 					//TODO Save
 					unimplemented('Index 0 task move');
@@ -210,7 +210,7 @@ function setup_group_arrows() {
 
 function apply_filters() {
 	assigned = $('#filter-assigned a.selected');
-	status = $('#filter-status a.selected');
+	statuses = $('#filter-status a.selected');
 	tasks = $('tr.task');
 
 	tasks.show();
@@ -221,7 +221,7 @@ function apply_filters() {
 		});
 	}
 
-	if(status.length > 0) {
+	if(statuses.length > 0) {
 		$('#filter-status a:not(.selected)').each(function() {
 			tasks.filter('[status="' + $(this).attr('status') + '"]').hide();
 		});
@@ -292,7 +292,8 @@ function resort_tasks(sort) {
 
 function fancy_cells(table_selector) {
 	$(table_selector).sortable({
-		items: 'tr',
+		items: 'tr:not(.nodrag)',
+		containment: table_selector,
 		start: function(event, ui) {
 			row = $(ui.item[0]);
 			if(row.hasClass('group')) { // Moving a group
@@ -300,7 +301,7 @@ function fancy_cells(table_selector) {
 			} else if(row.hasClass('task')) { // Moving a task
 			}
 		},
-		update: function(event, ui) {
+		stop: function(event, ui) {
 			row = $(ui.item[0]);
 			$('tr.task.hide-temp').removeClass('hide-temp');
 			// row.addClass('dirty');
@@ -320,17 +321,17 @@ function fancy_cells(table_selector) {
 
 				pred = row.prev();
 				if(!pred.length) { // First row in the table
-					saveTask(row, 'taskmove', '[0]');
+					save_task(row, 'taskmove', '[0]');
 				} else if(pred.hasClass('task')) { // Inserted after a task
-					saveTask(row, 'taskmove', pred.attr('taskid'));
+					save_task(row, 'taskmove', pred.attr('taskid'));
 				} else if(pred.hasClass('group')) { // Inserted after a group header (top of the group)
 					//TODO Save
-					saveTask(row, 'taskmove', '[' + new_group_id + ']');
+					save_task(row, 'taskmove', '[' + new_group_id + ']');
 				} else {
 					//FAIL
 				}
 			}
-		}
+		},
 	});
 
 	// $(table_selector).tableDnD({onDragClass: 'dragging'});
@@ -342,7 +343,7 @@ function fancy_cells(table_selector) {
 			if(c.previous != c.current) {
 				task = $(this).parents('tr.task');
 				// dirty($(this));
-				saveTask(task, 'name', c.current);
+				save_task(task, 'name', c.current);
 			}
 		}
 	});
@@ -356,12 +357,12 @@ function fancy_cells(table_selector) {
 			if(c.previous != c.current) {
 				task = $(this).parents('tr.task');
 				// dirty($(this));
-				saveTask(task, 'assigned', c.current);
+				save_task(task, 'assigned', c.current);
 			}
 		}
 	});
 
-	$('td.name img').contextMenu({
+	$('tr.task img.status').contextMenu({
 		menu: 'status-menu'
 	}, function(action, el, pos) {
 		task = $(el).parents('tr.task');
@@ -372,16 +373,16 @@ function fancy_cells(table_selector) {
 			field.val(action);
 			$(el).attr('src', '/static/images/status-' + action.replace(' ', '-') + '.png');
 			// dirty($(el));
-			saveTask(task, 'status', action);
+			save_task(task, 'status', action);
 		}
 	});
 }
 
-function saveTask(task, field, value) {
-	saveFields(task.attr('taskid'), task.attr('revid'), field, value);
+function save_task(task, field, value) {
+	save_fields(task.attr('taskid'), task.attr('revid'), field, value);
 }
 
-function saveFields(task_id, old_rev_id, field, value) {
+function save_fields(task_id, old_rev_id, field, value) {
 	//TODO
 	console.log("Saving change to " + task_id + "(" + old_rev_id + "): " + field + " <- " + value);
 	$.post("/sprints/" + sprintid + "/post", {'id': task_id, 'rev_id': old_rev_id, 'field': field, 'value': value}, function(data, text, request) {
@@ -411,6 +412,14 @@ function saveFields(task_id, old_rev_id, field, value) {
 
 		box.fadeIn();
 	});
+}
+
+function delete_task(task_id) {
+	row = $('tr.task[taskid=' + task_id + ']');
+	if(row) {
+		row.fadeOut();
+		//TODO Post
+	}
 }
 
 function unimplemented(what) {
