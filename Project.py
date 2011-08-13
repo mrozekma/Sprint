@@ -1,7 +1,8 @@
+from rorn.ResponseWriter import ResponseWriter
+
 from DB import ActiveRecord, db
 from User import User
 from utils import stripTags
-from ResponseWriter import ResponseWriter
 
 class Project(ActiveRecord):
 	owner = ActiveRecord.idObjLink(User, 'ownerid')

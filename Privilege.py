@@ -1,5 +1,6 @@
+from rorn.Box import LoginBox, ErrorBox, TintedBox
+
 from DB import ActiveRecord
-from Box import LoginBox, ErrorBox, TintedBox
 from utils import *
 
 class Privilege(ActiveRecord):

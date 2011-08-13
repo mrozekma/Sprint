@@ -1,12 +1,11 @@
 from __future__ import with_statement
-from ResponseWriter import ResponseWriter
-from Box import ErrorBox, TintedBox
-from Privilege import dev
-from utils import *
-
 from SilverCity import Python as SyntaxHighlighter
 from StringIO import StringIO
 from os.path import abspath, isabs, isfile
+
+from ResponseWriter import ResponseWriter
+from rorn.Box import ErrorBox, TintedBox
+from utils import *
 
 def showCode(filename, line, around = None):
 	parsedFilename = filename if isabs(filename) else abspath("%s/%s" % (basePath(), filename))

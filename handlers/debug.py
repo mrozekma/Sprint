@@ -1,5 +1,6 @@
+from rorn.Session import Session
+
 from Table import LRTable
-from Session import Session
 from Project import Project
 
 @get('dbg')

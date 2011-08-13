@@ -1,7 +1,8 @@
 import traceback
 import sys
-from HTTPHandler import handlers
-from ResponseWriter import ResponseWriter
+
+from rorn.HTTPHandler import handlers
+from rorn.ResponseWriter import ResponseWriter
 
 class Tabs:
 	def __init__(self):
