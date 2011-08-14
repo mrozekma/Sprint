@@ -369,4 +369,5 @@ def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members
 	Group(sprint.id, 'Miscellaneous', 1, False).save()
 
 	request['code'] = 299
-	delay(handler, TintedBox("Added sprint <b>%s</b>" % sprint.safe.name, 'green'))
+	# delay(handler, TintedBox("Added sprint <b>%s</b>" % sprint.safe.name, 'green'))
+	print "/sprints/%d" % sprint.id

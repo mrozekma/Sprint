@@ -19,7 +19,7 @@ $(document).ready(function() {
 			case 299:
 				// box.attr('class', 'tint green');
 				// $('span', box).html(data);
-				window.location = '/';
+				window.location = data;
 				return;
 			default:
 				box.attr('class', 'tint blood');
