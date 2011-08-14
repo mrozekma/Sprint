@@ -5,22 +5,22 @@ import HTTPHandler
 import menu
 from utils import *
 
-class LeftMenu:
-	def __init__(self):
-		self.entries = []
+# class LeftMenu:
+	# def __init__(self):
+		# self.entries = []
 
-	# text => url
-	def __setitem__(self, k, v):
-		self.entries.append((k, v))
+	# # text => url
+	# def __setitem__(self, k, v):
+		# self.entries.append((k, v))
 
-	def clear(self):
-		self.entries = []
+	# def clear(self):
+		# self.entries = []
 
-	def __str__(self):
-		if len(self.entries) == 0:
-			return "&nbsp;"
+	# def __str__(self):
+		# if len(self.entries) == 0:
+			# return "&nbsp;"
 
-		return "<br>\n".join(["<a href=\"%s\">%s</a>" % (url, text) for (text, url) in self.entries])
+		# return "<br>\n".join(["<a href=\"%s\">%s</a>" % (url, text) for (text, url) in self.entries])
 
 def header(handler, path):
 	print "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">"
