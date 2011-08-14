@@ -1,5 +1,5 @@
 import hashlib
-
+from os.path import dirname
 
 # http://smitbones.blogspot.com/2008/01/python-strip-html-tags-function.html
 def stripTags(value):
@@ -34,3 +34,6 @@ def pluralize(num, singular, plural):
 def globalize(f):
 	__builtins__[f.func_name] = f
 	return f
+
+def basePath():
+	return dirname(__file__).replace('/rorn', '')
