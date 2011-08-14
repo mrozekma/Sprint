@@ -4,6 +4,7 @@ from User import User
 from Project import Project
 from Sprint import Sprint
 from Group import Group
+from Goal import Goal
 from inspect import getmembers
 from datetime import datetime, date
 
@@ -35,12 +36,13 @@ class Task(ActiveRecord):
 	creator = ActiveRecord.idObjLink(User, 'creatorid')
 	assigned = ActiveRecord.idObjLink(User, 'assignedid')
 	group = ActiveRecord.idObjLink(Group, 'groupid')
+	goal = ActiveRecord.idObjLink(Goal, 'goalid')
 
 	def getStatus(self): return statuses[self.status]
 	def setStatus(self, stat): self.status = stat.name
 	stat = property(getStatus, setStatus)
 
-	def __init__(self, groupid, sprintid, creatorid, assignedid, name, status, hours, seq = None, timestamp = None, revision = 1, id = None):
+	def __init__(self, groupid, sprintid, creatorid, assignedid, goalid, name, status, hours, seq = None, timestamp = None, revision = 1, id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.revision = revision
@@ -48,6 +50,7 @@ class Task(ActiveRecord):
 		self.sprintid = sprintid
 		self.creatorid = creatorid
 		self.assignedid = assignedid
+		self.goalid = goalid
 		self.name = name
 		self.status = status
 		self.hours = hours
@@ -94,7 +97,7 @@ class Task(ActiveRecord):
 			# Pre-insert since tasks.id isn't autoincrementing
 			rows = db().select("SELECT MAX(id) FROM tasks");
 			rows = [x for x in rows]
-			self.id = rows[0]['MAX(id)'] + 1
+			self.id = (rows[0]['MAX(id)'] or 0) + 1
 			db().update("INSERT INTO tasks(id, revision) VALUES(?, ?)", self.id, 1)
 
 			# Shift everything after this sequence

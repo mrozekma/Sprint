@@ -412,6 +412,10 @@ table.tasks tr.task img.status {
 	cursor: pointer;
 }
 
+table.tasks tr.task img.goal {
+	cursor: pointer;
+}
+
 table.tasks tr.task td.assigned {
 	/* width: 10%; */
 	white-space: nowrap;

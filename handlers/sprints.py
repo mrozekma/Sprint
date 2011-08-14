@@ -15,6 +15,7 @@ from Task import Task, statuses, statusMenu
 from User import User
 from Group import Group
 from Tabs import Tabs
+from Goal import Goal
 from utils import *
 
 # groupings = ['status', 'owner', 'hours']
@@ -22,6 +23,7 @@ from utils import *
 tabs = Tabs()
 tabs['info'] = '/sprints/%d/info'
 tabs['backlog'] = '/sprints/%d'
+tabs['metrics'] = '/sprints/%d/metrics'
 
 @get('sprints')
 def sprint(handler, request):
@@ -29,14 +31,16 @@ def sprint(handler, request):
 		if case(0):
 			redirect('/projects')
 		elif case(1):
-			showSprint(handler, request, int(request['path'][0]), None)
+			showBacklog(handler, request, int(request['path'][0]), None)
 		elif case(2) and request['path'][1] == 'info':
 			showInfo(handler, request, int(request['path'][0]))
+		elif case(2) and request['path'][1] == 'metrics':
+			showMetrics(handler, request, int(request['path'][0]))
 		else:
 			print ErrorBox('Sprints', "Unable to handle request for <b>%s</b>" % stripTags('/'.join(request['path'])))
 			break
 
-def showSprint(handler, request, id, assigned):
+def showBacklog(handler, request, id, assigned):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
 	if not sprint:
@@ -60,6 +64,8 @@ def showSprint(handler, request, id, assigned):
 		print "    $('#filter-assigned a[assigned=\"%s\"]').click();" % assigned
 		print "});"
 	print "</script>"
+
+	print (tabs << 'backlog') % id
 
 	# print "<div class=\"group-buttons\">"
 	# for g in groupings:
@@ -92,6 +98,20 @@ def showSprint(handler, request, id, assigned):
 			print "<li class=\"%s\"><a href=\"#%s\" style=\"background-image:url('%s');\">%s</a></li>" % (cls, status.name, status.getIcon(), status.text)
 	print "</ul>"
 
+	print "<ul id=\"goal-menu\" class=\"contextMenu\">"
+	print "<li><a href=\"#0\" style=\"background-image:url('/static/images/tag-none.png');\">None</a></li>"
+	for goal in sprint.getGoals():
+		if goal.name != '':
+			print "<li><a href=\"#%s\" style=\"background-image:url('/static/images/tag-%s.png');\">%s</a></li>" % (goal.id, goal.color, goal.safe.name)
+	print "</ul>"
+
+	print "<script type=\"text/javascript\">"
+	print "goal_imgs = Array();"
+	print "goal_imgs[0] = '/static/images/tag-none.png';"
+	for goal in sprint.getGoals():
+		print "goal_imgs[%d] = '/static/images/tag-%s.png';" % (goal.id, goal.color)
+	print "</script>"
+
 	print "<div id=\"filter-assigned\">"
 	print Button('None').negative()
 	for member in sorted(sprint.members):
@@ -104,16 +124,12 @@ def showSprint(handler, request, id, assigned):
 		print "<a class=\"fancy\" status=\"%s\" href=\"#\"><img src=\"%s\">%s</a>" % (status.name, status.getIcon(), status.text)
 	print "</div><br>"
 
-	print (tabs << 'backlog') % id
-
 	print "<form method=\"post\" action=\"/sprints/%d/post\">" % id
 	# print Button('Save', image = 'tick.png', id = 'save-button').positive()
 
-	# for task in tasks:
-		# print "<input type=\"hidden\" name=\"revision[%d]\" value=\"%d\">" % (task.id, task.revision)
-		# print "<input type=\"hidden\" name=\"status[%d]\" value=\"%s\">" % (task.id, task.status)
-		# print "<input type=\"hidden\" name=\"name[%d]\" value=\"%s\">" % (task.id, task.name)
-		# print "<input type=\"hidden\" name=\"assigned[%d]\" value=\"%s\">" % (task.id, task.assigned.username)
+	for task in tasks:
+		print "<input type=\"hidden\" name=\"status[%d]\" value=\"%s\">" % (task.id, task.status)
+		print "<input type=\"hidden\" name=\"goal[%d]\" value=\"%s\">" % (task.id, task.goal.id if task.goal else 0)
 
 	print "<table border=0 id=\"all-tasks\" class=\"tasks\">"
 	print "<thead>"
@@ -142,12 +158,12 @@ def showSprint(handler, request, id, assigned):
 	print "</form>"
 
 def printTask(task, days, group = None):
-	print "<tr class=\"task\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" status=\"%s\" assigned=\"%s\">" % (task.id, task.id, task.revision, group.id if group else 0, task.stat.name, task.assigned.username)
+	print "<tr class=\"task\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" goalid=\"%d\" status=\"%s\" assigned=\"%s\">" % (task.id, task.id, task.revision, group.id if group else 0, task.goal.id if task.goal else 0, task.stat.name, task.assigned.username)
 
 	print "<td class=\"flags\">"
-	if task.id == 11:
-		print "<img src=\"/static/images/star.png\">&nbsp;"
-	print "<img src=\"/static/images/tag-blue.png\">&nbsp;<img id=\"status_%d\" class=\"status\" src=\"%s\">" % (task.id, task.stat.icon)
+	# print "<img src=\"/static/images/star.png\">&nbsp;"
+	print "<img id=\"goal_%d\" class=\"goal\" src=\"/static/images/tag-%s.png\" title=\"%s\">&nbsp;" % ((task.goal.id, task.goal.color, task.goal.safe.name) if task.goal else (0, 'none', 'None'))
+	print "<img id=\"status_%d\" class=\"status\" src=\"%s\">" % (task.id, task.stat.icon)
 	print "</td>"
 
 	print "<td class=\"name\"><span id=\"name_span_%d\">%s</span></td>" % (task.id, task.name)
@@ -218,10 +234,17 @@ def sprintPost(handler, request, p_id, p_rev_id, p_field, p_value):
 	if task.revision != p_rev_id: #TODO Implement collision support
 		die("Collision with %s detected" % task.creator)
 
-	if p_field in ['status', 'name', 'assigned', 'hours']:
+	if p_field in ['status', 'name', 'goal', 'assigned', 'hours']:
 		for case in switch(p_field):
 			if case('status') or case('name'):
 				parsedValue = p_value
+				break
+			elif case('goal'):
+				parsedValue = Goal.load(p_value)
+				if not parsedValue:
+					die("Unknown goal: <b>%s</b>" % stripTags(p_value))
+				if parsedValue.sprint != sprint:
+					die("Attempting to use goal output the specified sprint")
 				break
 			elif case('assigned'):
 				parsedValue = User.load(username = p_value)
@@ -264,22 +287,77 @@ def showInfo(handler, request, id):
 
 	handler.title(sprint.safe.name)
 
+	print "<style type=\"text/css\">"
+	print "#post-status {display: none}"
+	print "table input.goal {width: 400px;}"
+	print "#select-members, #save-button {width: 432px}"
+	print "</style>"
+	print "<script src=\"/static/sprint-info.js\" type=\"text/javascript\"></script>"
+
+	print TintedBox('Loading...', scheme = 'blue', id = 'post-status')
+
 	print (tabs << 'info') % id
 
-	print "<b>Hours</b><br>"
-	print "Remaining: %d<br>" % sum(task.hours for task in tasks)
-	print "<br>"
 	print "<b>Sprint goals</b><br>"
+	print "<form method=\"post\" action=\"/sprints/info?id=%d\">" % sprint.id
 	print "<table border=0>"
-	for clr in ['red', 'orange', 'yellow', 'green', 'blue', 'purple']:
-		print "<tr><td><img src=\"/static/images/tag-%s.png\"></td><td>Sprint goal %s</td></tr>" % (clr, clr)
+	for goal in sprint.getGoals():
+		print "<tr><td><img src=\"/static/images/tag-%s.png\"></td><td><input type=\"text\" class=\"goal\" name=\"goals[%d]\" goalid=\"%d\" value=\"%s\"></td></tr>" % (goal.color, goal.id, goal.id, goal.safe.name)
 	print "</table>"
 	print "<br>"
 	print "<b>Members</b><br>"
-	print "<select name=\"members\" id=\"select-members\" multiple>"
+	print "<select name=\"members[]\" id=\"select-members\" multiple>"
 	for user in sorted(User.loadAll()):
 		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user in sprint.members else '', user.safe.username)
-	print "</select>"
+	print "</select><br>"
+	print Button('Save', id = 'save-button', type = 'button').positive()
+	print "</form>"
+
+@post('sprints/info')
+def sprintInfoPost(handler, request, id, p_goals, p_members):
+	def die(msg):
+		print msg
+		done()
+
+	request['wrappers'] = False
+
+	if not handler.session['user']:
+		die("You must be logged in to modify sprint info")
+
+	sprint = Sprint.load(id)
+	if not sprint:
+		die("There is no sprint with ID %d" % id)
+
+	if not all([Goal.load(id) for id in p_goals]):
+		die("One or more goals do not exist")
+	if not all([User.load(int(id)) for id in p_members]):
+		die("One or more members do not exist")
+
+	for id in p_goals:
+		goal = Goal.load(id)
+		goal.name = p_goals[id]
+		goal.save()
+
+	sprint.members = map(User.load, p_members)
+	sprint.save()
+
+	request['code'] = 299
+	print "Saved changes"
+
+def showMetrics(handler, request, id):
+	requirePriv(handler, 'User')
+	sprint = Sprint.load(id)
+	if not sprint:
+		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
+		done()
+	tasks = sprint.getTasks()
+
+	handler.title(sprint.safe.name)
+
+	print (tabs << 'metrics') % id
+
+	print "<b>Hours</b><br>"
+	print "Remaining: %d<br>" % sum(task.hours for task in tasks)
 
 @get('sprints/new')
 def newSprint(handler, request, project):
@@ -290,9 +368,6 @@ def newSprint(handler, request, project):
 	if not project:
 		print ErrorBox('Invalid project', "No project with ID <b>%d</b>" % id)
 		done()
-
-	from Privilege import dev
-	dev(handler)
 
 	print "<style type=\"text/css\">"
 	print "#post-status {display: none}"
@@ -313,10 +388,10 @@ def newSprint(handler, request, project):
 	print "</select>"
 	print "</td></tr>"
 	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\" id=\"defaultfocus\"></td></tr>"
-	print "<tr><td class=\"left\">Start:</td><td class=\"right\"><input type=\"text\" name=\"start\" class=\"date\"></td></tr>"
+	print "<tr><td class=\"left\">Start:</td><td class=\"right\"><input type=\"text\" name=\"start\" class=\"date\" value=\"%s\"></td></tr>" % date.today().strftime('%m/%d/%Y')
 	print "<tr><td class=\"left\">End:</td><td class=\"right\"><input type=\"text\" name=\"end\" class=\"date\"></td></tr>"
 	print "<tr><td class=\"left\">Members:</td><td class=\"right\">"
-	print "<select name=\"members\" id=\"select-members\" multiple>"
+	print "<select name=\"members[]\" id=\"select-members\" multiple>"
 	for user in sorted(User.loadAll()):
 		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user == handler.session['user'] else '', user.safe.username)
 	print "</select>"
@@ -367,6 +442,8 @@ def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members
 	sprint.save()
 	# Make a default 'Miscellaneous' group so there's something to add tasks to
 	Group(sprint.id, 'Miscellaneous', 1, False).save()
+	# Make the standard set of sprint goals
+	Goal.newSet(sprint)
 
 	request['code'] = 299
 	# delay(handler, TintedBox("Added sprint <b>%s</b>" % sprint.safe.name, 'green'))

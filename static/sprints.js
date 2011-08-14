@@ -376,6 +376,24 @@ function fancy_cells(table_selector) {
 			save_task(task, 'status', action);
 		}
 	});
+
+	$('tr.task img.goal').contextMenu({
+		menu: 'goal-menu'
+	}, function(action, el, pos) {
+		task = $(el).parents('tr.task');
+		id = $(el).attr('id').replace('goal_', '');
+		field = $('[name="goal[' + id + ']"]');
+		console.log(action);
+		console.log(id);
+		if(field.val() != action) {
+			task.attr('goal', action);
+			field.val(action);
+			console.log($(el));
+			console.log($('#goal-menu a[href="#' + action + '"]').css('background-image'));
+			$(el).attr('src', goal_imgs[action]);
+			save_task(task, 'goal', action);
+		}
+	});
 }
 
 function save_task(task, field, value) {

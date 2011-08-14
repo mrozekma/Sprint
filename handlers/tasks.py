@@ -6,6 +6,7 @@ from rorn.Box import TintedBox, ErrorBox
 from Privilege import requirePriv
 from Task import Task, statuses, statusMenu
 from Group import Group
+from Goal import Goal
 from User import User
 from Table import LRTable
 from Button import Button
@@ -34,7 +35,7 @@ def showTask(handler, request, id):
 	print TintedBox('Unimplemented', scheme = 'blood')
 	print "<br>"
 
-	m = ['id', 'revision', 'sprintid', 'sprint', 'creatorid', 'creator', 'assignedid', 'assigned', 'name', 'status', 'hours', 'timestamp']
+	m = ['id', 'revision', 'sprintid', 'sprint', 'creatorid', 'creator', 'assignedid', 'assigned', 'goalid', 'goal', 'name', 'status', 'hours', 'timestamp']
 	revs = task.getRevisions()
 
 	from Table import Table
@@ -98,6 +99,13 @@ def newTaskSingle(handler, request, group):
 	print "</select>"
 	print "</td></tr>"
 	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\" id=\"defaultfocus\"></td></tr>"
+	print "<tr><td class=\"left\">Sprint Goal:</td><td class=\"right\">"
+	print "<select id=\"select-goal\" name=\"goal\" size=\"5\">"
+	print "<option value=\"0\" selected>None</option>"
+	for goal in group.sprint.getGoals():
+		print "<option value=\"%d\">%s</option>" % (goal.id, goal.safe.name)
+	print "</select>"
+	print "</td></tr>"
 	print "<tr><td class=\"left\">Status:</td><td class=\"right\">"
 	print "<select id=\"select-status\" name=\"status\" size=\"10\">"
 	first = True
@@ -122,7 +130,7 @@ def newTaskSingle(handler, request, group):
 	print "</form>"
 
 @post('tasks/new/single')
-def newTaskPost(handler, request, p_group, p_name, p_status, p_assigned, p_hours):
+def newTaskPost(handler, request, p_group, p_name, p_goal, p_status, p_assigned, p_hours):
 	def die(msg):
 		print msg
 		done()
@@ -139,9 +147,17 @@ def newTaskPost(handler, request, p_group, p_name, p_status, p_assigned, p_hours
 	if not assigned:
 		die("No user with ID <b>%d</b>" % assignedid)
 
+	goalid = to_int(p_goal, 'goal', die)
+	if goalid != 0:
+		goal = Goal.load(goalid)
+		if not goal:
+			die("No goal with ID <b>%d</b>" % goalid)
+		if goal.sprint != group.sprint:
+			die("Goal does not belong to the correct sprint")
+
 	hours = to_int(p_hours, 'hours', die)
 
-	task = Task(groupid, group.sprintid, handler.session['user'].id, assignedid, p_name, p_status, hours)
+	task = Task(groupid, group.sprintid, handler.session['user'].id, assignedid, goalid, p_name, p_status, hours)
 	task.save()
 
 	request['code'] = 299

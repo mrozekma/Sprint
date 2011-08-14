@@ -1,5 +1,4 @@
 from BaseHTTPServer import BaseHTTPRequestHandler
-from Session import Session, timestamp
 from inspect import getargspec
 import re
 import cgi
@@ -7,6 +6,8 @@ import sys
 from sqlite3 import OperationalError
 import traceback
 
+from Session import Session, timestamp
+from Box import ErrorBox
 from code import showCode, highlightCode
 from ResponseWriter import ResponseWriter
 from utils import *
@@ -230,8 +231,23 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 	def do_POST(self):
 		form = cgi.FieldStorage(fp = self.rfile, headers = self.headers, environ={'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': self.headers['Content-Type']}, keep_blank_values = True)
-		data = dict([(k, map(lambda v: v.value, form[k]) if type(form[k]) is list else form[k].value) for k in form])
-		print "DEBUG: %s" % self.rfile
+		data = {}
+		for k in form:
+			if k[-2:] == '[]':
+				data[k[:-2]] = form.getlist(k)
+			elif type(form[k]) is list:
+				self.session = Session.load(Session.determineKey(self))
+				self.hackify() #TODO Remove
+				self.contentType = 'text/html'
+				self.response = "Multiple values for POST key: %s" % k
+				self.sendHead(200)
+				self.wfile.write(self.response)
+				return
+			else:
+				print form[k]
+				data[k] = form[k].value
+		# data = dict([(k, map(lambda v: v.value, form[k]) if type(form[k]) is list else form[k].value) for k in form])
+		# print "DEBUG: %s" % self.rfile
 		self.do_HEAD('post', data)
 		self.wfile.write(self.response)
 

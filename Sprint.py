@@ -37,6 +37,10 @@ class Sprint(ActiveRecord):
 		from Group import Group
 		return Group.loadAll(sprintid = self.id, orderby = orderby)
 
+	def getGoals(self):
+		from Goal import Goal
+		return Goal.loadAll(sprintid = self.id)
+
 	def getFormattedName(self):
 		cls = 'sprint-name active' if self.isActive() else 'sprint-name'
 		return "<span class=\"%s\">%s</span>" % (cls, self.safe.name)
