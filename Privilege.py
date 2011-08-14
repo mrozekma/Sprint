@@ -29,6 +29,9 @@ def requirePriv(handler, priv):
 		print ErrorBox('Forbidden', "You need the <b>%s</b> privilege" % priv)
 		done()
 
+def admin(handler):
+	requirePriv(handler, 'Dev')
+
 def dev(handler):
 	if handler.session['user'].hasPrivilege('Dev'):
 		print TintedBox('Under development', scheme = 'yellow')

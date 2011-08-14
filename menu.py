@@ -3,6 +3,7 @@ from utils import andmap
 menu = [
 	('Home', '/', []),
 	('Users', '/users', []),
+	('Admin', '/admin', ['Dev']),
 	('Logout', '/logout', ['User'])
 ]
 
