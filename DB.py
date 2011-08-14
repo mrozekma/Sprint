@@ -1,6 +1,7 @@
 from sqlite3 import connect, Row
 from inspect import getargspec, getmembers
 import sys
+
 from utils import stripTags
 
 class DB:
@@ -46,6 +47,11 @@ def db():
 	if not singleton:
 		singleton = DB()
 	return singleton
+
+def dbReconnect():
+	global singleton
+	singleton = None
+	return db()
 
 class DBError(Exception): pass
 # class NoRecordsError(DBError): pass
