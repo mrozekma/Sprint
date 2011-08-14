@@ -7,6 +7,7 @@ from rorn.ResponseWriter import ResponseWriter
 from rorn.Box import ErrorBox
 from rorn.code import showCode
 
+from Privilege import admin
 from Task import Task
 from Button import *
 from utils import *
@@ -14,7 +15,7 @@ from utils import *
 @get('code')
 def code(handler, request, filename, line):
 	handler.title('Code')
-	dev(handler)
+	admin(handler)
 
 	showCode(filename, int(line), 2)
 
