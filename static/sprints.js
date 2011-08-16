@@ -199,6 +199,7 @@ function setup_group_arrows() {
 			$(this).attr('src', '/static/images/collapse.png');
 			groupid=$(this).parents('tr').attr('groupid');
 			$('tr.task[groupid=' + groupid + ']').show();
+			apply_filters();
 			break;
 		}
 	});
@@ -226,6 +227,11 @@ function apply_filters() {
 			tasks.filter('[status="' + $(this).attr('status') + '"]').hide();
 		});
 	}
+
+	$('tr.group img[src="/static/images/expand.png"]').each(function(e) {
+		groupid=$(this).parents('tr').attr('groupid');
+		$('tr.task[groupid=' + groupid + ']').hide();
+	});
 }
 
 function resort_tasks(sort) {
