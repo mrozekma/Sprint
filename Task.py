@@ -116,11 +116,12 @@ class Task(ActiveRecord):
 
 	def revise(self):
 		cls = self.__class__
+
+		self.revision += 1 # Bump the revision number
+
 		fields = [x for x in set(cls.fields())]
 		vals = dict(getmembers(self))
-
 		boundArgs = [vals[k] for k in fields]
-		boundArgs[fields.index('revision')] += 1 # Bump the revision number
 
 		placeholders = ', '.join(map(lambda x: "?", fields))
 		db().update("INSERT INTO %s(%s) VALUES(%s)" % (cls.table(), ', '.join(fields), placeholders), *boundArgs)
