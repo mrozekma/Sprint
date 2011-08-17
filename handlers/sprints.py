@@ -1,5 +1,5 @@
 from __future__ import with_statement
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import itertools
 from json import dumps as toJS
 
@@ -362,10 +362,185 @@ def showMetrics(handler, request, id):
 
 	handler.title(sprint.safe.name)
 
+	tasks = sprint.getTasks()
+	oneday = timedelta(1)
+	start, end = tsToDate(sprint.start), tsToDate(sprint.end)
+
+	print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts.js\"></script>"
+	print """
+<script type=\"text/javascript\"> //"
+$(document).ready(function() {
+	new Highcharts.Chart({
+		chart: {
+			renderTo: 'chart-general',
+			defaultSeriesType: 'line',
+			zoomType: 'x',
+		},
+
+		title: {
+			text: ''
+		},
+
+		plotOptions: {
+			line: {
+				dataLabels: {
+					enabled: true
+				}
+			}
+		},
+
+		tooltip: {
+			shared: true
+		},
+
+		credits: {
+			enabled: false
+		},
+
+		xAxis: {
+			type: 'datetime',
+			dateTimeLabelFormats: {
+				day: '%%a'
+			},
+			tickInterval: 24 * 3600 * 1000,
+			maxZoom: 48 * 3600 * 1000,
+			title: {
+				text: 'Day'
+			},
+			plotBands: [{
+				color: '#DDD',
+				from: %d,
+				to: %d
+			}],
+		},
+
+		yAxis: {
+			min: 0,
+			title: {
+				text: 'Hours'
+			}
+		},
+
+		series: [
+			{
+				name: 'Hours needed',
+				pointStart: %d,
+				pointInterval: 24 * 3600 * 1000,
+				data: [
+""" % (dateToTs(datetime.now()) * 1000, sprint.end * 1000, sprint.start * 1000)
+
+	seek = start
+	while seek <= end:
+		print "%d," % sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in tasks]),
+		seek += oneday
+
+	print """
+				]
+			},
+
+			{
+				name: 'Availability',
+				pointStart: %d,
+				pointInterval: 24 * 3600 * 1000,
+				data: [
+""" % (sprint.start * 1000)
+
+	#TODO Implement per-user availability
+	perDay = len(sprint.members) * 8
+	numDays = (end - start).days
+	print ', '.join(map(str, range(numDays*perDay, -1, -perDay)))
+
+	print """
+				]
+			}
+		]
+	});
+
+	new Highcharts.Chart({
+		chart: {
+			renderTo: 'chart-by-user',
+			defaultSeriesType: 'line',
+			zoomType: 'x',
+		},
+
+		title: {
+			text: ''
+		},
+
+		/*
+		plotOptions: {
+			line: {
+				dataLabels: {
+					enabled: true
+				}
+			}
+		},
+		*/
+
+		tooltip: {
+			shared: true
+		},
+
+		credits: {
+			enabled: false
+		},
+
+		xAxis: {
+			type: 'datetime',
+			dateTimeLabelFormats: {
+				day: '%%a'
+			},
+			tickInterval: 24 * 3600 * 1000,
+			maxZoom: 48 * 3600 * 1000,
+			title: {
+				text: 'Day'
+			},
+			plotBands: [{
+				color: '#DDD',
+				from: %d,
+				to: %d
+			}],
+		},
+
+		yAxis: {
+			min: 0,
+			title: {
+				text: 'Hours'
+			}
+		},
+
+		series: [
+""" % (dateToTs(datetime.now()) * 1000, sprint.end * 1000)
+
+	for user in sorted(sprint.members):
+		print "			{"
+		print "				name: '%s'," % user.username
+		print "				pointStart: %d," % (sprint.start * 1000)
+		print "				pointInterval: 24 * 3600 * 1000,"
+		print "				data: [",
+		userTasks = filter(lambda t: t.assigned == user, tasks)
+		seek = start
+		while seek <= end:
+			print "%d," % sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in userTasks]),
+			seek += oneday
+		print "],"
+		print "				visible: true"
+		print "			},"
+
+	print """
+]
+	});
+});
+</script>
+"""
+
 	print (tabs << 'metrics') % id
 
-	print "<b>Hours</b><br>"
-	print "Remaining: %d<br>" % sum(task.hours for task in tasks)
+	print "<h2>Hours (general)</h2>"
+	print "<div id=\"chart-general\"></div>"
+
+	print "<h2>Hours (by user)</h2>"
+	print "<div id=\"chart-by-user\"></div>"
 
 @get('sprints/new')
 def newSprint(handler, request, project):
