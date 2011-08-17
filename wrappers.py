@@ -23,7 +23,8 @@ from utils import *
 		# return "<br>\n".join(["<a href=\"%s\">%s</a>" % (url, text) for (text, url) in self.entries])
 
 def header(handler, path):
-	print "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">"
+	# print "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">"
+	print "<!DOCTYPE html>"
 	print "<html>"
 	print "<head>"
 	print "<title>$title$</title>"
