@@ -378,7 +378,7 @@ function fancy_cells(table_selector) {
 			task.attr('status', action);
 			field.val(action);
 			$(el).attr('src', '/static/images/status-' + action.replace(' ', '-') + '.png');
-			// dirty($(el));
+			$(el).attr('title', status_texts[action]);
 			save_task(task, 'status', action);
 		}
 	});
@@ -394,9 +394,8 @@ function fancy_cells(table_selector) {
 		if(field.val() != action) {
 			task.attr('goal', action);
 			field.val(action);
-			console.log($(el));
-			console.log($('#goal-menu a[href="#' + action + '"]').css('background-image'));
 			$(el).attr('src', goal_imgs[action]);
+			$(el).attr('title', goal_texts[action]);
 			save_task(task, 'goal', action);
 		}
 	});

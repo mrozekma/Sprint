@@ -1,6 +1,7 @@
 from __future__ import with_statement
 from datetime import datetime, date
 import itertools
+from json import dumps as toJS
 
 from rorn.Session import delay, undelay
 from rorn.ResponseWriter import ResponseWriter
@@ -106,10 +107,19 @@ def showBacklog(handler, request, id, assigned):
 	print "</ul>"
 
 	print "<script type=\"text/javascript\">"
+	print "status_texts = Array();"
+	for statusBlock in statusMenu:
+		for statusName in statusBlock:
+			status = statuses[statusName]
+			print "status_texts['%s'] = '%s';" % (status.name, status.text)
 	print "goal_imgs = Array();"
 	print "goal_imgs[0] = '/static/images/tag-none.png';"
 	for goal in sprint.getGoals():
 		print "goal_imgs[%d] = '/static/images/tag-%s.png';" % (goal.id, goal.color)
+	print "goal_texts = Array();"
+	print "goal_texts[0] = \"None\";"
+	for goal in sprint.getGoals():
+		print "goal_texts[%d] = %s;" % (goal.id, toJS(goal.name))
 	print "</script>"
 
 	print "<div id=\"filter-assigned\">"
@@ -163,7 +173,7 @@ def printTask(task, days, group = None):
 	print "<td class=\"flags\">"
 	# print "<img src=\"/static/images/star.png\">&nbsp;"
 	print "<img id=\"goal_%d\" class=\"goal\" src=\"/static/images/tag-%s.png\" title=\"%s\">&nbsp;" % ((task.goal.id, task.goal.color, task.goal.safe.name) if task.goal else (0, 'none', 'None'))
-	print "<img id=\"status_%d\" class=\"status\" src=\"%s\">" % (task.id, task.stat.icon)
+	print "<img id=\"status_%d\" class=\"status\" src=\"%s\" title=\"%s\">" % (task.id, task.stat.icon, task.stat.text)
 	print "</td>"
 
 	print "<td class=\"name\"><span id=\"name_span_%d\">%s</span></td>" % (task.id, task.name)
