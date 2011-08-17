@@ -42,13 +42,9 @@ function setup_hours_events() {
 			val = 0;
 		}
 		field.val('' + val)
-		// dirty($(this));
 		save_task(task, 'hours', val);
+		set_status(task, val == 0 ? 'complete' : 'in progress');
 	});
-
-	// $("td.hours input").keydown(function(event) {
-		// dirty($(this));
-	// });
 
 	$("td.hours input").blur(function(event) {
 		task = $(this).parents('tr.task');
@@ -372,15 +368,7 @@ function fancy_cells(table_selector) {
 		menu: 'status-menu'
 	}, function(action, el, pos) {
 		task = $(el).parents('tr.task');
-		id = $(el).attr('id').replace('status_', '');
-		field = $('[name="status[' + id + ']"]');
-		if(field.val() != action) {
-			task.attr('status', action);
-			field.val(action);
-			$(el).attr('src', '/static/images/status-' + action.replace(' ', '-') + '.png');
-			$(el).attr('title', status_texts[action]);
-			save_task(task, 'status', action);
-		}
+		set_status(task, action);
 	});
 
 	$('tr.task img.goal').contextMenu({
@@ -399,6 +387,19 @@ function fancy_cells(table_selector) {
 			save_task(task, 'goal', action);
 		}
 	});
+}
+
+function set_status(task, status_name) {
+	node = $('img.status', task);
+	id = node.attr('id').replace('status_', '');
+	field = $('[name="status[' + id + ']"]');
+	if(field.val() != status_name) {
+		task.attr('status', status_name);
+		field.val(status_name);
+		node.attr('src', '/static/images/status-' + status_name.replace(' ', '-') + '.png');
+		node.attr('title', status_texts[status_name]);
+		save_task(task, 'status', status_name);
+	}
 }
 
 function save_task(task, field, value) {
