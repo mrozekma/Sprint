@@ -1,7 +1,11 @@
-import matplotlib
-matplotlib.use('Cairo')
-import matplotlib.pyplot as plt
-from pylab import figure, pie, axes, title
+try:
+	import matplotlib
+	matplotlib.use('Cairo')
+	import matplotlib.pyplot as plt
+	from pylab import figure, pie, axes, title
+	plottingLib = True
+except ImportError:
+	plottingLib = False
 
 from rorn.ResponseWriter import ResponseWriter
 from rorn.Box import ErrorBox
@@ -52,6 +56,124 @@ def chosen(handler, request):
 	print "<select id=\"two\"><option>one</option><option>two</option><option>three</option></select>"
 	print "<select id=\"three\"><option>one</option><option>two</option><option>three</option></select>"
 	print "<select id=\"four\"><option>one</option><option>two</option><option>three</option></select>"
+
+if plottingLib:
+	@get('graph1')
+	def test(handler, request):
+		request['wrappers'] = False
+		handler.contentType = 'image/png'
+
+		plt.clf()
+		plt.cla()
+
+		plt.title("Test Title ($\sqrt{\pi}$)")
+		plt.xlabel("X axis")
+		plt.ylabel("Y axis")
+		plt.plot([1,2,5])
+		plt.annotate("Annotation", (1, 2), (1.5, 1.95), arrowprops = {'facecolor': 'black', 'shrink': 0.05})
+
+		w = ResponseWriter(False, False)
+		w.clear()
+		plt.savefig(w)
+		print w.data
+
+	@get('graph2')
+	def graph2(handler, request):
+		request['wrappers'] = False
+		handler.contentType = 'image/png'
+
+		plt.clf()
+		plt.cla()
+		figure(1, figsize=(6,6))
+		# ax = axes([0.1, 0.1, 0.8, 0.8])
+
+		pie([150, 200, 400], labels = ['foo', 'bar', 'baz'], autopct = lambda x: "%d (%1.1f%%)" % (int(x*750/100), x))
+		title('Raining Hogs and Dogs')
+
+		w = ResponseWriter(False, False)
+		w.clear()
+		plt.savefig(w)
+		print w.data
+
+	@get('graph3')
+	def graph3(handler, request):
+		plt.clf()
+		plt.cla()
+		fig = figure()
+		title('Test')
+
+		pie([100, 100, 100], labels = ['test', 'test2', 'test3'], autopct = "%1.1f%%")
+
+		w = ResponseWriter(False, False)
+		w.clear()
+		plt.savefig(w)
+		request['wrappers'] = False
+		handler.contentType = 'image/png'
+		print w.data
+
+	@get('graph4')
+	def graph4(handler, request):
+		handler.title("Graph 4")
+
+		print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts.js\"></script>"
+		print """
+<script type=\"text/javascript\"> //"
+$(document).ready(function() {
+	chart = new Highcharts.Chart({
+		chart: {
+			renderTo: 'foobar',
+			defaultSeriesType: 'line',
+			zoomType: 'x',
+		},
+
+		credits: {
+			enabled: false
+		},
+
+		title: {
+			text: 'foo'
+		},
+
+		xAxis: {
+			type: 'datetime',
+			dateTimeLabelFormats: {
+				day: '%a'
+			},
+			tickInterval: 24 * 3600 * 1000,
+			maxZoom: 48 * 3600 * 1000,
+			title: {
+				text: 'Day'
+			}
+		},
+
+		series: [
+			{
+				name: 'Test Series',
+				pointStart: Date.UTC(2011, 8, 15),
+				pointInterval: 24 * 3600 * 1000,
+				data: [1, 2, 3, 5, 6, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150],
+				visible: true
+			},
+
+			{
+				name: 'Test Series 2',
+				pointStart: Date.UTC(2011, 8, 15),
+				pointInterval: 24 * 3600 * 1000,
+				data: [5, 5, 5, 5],
+			}
+		]
+	});
+console.log(chart);
+});
+</script>
+"""
+		print "<div id=\"foobar\"></div>"
+
+@get('hours-test')
+def hoursTest(handler, request):
+	handler.title('Hours Test')
+
+	pass
 
 # @get('test')
 # def test(handler, request):
@@ -190,43 +312,4 @@ def test(handler, request, id):
 		# print "<hr>"
 	# tasks[0].name = 'web-revision'
 	# tasks[0].revise()
-"""
-
-"""
-@get('test')
-def test(handler, request):
-	request['wrappers'] = False
-	handler.contentType = 'image/png'
-
-	plt.clf()
-	plt.cla()
-
-	plt.title("Test Title ($\sqrt{\pi}$)")
-	plt.xlabel("X axis")
-	plt.ylabel("Y axis")
-	plt.plot([1,2,5])
-	plt.annotate("Annotation", (1, 2), (1.5, 1.95), arrowprops = {'facecolor': 'black', 'shrink': 0.05})
-
-	w = ResponseWriter(False, False)
-	w.clear()
-	plt.savefig(w)
-	print w.data
-
-@get('test2')
-def test2(handler, request):
-	request['wrappers'] = False
-	handler.contentType = 'image/png'
-
-	plt.clf()
-	plt.cla()
-	figure(1, figsize=(6,6))
-	# ax = axes([0.1, 0.1, 0.8, 0.8])
-
-	pie([150, 200, 400], labels = ['foo', 'bar', 'baz'], autopct = lambda x: "%d (%1.1f%%)" % (int(x*750/100), x))
-	title('Raining Hogs and Dogs')
-
-	w = ResponseWriter(False, False)
-	w.clear()
-	plt.savefig(w)
-	print w.data
 """
