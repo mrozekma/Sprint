@@ -217,7 +217,6 @@ def sprintPost(handler, request, p_id, p_rev_id, p_field, p_value):
 		done()
 
 	request['wrappers'] = False
-	request['code'] = 299
 	p_id = int(p_id)
 	p_rev_id = int(p_rev_id)
 
@@ -236,13 +235,12 @@ def sprintPost(handler, request, p_id, p_rev_id, p_field, p_value):
 	if task.sprint != sprint:
 		die("Attempting to modify task outside the specified sprint")
 
-	print "%d, %d, %s, %s" % (p_id, p_rev_id, p_field, p_value)
-	print "<br>"
+	# print "%d, %d, %s, %s" % (p_id, p_rev_id, p_field, p_value)
 
 	# self.__setattr__(var, obj.id)
 	# hours, taskmove, name, assigned, status
 	if task.revision != p_rev_id: #TODO Implement collision support
-		die("Collision with %s detected" % task.creator)
+		die("Collision with %s detected. Changes not saved" % task.creator)
 
 	if p_field in ['status', 'name', 'goal', 'assigned', 'hours']:
 		for case in switch(p_field):
@@ -274,18 +272,18 @@ def sprintPost(handler, request, p_id, p_rev_id, p_field, p_value):
 
 	# Is this within the 5-minute window, by the same user?
 	ts = dateToTs(datetime.now())
-	if task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60:
+	if task.creator == handler.session['user'] and (ts - task.timestamp) < 5: #*60:
 		task.save()
 	else:
 		task.creator = handler.session['user']
 		task.timestamp = ts
 		task.revise()
 
-	# 200 - good
+	# 299 - good
 	# 298 - warning
-	# 299 - error
-	request['code'] = 200
-	print "Done"
+	# 200 - error
+	request['code'] = 299
+	print task.revision
 
 def showInfo(handler, request, id):
 	requirePriv(handler, 'User')

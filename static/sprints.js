@@ -413,21 +413,17 @@ function save_fields(task_id, old_rev_id, field, value) {
 		box = $('#post-status')
 		switch(request.status) {
 		case 200:
-			box.attr('class', 'tint green');
+			box.attr('class', 'tint red');
 			$('span', box).html(data);
-
-			// $('.dirty').each(function() {
-			// $(this).removeClass('dirty');
-			// });
 			break;
 		case 298:
 			box.attr('class', 'tint yellow');
 			$('span', box).html(data);
 			break;
 		case 299:
-			box.attr('class', 'tint red');
-			$('span', box).html(data);
-			break;
+			$('tr.task[taskid=' + task_id + ']').attr('revid', data);
+			console.log("Changed saved; new revision is " + data);
+			return;
 		default:
 			box.attr('class', 'tint blood');
 			$('span', box).html("Unexpected response code " + request.status)

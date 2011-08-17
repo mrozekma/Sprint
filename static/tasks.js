@@ -14,7 +14,6 @@ $(document).ready(function() {
 				box.attr('class', 'tint yellow');
 				$('span', box).html(data);
 				break;
-				break;
 			case 299:
 				// box.attr('class', 'tint green');
 				// $('span', box).html(data);
