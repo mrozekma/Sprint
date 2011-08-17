@@ -173,7 +173,80 @@ console.log(chart);
 def hoursTest(handler, request):
 	handler.title('Hours Test')
 
-	pass
+	from Sprint import Sprint
+	sprint = Sprint.load(2)
+
+	from datetime import datetime, timedelta
+	from User import User
+	tasks = sprint.getTasks()
+	oneday = timedelta(1)
+	start, end = tsToDate(sprint.start), tsToDate(sprint.end)
+
+	print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts.js\"></script>"
+	print """
+<script type=\"text/javascript\"> //"
+$(document).ready(function() {
+	chart = new Highcharts.Chart({
+		chart: {
+			renderTo: 'chart',
+			defaultSeriesType: 'line',
+			zoomType: 'x',
+		},
+
+		credits: {
+			enabled: false
+		},
+
+		title: {
+			text: '%s'
+		},
+
+		xAxis: {
+			type: 'datetime',
+			dateTimeLabelFormats: {
+				day: '%%a'
+			},
+			tickInterval: 24 * 3600 * 1000,
+			maxZoom: 48 * 3600 * 1000,
+			title: {
+				text: 'Day'
+			}
+		},
+
+		yAxis: {
+			min: 0,
+			title: {
+				text: 'Hours'
+			}
+		},
+
+		series: [
+""" % sprint
+
+	for user in sprint.members:
+		print "{"
+		print "name: '%s'," % user.username
+		print "pointStart: %d," % (sprint.start * 1000)
+		print "pointInterval: 24 * 3600 * 1000,"
+		print "data: [",
+		userTasks = filter(lambda t: t.assigned == user, tasks)
+		seek = start
+		while seek <= end:
+			print "%d," % sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in userTasks]),
+			seek += oneday
+		print "],"
+		print "visible: true"
+		print "},"
+
+	print """
+]
+	});
+console.log(chart);
+});
+</script>
+"""
+	print "<div id=\"chart\"></div>"
+
 
 # @get('test')
 # def test(handler, request):
