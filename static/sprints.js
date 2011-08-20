@@ -402,8 +402,21 @@ function set_status(task, status_name) {
 	}
 }
 
-function save_task(task, field, value) {
-	console.log("Saving change to " + task_id + "(" + old_rev_id + "): " + field + " <- " + value);
+savingMutex = false;
+function save_task(task, field, value, counter) {
+	console.log("Saving change to " + task.attr('taskid') + "(" + task.attr('revid') + "): " + field + " <- " + value + " (attempt " + (counter == undefined ? 0 : counter) + ")");
+	if(savingMutex) {
+		if(counter == 10) {
+			box = $('#post-status');
+			box.attr('class', 'tint red');
+			$('span', box).html("Timed out trying to set task " + task.attr('taskid') + " " + field + " to " + value);
+			box.fadeIn();
+		} else {
+			setTimeout(function() {save_task(task, field, value, (counter == undefined ? 0 : counter) + 1);}, 200);
+		}
+		return;
+	}
+	savingMutex = true;
 	$.post("/sprints/" + sprintid + "/post", {'id': task.attr('taskid'), 'rev_id': task.attr('revid'), 'field': field, 'value': value}, function(data, text, request) {
 		box = $('#post-status')
 		switch(request.status) {
@@ -416,16 +429,20 @@ function save_task(task, field, value) {
 			$('span', box).html(data);
 			break;
 		case 299:
-			$('tr.task[taskid=' + task_id + ']').attr('revid', data);
+			$('tr.task[taskid=' + task.attr('taskid') + ']').attr('revid', data);
 			console.log("Changed saved; new revision is " + data);
-			return;
+			box = null;
+			break;
 		default:
 			box.attr('class', 'tint blood');
 			$('span', box).html("Unexpected response code " + request.status)
 			break;
 		}
 
-		box.fadeIn();
+		if(box) {
+			box.fadeIn();
+		}
+		savingMutex = false;
 	});
 }
 
