@@ -38,6 +38,11 @@ def test(handler, request):
 def testPost(handler, request, p_test):
 	print p_test
 
+@get('test/(?P<num>[0-9]+)/regex')
+def testRegex(handler, request, num):
+	handler.title('Test Regex')
+	print num
+
 @get('test2')
 def test2(handler, request):
 	raise Exception("Lorem ipsum dolor sit amet, consectetur adipiscing elit")

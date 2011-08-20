@@ -17,14 +17,14 @@ handlers = {'get': {}, 'post': {}}
 @globalize
 def get(index):
 	def wrap(f):
-		handlers['get'][index] = f
+		handlers['get'][re.compile("^%s$" % index)] = f
 		return f
 	return wrap
 
 @globalize
 def post(index):
 	def wrap(f):
-		handlers['post'][index] = f
+		handlers['post'][re.compile("^%s$" % index)] = f
 		return f
 	return wrap
 
@@ -75,7 +75,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 				match = re.match('(.*)\\[(.*)\\]', key)
 				if match:
 					name, realKey = match.groups()
-					if re.match('\\d+', realKey):
+					if re.match('^\\d+$', realKey):
 						realKey = int(realKey)
 					if name in query:
 						if not isinstance(query[name], dict):
@@ -97,23 +97,26 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 			# Try increasingly generic paths (e.g. if the path is /foo/bar/baz, try /foo/bar/baz, then /foo/bar, then /foo)
 			log("Checking path fragments from %d to 0" % len(path))
+			fn = None
 			for i in range(len(path), 0, -1):
 				slashPath = '/'.join(path[:i])
 				log("Trying %s" % slashPath)
-				try:
-					if slashPath in handlers[method]:
-						fn = handlers[method][slashPath]
-					elif path[:i] != '':
-						continue
-					else:
-						self.error("Invalid request", "No empty action handler")
+				for pattern in handlers[method]:
+					match = pattern.match(slashPath)
+					if match:
+						fn = handlers[method][pattern]
+						for k, v in match.groupdict().items():
+							if k in query:
+								self.error("Invalid request", "Duplicate key in request: %s" % k)
+							if re.match('^\\d+$', v):
+								v = int(v)
+							query[k] = v
+						break
 
-					path = path[i-1:]
+				if fn:
 					break
-				except AttributeError:
-					pass
 			else: # No path matched
-				self.error("Invalid request", "Unknown action <b>%s</b>" % path[0])
+				self.error("Invalid request", "Unknown action <b>%s</b>" % path[0] if len(path) else "No empty action handler")
 
 			given = query.keys()
 			expected, _, _, defaults = getargspec(fn)
