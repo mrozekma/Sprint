@@ -350,18 +350,19 @@ function fancy_cells(table_selector) {
 		}
 	});
 
-	$('td.assigned > span', $(table_selector)).editable({
-		onSubmit: function(c) {
-			id = $(this).attr('id').replace('assigned_span_', '');
-			$('[name="assigned[' + id + ']"]').val(c.current);
-			$('tr', $(this)).attr('assigned', c.current);
-			$(this).attr('username', c.current);
-			if(c.previous != c.current) {
-				task = $(this).parents('tr.task');
-				// dirty($(this));
-				save_task(task, 'assigned', c.current);
-			}
+	$('td.assigned > span').click(function() {
+		task = $(this).parents('tr.task');
+		sel = $('<select/>');
+		for(i in usernames) {
+			opt = $("<option>").text(usernames[i]).attr('selected', usernames[i] == task.attr('assigned'));
+			sel.append(opt);
 		}
+		$(this).replaceWith(sel);
+		// sel.chosen();
+		sel.change(function() {
+			task.attr('assigned', $(this).val());
+			save_task(task, 'assigned', $(this).val());
+		});
 	});
 
 	$('tr.task img.status').contextMenu({

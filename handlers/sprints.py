@@ -107,6 +107,7 @@ def showBacklog(handler, request, id, assigned):
 	print "</ul>"
 
 	print "<script type=\"text/javascript\">"
+	print "usernames = Array(%s);" % ', '.join("'%s'" % user.username for user in sorted(sprint.members))
 	print "status_texts = Array();"
 	for statusBlock in statusMenu:
 		for statusName in statusBlock:
@@ -178,7 +179,7 @@ def printTask(task, days, group = None):
 
 	print "<td class=\"name\"><span id=\"name_span_%d\">%s</span></td>" % (task.id, task.name)
 	# print "<td class=\"assigned\">%s</td>" % task.assigned.str('member')
-	print "<td class=\"assigned\">%s</td>" % (task.assigned.str('member', False, "assigned_span_%d" % task.id))
+	print "<td class=\"assigned\"><span>%s</span></td>" % (task.assigned.str('member', False, "assigned_span_%d" % task.id))
 	for lbl, day in days:
 		dayTask = task.getRevisionAt(day)
 		previousTask = task.getRevisionAt(Weekday.shift(-1, day))
