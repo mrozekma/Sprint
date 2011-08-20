@@ -93,30 +93,21 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			assert path[0] == '/'
 			path = path[1:]
 			if len(path) and path[-1] == '/': path = path[:-1]
-			path = path.split('/')
-
-			# Try increasingly generic paths (e.g. if the path is /foo/bar/baz, try /foo/bar/baz, then /foo/bar, then /foo)
-			log("Checking path fragments from %d to 0" % len(path))
 			fn = None
-			for i in range(len(path), 0, -1):
-				slashPath = '/'.join(path[:i])
-				log("Trying %s" % slashPath)
-				for pattern in handlers[method]:
-					match = pattern.match(slashPath)
-					if match:
-						fn = handlers[method][pattern]
-						for k, v in match.groupdict().items():
-							if k in query:
-								self.error("Invalid request", "Duplicate key in request: %s" % k)
-							if re.match('^\\d+$', v):
-								v = int(v)
-							query[k] = v
-						break
-
-				if fn:
+			for pattern in handlers[method]:
+				match = pattern.match(path)
+				if match:
+					fn = handlers[method][pattern]
+					for k, v in match.groupdict().items():
+						if k in query:
+							self.error("Invalid request", "Duplicate key in request: %s" % k)
+						if re.match('^\\d+$', v):
+							v = int(v)
+						query[k] = v
 					break
-			else: # No path matched
-				self.error("Invalid request", "Unknown action <b>%s</b>" % path[0] if len(path) else "No empty action handler")
+
+			if not fn:
+				self.error("Invalid request", "Unknown action <b>%s</b>" % path if path != '' else "No empty action handler")
 
 			given = query.keys()
 			expected, _, _, defaults = getargspec(fn)

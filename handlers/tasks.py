@@ -13,17 +13,8 @@ from Button import Button
 from Tabs import Tabs
 from utils import *
 
-@get('tasks')
-def task(handler, request):
-	for case in switch(len(request['path'])):
-		if case(0):
-			ErrorBox.die("Tasks", "No task specified")
-			break
-		if case(1):
-			showTask(handler, request, int(request['path'][0]))
-			break
-
-def showTask(handler, request, id):
+@get('tasks/(?P<id>[0-9]+)')
+def task(handler, request, id):
 	requirePriv(handler, 'User')
 	task = Task.load(id)
 	if not task:

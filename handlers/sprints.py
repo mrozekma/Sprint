@@ -28,20 +28,10 @@ tabs['metrics'] = '/sprints/%d/metrics'
 
 @get('sprints')
 def sprint(handler, request):
-	for case in switch(len(request['path'])):
-		if case(0):
-			redirect('/projects')
-		elif case(1):
-			showBacklog(handler, request, int(request['path'][0]), None)
-		elif case(2) and request['path'][1] == 'info':
-			showInfo(handler, request, int(request['path'][0]))
-		elif case(2) and request['path'][1] == 'metrics':
-			showMetrics(handler, request, int(request['path'][0]))
-		else:
-			print ErrorBox('Sprints', "Unable to handle request for <b>%s</b>" % stripTags('/'.join(request['path'])))
-			break
+	redirect('/projects')
 
-def showBacklog(handler, request, id, assigned):
+@get('sprints/(?P<id>[0-9])')
+def showBacklog(handler, request, id, assigned = None):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
 	if not sprint:
@@ -286,6 +276,7 @@ def sprintPost(handler, request, p_id, p_rev_id, p_field, p_value):
 	request['code'] = 299
 	print task.revision
 
+@get('sprints/(?P<id>[0-9])/info')
 def showInfo(handler, request, id):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
@@ -355,6 +346,7 @@ def sprintInfoPost(handler, request, id, p_goals, p_members):
 	request['code'] = 299
 	print "Saved changes"
 
+@get('sprints/(?P<id>[0-9])/metrics')
 def showMetrics(handler, request, id):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)

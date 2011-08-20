@@ -2,14 +2,11 @@ from __future__ import with_statement
 from os.path import isfile
 from utils import *
 
-@get('static')
-def static(handler, request, v = None):
+@get('static/(?P<path>.+)')
+def static(handler, request, path, v = None):
 	request['wrappers'] = False
-	path = request['path']
-	if not len(path):
-		return handler.error("Missing static argument", "No static resource specified")
 
-	filename = stripTags('/'.join(path))
+	filename = stripTags(path)
 	types = {
 		'css': 'text/css',
 		'js': 'text/javascript',
