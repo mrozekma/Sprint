@@ -403,13 +403,8 @@ function set_status(task, status_name) {
 }
 
 function save_task(task, field, value) {
-	save_fields(task.attr('taskid'), task.attr('revid'), field, value);
-}
-
-function save_fields(task_id, old_rev_id, field, value) {
-	//TODO
 	console.log("Saving change to " + task_id + "(" + old_rev_id + "): " + field + " <- " + value);
-	$.post("/sprints/" + sprintid + "/post", {'id': task_id, 'rev_id': old_rev_id, 'field': field, 'value': value}, function(data, text, request) {
+	$.post("/sprints/" + sprintid + "/post", {'id': task.attr('taskid'), 'rev_id': task.attr('revid'), 'field': field, 'value': value}, function(data, text, request) {
 		box = $('#post-status')
 		switch(request.status) {
 		case 200:
