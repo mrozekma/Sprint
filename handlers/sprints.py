@@ -306,6 +306,8 @@ def showInfo(handler, request, id):
 
 	print (tabs << 'info') % id
 
+	print "<b>Duration</b><br>"
+	print "%s - %s<br><br>" % (tsToDate(sprint.start).strftime('%d %b %Y'), tsToDate(sprint.end).strftime('%d %b %Y'))
 	print "<b>Sprint goals</b><br>"
 	print "<form method=\"post\" action=\"/sprints/info?id=%d\">" % sprint.id
 	print "<table border=0>"
