@@ -103,16 +103,8 @@ class HTTPHandler(BaseHTTPRequestHandler):
 				try:
 					if slashPath in handlers[method]:
 						fn = handlers[method][slashPath]
-						needSelf = True
 					elif path[:i] != '':
-						# Convert foo-bar-baz to methodFooBarBaz
-						# Multiple paths are joined with _, (e.g. /foo/bar-baz is methodFoo_BarBaz)
-						handlerName = ''.join(map(lambda x: ucfirst(x), re.split('(?:-|_)+', slashPath)))
-						handlerName = '_'.join(map(lambda x: ucfirst(x), handlerName.split('/')))
-						handlerName = method + handlerName
-
-						fn = getattr(self, handlerName)
-						needSelf = False
+						continue
 					else:
 						self.error("Invalid request", "No empty action handler")
 
@@ -149,10 +141,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			request['path'] = path
 			self.replace('{{path}}', '/'.join(path))
 
-			if needSelf:
-				fn(handler = self, request = request, **query)
-			else:
-				fn(request = request, **query)
+			fn(handler = self, request = request, **query)
 		except DoneRendering: pass
 		except OperationalError, e:
 			writer.clear()
