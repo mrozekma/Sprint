@@ -426,7 +426,8 @@ $(document).ready(function() {
 
 	seek = start
 	while seek <= end:
-		print "%d," % sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in tasks]),
+		if seek.weekday() < 5: # Weekday
+			print "[%d, %d]," % (dateToTs(seek) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in tasks])),
 		seek += oneday
 
 	print """
@@ -441,9 +442,9 @@ $(document).ready(function() {
 """ % (sprint.start * 1000)
 
 	#TODO Implement per-user availability
-	perDay = len(sprint.members) * 8
-	numDays = (end - start).days
-	print ', '.join(map(str, range(numDays*perDay, -1, -perDay)))
+	# perDay = len(sprint.members) * 8
+	# numDays = (end - start).days
+	# print ', '.join(map(str, range(numDays*perDay, -1, -perDay)))
 
 	print """
 				]
@@ -516,7 +517,8 @@ $(document).ready(function() {
 		userTasks = filter(lambda t: t.assigned == user, tasks)
 		seek = start
 		while seek <= end:
-			print "%d," % sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in userTasks]),
+			if seek.weekday() < 5: # Weekday
+				print "[%d, %d]," % (dateToTs(seek) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in userTasks])),
 			seek += oneday
 		print "],"
 		print "				visible: true"
