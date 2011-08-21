@@ -17,6 +17,7 @@ from User import User
 from Group import Group
 from Tabs import Tabs
 from Goal import Goal
+from Availability import Availability
 from utils import *
 
 # groupings = ['status', 'owner', 'hours']
@@ -25,6 +26,7 @@ tabs = Tabs()
 tabs['info'] = '/sprints/%d/info'
 tabs['backlog'] = '/sprints/%d'
 tabs['metrics'] = '/sprints/%d/metrics'
+tabs['availability'] = '/sprints/%d/availability'
 
 @get('sprints')
 def sprint(handler, request):
@@ -441,6 +443,13 @@ $(document).ready(function() {
 				data: [
 """ % (sprint.start * 1000)
 
+	avail = Availability(sprint)
+	seek = start
+	while seek <= end:
+		if seek.weekday() < 5: # Weekday
+			print "[%d, %d]," % (dateToTs(seek) * 1000, avail.getAllForward(seek)),
+		seek += oneday
+
 	#TODO Implement per-user availability
 	# perDay = len(sprint.members) * 8
 	# numDays = (end - start).days
@@ -555,6 +564,91 @@ $(document).ready(function() {
 
 	print "<h2>Hours (by user)</h2>"
 	print "<div id=\"chart-by-user\"></div>"
+
+@get('sprints/(?P<id>[0-9])/availability')
+def showAvailability(handler, request, id):
+	requirePriv(handler, 'User')
+	sprint = Sprint.load(id)
+	if not sprint:
+		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
+		done()
+	tasks = sprint.getTasks()
+
+	handler.title(sprint.safe.name)
+	print (tabs << 'availability') % id
+
+	print "<script src=\"/static/sprint-availability.js\" type=\"text/javascript\"></script>"
+	print "<script type=\"text/javascript\">"
+	print "var sprintid = %d;" % id
+	print "</script>"
+	print "<style type=\"text/css\">"
+	print "#post-status {display: none}"
+	print "</style>"
+
+	print TintedBox('Loading...', scheme = 'blue', id = 'post-status')
+
+	avail = Availability(sprint)
+	oneday = timedelta(1)
+	start, end = tsToDate(sprint.start), tsToDate(sprint.end)
+
+	print "<form method=\"post\" action=\"/sprints/%d/availability\">" % sprint.id
+	print "<table class=\"availability\">"
+	print "<tr class=\"dateline\">"
+	print "<td>&nbsp;</td>"
+	seek = start
+	while seek <= end:
+		if seek.weekday() < 5: # Weekday
+			print "<td>%s<br>%s</td>" % (seek.strftime('%d'), seek.strftime('%a'))
+		seek += oneday
+	print "<td>%s</td>" % Button('set all 8', type = 'button')
+	print "</tr>"
+
+	for user in sorted(sprint.members):
+		print "<tr class=\"userline\">"
+		print "<td class=\"username\">%s</td>" % user.safe.username
+		seek = start
+		while seek <= end:
+			if seek.weekday() < 5: # Weekday
+				print "<td><input type=\"text\" name=\"hours[%d,%d]\" value=\"%d\"></td>" % (user.id, dateToTs(seek), avail.get(user, seek))
+			seek += oneday
+		print "<td>%s</td>" % Button('copy first', type = 'button')
+		print "</tr>"
+
+	print "</table>"
+	print Button('Save', id = 'save-button', type = 'button').positive()
+	print "</form>"
+
+@post('sprints/(?P<id>[0-9])/availability')
+def sprintAvailabilityPost(handler, request, id, p_hours):
+	def die(msg):
+		print msg
+		done()
+
+	request['wrappers'] = False
+
+	if not handler.session['user']:
+		die("You must be logged in to modify sprint info")
+
+	sprint = Sprint.load(id)
+	if not sprint:
+		die("There is no sprint with ID %d" % id)
+
+	avail = Availability(sprint)
+	for k, hours in p_hours.items():
+		userid, timestamp = map(int, k.split(',', 1))
+		hours = int(hours)
+
+		user = User.load(userid)
+		if not user in sprint.members:
+			die("Trying to set availability of non-member %s" % user.safe.username)
+		time = tsToDate(timestamp)
+		if not sprint.start <= timestamp <= sprint.end:
+			die("Trying to set availability outside of sprint window")
+
+		avail.set(user, time, hours)
+
+	request['code'] = 299
+	print "Saved changes"
 
 @get('sprints/new')
 def newSprint(handler, request, project):
