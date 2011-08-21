@@ -127,7 +127,8 @@ def showBacklog(handler, request, id, assigned = None):
 		print "<a class=\"fancy\" status=\"%s\" href=\"#\"><img src=\"%s\">%s</a>" % (status.name, status.getIcon(), status.text)
 	print "</div><br>"
 
-	print "<form method=\"post\" action=\"/sprints/%d/post\">" % id
+	#TODO I think this form (and possibly the hidden inputs right after) can be removed
+	print "<form method=\"post\" action=\"/sprints/%d\">" % id
 	# print Button('Save', image = 'tick.png', id = 'save-button').positive()
 
 	for task in tasks:
@@ -203,8 +204,8 @@ def printTask(task, days, group = None):
 	print "</td>"
 	print "</tr>"
 
-@post('sprints')
-def sprintPost(handler, request, p_id, p_rev_id, p_field, p_value):
+@post('sprints/(?P<sprintid>[0-9]+)')
+def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 	def die(msg):
 		print msg
 		done()
@@ -216,10 +217,6 @@ def sprintPost(handler, request, p_id, p_rev_id, p_field, p_value):
 	if not handler.session['user']:
 		die("You must be logged in to modify tasks")
 
-	if len(request['path']) != 2 or request['path'][1] != 'post':
-		die("Unexpected POST to %s" % stripTags('/'.join(request['path'])))
-
-	sprintid = int(request['path'][0])
 	sprint = Sprint.load(sprintid)
 	if not sprint:
 		die("There is no sprint with ID %d" % sprintid)

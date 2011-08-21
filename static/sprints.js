@@ -418,7 +418,7 @@ function save_task(task, field, value, counter) {
 		return;
 	}
 	savingMutex = true;
-	$.post("/sprints/" + sprintid + "/post", {'id': task.attr('taskid'), 'rev_id': task.attr('revid'), 'field': field, 'value': value}, function(data, text, request) {
+	$.post("/sprints/" + sprintid, {'id': task.attr('taskid'), 'rev_id': task.attr('revid'), 'field': field, 'value': value}, function(data, text, request) {
 		box = $('#post-status')
 		switch(request.status) {
 		case 200:
