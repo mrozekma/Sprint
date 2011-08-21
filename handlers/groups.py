@@ -26,6 +26,9 @@ def newGroup(handler, request, after):
 	print "table.list td.right * {width: 400px;}"
 	print "table.list td.right button {width: 200px;}" # Half of the above value
 	print "</style>"
+	print "<script type=\"text/javascript\">"
+	print "next_url = '/sprints/%d';" % afterGroup.sprint.id
+	print "</script>"
 	print "<script src=\"/static/groups.js\" type=\"text/javascript\"></script>"
 
 	print TintedBox('', scheme = 'blue', id = 'post-status')
@@ -72,37 +75,3 @@ $(document).ready(function() {
 });
 </script>""" % group.id)
 	print "/sprints/%d" % group.sprint.id
-
-@get('tasks/new/many')
-def newTaskMany(handler, request, group):
-	requirePriv(handler, 'User')
-	handler.title("New Tasks")
-	id = int(group)
-
-	print (tabs << 'many') % id
-
-	group = Group.load(group)
-	if not group:
-		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
-
-	print TintedBox('Unimplemented', scheme = 'blood')
-	print "<br>"
-	print "sprint: %s<br>" % group.sprint
-	print "group: %s" % group
-
-@get('tasks/new/import')
-def newTaskImport(handler, request, group):
-	requirePriv(handler, 'User')
-	handler.title("Import Tasks")
-	id = int(group)
-
-	print (tabs << 'import') % id
-
-	group = Group.load(group)
-	if not group:
-		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
-
-	print TintedBox('Unimplemented', scheme = 'blood')
-	print "<br>"
-	print "sprint: %s<br>" % group.sprint
-	print "group: %s" % group
