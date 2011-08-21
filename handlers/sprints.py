@@ -448,6 +448,23 @@ $(document).ready(function() {
 
 	print """
 				]
+			},
+
+			{
+				name: 'Deferred tasks',
+				pointStart: %d,
+				pointInterval: 24 * 3600 * 1000,
+				data: [
+""" % (sprint.start * 1000)
+
+	seek = start
+	while seek <= end:
+		if seek.weekday() < 5: # Weekday
+			print "[%d, %d]," % (dateToTs(seek) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in tasks if t.status == 'deferred']))
+		seek += oneday
+
+	print """
+				]
 			}
 		]
 	});
