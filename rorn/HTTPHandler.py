@@ -133,7 +133,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 			path = path[1:]
 			request['path'] = path
-			self.replace('{{path}}', '/'.join(path))
+			self.replace('{{path}}', path)
 
 			fn(handler = self, request = request, **query)
 		except DoneRendering: pass
