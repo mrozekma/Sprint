@@ -262,7 +262,7 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 
 	# Is this within the 5-minute window, by the same user?
 	ts = dateToTs(datetime.now())
-	if task.creator == handler.session['user'] and (ts - task.timestamp) < 5: #*60:
+	if task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60:
 		task.save()
 	else:
 		task.creator = handler.session['user']
