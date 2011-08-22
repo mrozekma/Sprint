@@ -45,7 +45,7 @@ class User(ActiveRecord):
 		return db().matches("SELECT g.* FROM grants AS g, privileges AS p WHERE g.userid=? AND g.privid=p.id AND p.name=?", self.id, name)
 
 	def getAvatar(self):
-		email = "%s@arxandefense.com" % self.username
+		email = "%s@microsemi-wl.com" % self.username
 		email = md5(email.strip().lower())
 		return "http://www.gravatar.com/avatar/%s?s=64&d=wavatar" % email
 
