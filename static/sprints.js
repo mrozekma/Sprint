@@ -51,6 +51,7 @@ function setup_hours_events() {
         field = $('input', $(this).parents('.hours'));
 		val = parseInt(field.val(), 10);
 		save_task(task, 'hours', val);
+		set_status(task, val == 0 ? 'complete' : 'in progress');
 	});
 }
 
