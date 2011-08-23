@@ -233,9 +233,9 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 	if task.revision != p_rev_id: #TODO Implement collision support
 		die("Collision with %s detected. Changes not saved" % task.creator)
 
-	if p_field in ['status', 'name', 'goal', 'assigned', 'hours']:
+	if p_field in ['status', 'name', 'goal', 'assigned', 'hours', 'deleted']:
 		for case in switch(p_field):
-			if case('status') or case('name'):
+			if case('status') or case('name') or case('deleted'):
 				parsedValue = p_value
 				break
 			elif case('goal'):

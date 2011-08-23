@@ -29,9 +29,13 @@ class Sprint(ActiveRecord):
 		now = dateToTs(datetime.now())
 		return self.start <= now <= self.end
 
-	def getTasks(self, orderby = 'seq ASC'):
+	def getTasks(self, orderby = 'seq ASC', includeDeleted = False):
 		from Task import Task
-		return Task.loadAll(sprintid = self.id, orderby = orderby)
+		tasks = Task.loadAll(sprintid = self.id, orderby = orderby)
+		# This is filtered here instead of in Task.loadAll to prevent loading old revisions
+		if not includeDeleted:
+			tasks = filter(lambda t: not t.deleted, tasks)
+		return tasks
 
 	def getGroups(self, orderby = 'seq ASC'):
 		from Group import Group

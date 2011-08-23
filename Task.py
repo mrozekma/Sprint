@@ -42,7 +42,7 @@ class Task(ActiveRecord):
 	def setStatus(self, stat): self.status = stat.name
 	stat = property(getStatus, setStatus)
 
-	def __init__(self, groupid, sprintid, creatorid, assignedid, goalid, name, status, hours, seq = None, timestamp = None, revision = 1, id = None):
+	def __init__(self, groupid, sprintid, creatorid, assignedid, goalid, name, status, hours, seq = None, timestamp = None, deleted = 0, revision = 1, id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.revision = revision
@@ -56,6 +56,7 @@ class Task(ActiveRecord):
 		self.hours = hours
 		self.timestamp = timestamp if timestamp else dateToTs(datetime.now())
 		self.seq = seq if seq else maxOr(task.seq for task in self.group.getTasks())+1
+		self.deleted = deleted
 
 	def __str__(self):
 		return self.safe.name
