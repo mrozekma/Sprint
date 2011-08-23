@@ -101,8 +101,23 @@ class Task(ActiveRecord):
 			db().update("INSERT INTO tasks(id, revision) VALUES(?, ?)", self.id, 1)
 
 			# Shift everything after this sequence
-			db().update("UPDATE tasks SET seq = seq + 1 WHERE seq >= ?", self.seq)
+			db().update("UPDATE tasks SET seq = seq + 1 WHERE groupid = ? AND seq >= ?", self.groupid, self.seq)
 		return ActiveRecord.save(self, pks = ['id', 'revision'])
+
+	def move(self, newSeq, newGroup):
+		# Remove from current group (shift all later tasks up)
+		db().update("UPDATE tasks SET seq = seq - 1 WHERE groupid = ? AND seq > ?", self.groupid, self.seq)
+
+		# Switch group (for all revisions)
+		if(self.group != newGroup):
+			self.group = newGroup
+			db().update("UPDATE tasks SET groupid = ? WHERE id = ?", self.groupid, self.id)
+
+		# Add to new group (shift all later tasks down)
+		self.seq = newSeq
+		db().update("UPDATE tasks SET seq = seq + 1 WHERE groupid = ? AND seq >= ?", self.groupid, self.seq)
+		db().update("UPDATE tasks SET seq = ? WHERE id = ?", self.seq, self.id)
+
 
 	# @classmethod
 	# def loadAll(cls, **attrs):

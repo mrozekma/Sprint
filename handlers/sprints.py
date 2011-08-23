@@ -157,6 +157,7 @@ def showBacklog(handler, request, id, assigned = None):
 	# for task in filter(lambda t: not t.group, tasks):
 		# printTask(task, days)
 
+	print "<tr><td colspan=\"7\">&nbsp;</td></tr>" # Spacer so rows can be dragged to the bottom
 	print "</tbody>"
 	print "</table>"
 	print "</form>"
@@ -255,19 +256,33 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 		if task.__getattribute__(p_field) == parsedValue: # No change
 			return
 		task.__setattr__(p_field, parsedValue)
+
+		# Is this within the 5-minute window, by the same user?
+		ts = dateToTs(datetime.now())
+		if task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60:
+			task.save()
+		else:
+			task.creator = handler.session['user']
+			task.timestamp = ts
+			task.revise()
+
 	elif p_field == 'taskmove':
-		die("Unimplemented: taskmove")
+		if p_value[0] == ':': # Beginning of the group
+			predTask = None
+			predGroupID = int(p_value[1:])
+			predGroup = Group.load(predGroupID)
+			if not predGroup:
+				die("No group with ID %d" % predGroupID)
+		else:
+			predTask = Task.load(int(p_value))
+			predGroup = predTask.group
+
+		if predGroup.sprint != sprint:
+			die("Group/task sprint mismatch")
+
+		task.move((predTask.seq if predTask else 0) + 1, predGroup)
 	else:
 		die("Unexpected field name: %s" % stripTags(p_field))
-
-	# Is this within the 5-minute window, by the same user?
-	ts = dateToTs(datetime.now())
-	if task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60:
-		task.save()
-	else:
-		task.creator = handler.session['user']
-		task.timestamp = ts
-		task.revise()
 
 	# 299 - good
 	# 298 - warning

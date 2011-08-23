@@ -324,12 +324,12 @@ function fancy_cells(table_selector) {
 
 				pred = row.prev();
 				if(!pred.length) { // First row in the table
-					save_task(row, 'taskmove', '[0]');
+					save_task(row, 'taskmove', ':0');
 				} else if(pred.hasClass('task')) { // Inserted after a task
 					save_task(row, 'taskmove', pred.attr('taskid'));
 				} else if(pred.hasClass('group')) { // Inserted after a group header (top of the group)
 					//TODO Save
-					save_task(row, 'taskmove', '[' + new_group_id + ']');
+					save_task(row, 'taskmove', ':' + new_group_id);
 				} else {
 					//FAIL
 				}
