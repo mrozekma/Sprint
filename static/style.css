@@ -506,6 +506,24 @@ table.availability tr td button {
 	width: 80%;
 }
 
+.revision-history img.bullet {
+	position: relative;
+	top: 3px;
+	padding-left: 15px;
+}
+
+.revision-history .timestamp {
+	padding-right: 10px;
+}
+
+.revision-history .hours-up {
+	color: #f00;
+}
+
+.revision-history .hours-down {
+	color: #0a0;
+}
+
 .buttons {
 	float: left;
 }

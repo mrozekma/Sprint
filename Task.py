@@ -12,19 +12,20 @@ class Status:
 	def getIcon(self): return "/static/images/status-%s.png" % self.name.replace(' ', '-')
 	icon = property(getIcon)
 
-	def __init__(self, name, text, color):
+	def __init__(self, name, text, color, revisionVerb):
 		self.name = name
 		self.text = text
 		self.color = color
+		self.revisionVerb = revisionVerb
 
 statuses = [
-	Status('blocked', 'Blocked', '#000'),
-	Status('canceled', 'Canceled', '#000'),
-	Status('complete', 'Complete', '#0F0'),
-	Status('deferred', 'Deferred', '#000'),
-	Status('in progress', 'In Progress', '#FF0'),
-	Status('not started', 'Not Started', '#F00'),
-	Status('split', 'Split', '#000'),
+	Status('blocked', 'Blocked', '#000', 'Blocked'),
+	Status('canceled', 'Canceled', '#000', 'Canceled'),
+	Status('complete', 'Complete', '#0F0', 'Completed'),
+	Status('deferred', 'Deferred', '#000', 'Deferred'),
+	Status('in progress', 'In Progress', '#FF0', 'Started'),
+	Status('not started', 'Not Started', '#F00', 'Aborted'),
+	Status('split', 'Split', '#000', 'Split'),
 ]
 statuses = dict([(s.name, s) for s in statuses])
 
