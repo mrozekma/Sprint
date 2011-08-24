@@ -128,7 +128,7 @@ def newTaskSingle(handler, request, group):
 		print "<option value=\"%d\"%s>%s</option>" % (sGroup.id, ' selected' if sGroup == group else '', sGroup.safe.name)
 	print "</select>"
 	print "</td></tr>"
-	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\" id=\"defaultfocus\"></td></tr>"
+	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\" class=\"defaultfocus\"></td></tr>"
 	print "<tr><td class=\"left\">Sprint Goal:</td><td class=\"right\">"
 	print "<select id=\"select-goal\" name=\"goal\" size=\"5\">"
 	print "<option value=\"0\" selected>None</option>"

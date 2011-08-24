@@ -690,7 +690,7 @@ def newSprint(handler, request, project):
 		print "<option value=\"%d\"%s>%s</option>" % (thisProject.id, ' selected' if thisProject == project else '', thisProject.safe.name)
 	print "</select>"
 	print "</td></tr>"
-	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\" id=\"defaultfocus\"></td></tr>"
+	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\" class=\"defaultfocus\"></td></tr>"
 	print "<tr><td class=\"left\">Start:</td><td class=\"right\"><input type=\"text\" name=\"start\" class=\"date\" value=\"%s\"></td></tr>" % date.today().strftime('%m/%d/%Y')
 	print "<tr><td class=\"left\">End:</td><td class=\"right\"><input type=\"text\" name=\"end\" class=\"date\"></td></tr>"
 	print "<tr><td class=\"left\">Members:</td><td class=\"right\">"

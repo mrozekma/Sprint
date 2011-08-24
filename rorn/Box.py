@@ -93,7 +93,7 @@ class LoginBox(Box):
 
 		print "<form method=\"post\" action=\"/login\">"
 		print "<table style=\"margin-left: 30px;\">"
-		print "<tr><td class=\"left\">Username:</td><td class=\"right\"><input type=\"text\" id=\"defaultfocus\" name=\"username\" class=\"username\"></td></tr>"
+		print "<tr><td class=\"left\">Username:</td><td class=\"right\"><input type=\"text\" class=\"defaultfocus\" name=\"username\" class=\"username\"></td></tr>"
 		print "<tr><td class=\"left\">Password:</td><td class=\"right\"><input type=\"password\" name=\"password\" class=\"password\"></td></tr>"
 		print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\"><button type=\"submit\">Login</button></td></tr>"
 		print "</table>"

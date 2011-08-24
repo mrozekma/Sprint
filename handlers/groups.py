@@ -42,7 +42,7 @@ def newGroup(handler, request, after):
 		print "<option value=\"%d\"%s>%s</option>" % (sGroup.id, ' selected' if sGroup == afterGroup else '', sGroup.safe.name)
 	print "</select>"
 	print "</td></tr>"
-	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\" id=\"defaultfocus\"></td></tr>"
+	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\" class=\"defaultfocus\"></td></tr>"
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
 	print Button('Save', id = 'save-button', type = 'button').positive()
 	print Button('Cancel', id = 'cancel-button', type = 'button').negative()

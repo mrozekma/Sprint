@@ -1,7 +1,5 @@
 $(document).ready(function () {
-	if(document.getElementById('defaultfocus')) {
-		document.getElementById('defaultfocus').focus();
-	}
+	$('.defaultfocus').focus();
 
 	$('.box.collapsible .title').click(function(event) {
 		$(this).parents('.box.collapsible').toggleClass('expanded');
