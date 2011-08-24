@@ -252,6 +252,49 @@ console.log(chart);
 """
 	print "<div id=\"chart\"></div>"
 
+@get('icons')
+def icons(handler, request):
+	handler.title('Icons')
+	admin(handler)
+
+	def makeList(path, l = {}):
+		from os import listdir
+		from os.path import isdir
+		for entry in listdir(path):
+			full = "%s/%s" % (path, entry)
+			if isdir(full):
+				makeList(full, l)
+			else:
+				if path not in l:
+					l[path] = []
+				l[path].append(full)
+		return l
+
+	l = makeList('/home/mrozekma/icons')
+	for scn, items in l.items():
+		print "<h2>%s</h2>" % scn
+		items.sort()
+		for item in items:
+			print "<img src=\"%s\" title=\"%s\">" % (item.replace('/home/mrozekma/icons', '/icons/show'), item)
+
+@get('icons/show/(?P<path>.*)')
+def iconsShow(handler, request, path):
+	request['wrappers'] = False
+	admin(handler)
+
+	filename = stripTags(path)
+	types = {
+		'css': 'text/css',
+		'js': 'text/javascript',
+		'png': 'image/png'
+		}
+
+	ext = filename[filename.rfind('.')+1:]
+	if ext in types:
+		handler.contentType = types[ext]
+
+	with open("/home/mrozekma/icons/" + filename) as f:
+		print f.read()
 
 # @get('test')
 # def test(handler, request):
