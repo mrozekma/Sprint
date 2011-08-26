@@ -26,6 +26,10 @@ def task(handler, request, id):
 	def start(rev, icon):
 		print "<img class=\"bullet\" src=\"/static/images/%s.png\">&nbsp;<span class=\"timestamp\">[%s]</span>" % (icon, tsToDate(rev.timestamp).strftime('%Y-%m-%d %H:%M:%S')),
 
+	def userStr(arg):
+		user = arg.creator if isinstance(arg, Task) else arg
+		return user.str('scrummaster' if user == rev.sprint.project.owner else 'member')
+
 	print "<div class=\"revision-history\">"
 	fields = set(Task.fields()) - set(['creatorid', 'timestamp', 'revision'])
 	revs = task.getRevisions()
@@ -33,8 +37,8 @@ def task(handler, request, id):
 		w = ResponseWriter()
 		if rev.revision == 1:
 			start(rev, 'revision-create')
-			print "Task created by %s." % rev.creator,
-			print "Assigned to %s," % rev.assigned,
+			print "Task created by %s." % userStr(rev),
+			print "Assigned to %s," % userStr(rev.assigned),
 			print "%s," % rev.getStatus().text.lower(),
 			print "%d %s remain" % (rev.hours, 'hour' if rev.hours == 1 else 'hours'),
 		else:
@@ -44,7 +48,7 @@ def task(handler, request, id):
 				for case in switch(field):
 					if case('status'):
 						start(rev, "revision-%s" % rev.getStatus().name.replace(' ', '-'))
-						print "%s by %s" % (rev.getStatus().revisionVerb, rev.creator)
+						print "%s by %s" % (rev.getStatus().revisionVerb, userStr(rev))
 						if 'hours' in changedFields:
 							print "(<span class=\"hours-%s\">%+d</span> to %d)" % ('up' if rev.hours > oldRev.hours else 'down', rev.hours - oldRev.hours, rev.hours)
 						break
@@ -52,23 +56,23 @@ def task(handler, request, id):
 						if 'status' in changedFields:
 							continue # Already showed the hours change in the status line
 						start(rev, 'revision-in-progress')
-						print "%s changed hours <span class=\"hours-%s\">%+d</span> to %d" % (rev.creator, 'up' if rev.hours > oldRev.hours else 'down', rev.hours - oldRev.hours, rev.hours)
+						print "%s changed hours <span class=\"hours-%s\">%+d</span> to %d" % (userStr(rev), 'up' if rev.hours > oldRev.hours else 'down', rev.hours - oldRev.hours, rev.hours)
 						break
 					if case('name'):
 						start(rev, 'revision-renamed')
-						print "Renamed <b>%s</b> by %s" % (rev.safe.name, rev.creator)
+						print "Renamed <b>%s</b> by %s" % (rev.safe.name, userStr(rev))
 						break
 					if case('deleted'):
 						start(rev, 'revision-deleted' if rev.deleted else 'revision-undeleted')
-						print "%s by %s" % ('Deleted' if rev.deleted else 'Undeleted', rev.creator)
+						print "%s by %s" % ('Deleted' if rev.deleted else 'Undeleted', userStr(rev))
 						break
 					if case('assignedid'):
 						start(rev, 'revision-assigned')
-						print "Assigned to %s by %s" % (rev.assigned, rev.creator)
+						print "Assigned to %s by %s" % (userStr(rev.assigned), userStr(rev))
 						break
 					if case('goalid'):
 						start(rev, 'tag-blue')
-						print "Set sprint goal <b>%s</b> by %s" % (rev.goal.safe.name, rev.creator)
+						print "Set sprint goal <b>%s</b> by %s" % (rev.goal.safe.name, userStr(rev))
 						break
 					if case('group'):
 						# Nobody cares
