@@ -178,6 +178,9 @@ class ActiveRecord(object):
 	def __ne__(self, other):
 		return not (self == other)
 
+	def __hash__(self):
+		return self.id
+
 class Safe(object):
 	def __init__(self, ar):
 		self.ar = ar
