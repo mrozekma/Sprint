@@ -632,6 +632,53 @@ $(document).ready(function() {
 			}
 		]
 	});
+
+	new Highcharts.Chart({
+		chart: {
+			renderTo: 'chart-sprint-goals',
+			defaultSeriesType: 'bar'
+		},
+
+		title: {
+			text: ''
+		},
+
+		credits: {
+			enabled: false
+		},
+
+		tooltip: {
+			formatter: function() {
+				return '<b>' + this.series.name + '</b>: ' + this.point.y + '%';
+			}
+		},
+
+		xAxis: {
+			categories: [' '],
+			title: {
+				text: 'Goals'
+			},
+		},
+
+		yAxis: {
+			title: {
+				text: 'Percent complete'
+			}
+		},
+
+		series: [
+"""
+
+	total = sum(t.hours for t in tasks)
+	for goal in sprint.getGoals() + [None]:
+		if goal and goal.name == '':
+			continue
+		hours = sum(t.hours for t in tasks if t.goalid == (goal.id if goal else 0))
+		print "			{name: %s, data: [%2.2f], dataLabels: {enabled: true}}," % (toJS(goal.name if goal else 'Other'), 100 * hours / total)
+
+	print """
+		]
+	});
 });
 </script>
 """
@@ -646,6 +693,9 @@ $(document).ready(function() {
 
 	print "<h2>Total commitment</h2>"
 	print "<div id=\"chart-commitment\"></div>"
+
+	print "<h2>Sprint goals</h2>"
+	print "<div id=\"chart-sprint-goals\"></div>"
 
 @get('sprints/(?P<id>[0-9])/availability')
 def showAvailability(handler, request, id):
