@@ -524,6 +524,13 @@ table.availability tr td button {
 	color: #0a0;
 }
 
+.user-list-entry {
+	float: left;
+	font-weight: bold;
+	text-align: center;
+	padding: 30px;
+}
+
 .buttons {
 	float: left;
 }

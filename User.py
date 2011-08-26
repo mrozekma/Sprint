@@ -25,7 +25,7 @@ class User(ActiveRecord):
 		s = "<img src=\"/static/images/%s.png\" class=\"user\">" % image
 
 		if link:
-			s += "<a %shref=\"/users/?username=%s\">%s</a>" % ("id=\"%s\" " % id if id else '', self.username, self.username)
+			s += "<a %shref=\"/users/%s\">%s</a>" % ("id=\"%s\" " % id if id else '', self.username, self.username)
 		else:
 			s += "<span %sclass=\"username\" username=\"%s\">%s</span>" % ("id=\"%s\" " % id if id else '', self.username, self.username)
 
@@ -44,10 +44,10 @@ class User(ActiveRecord):
 			return False
 		return db().matches("SELECT g.* FROM grants AS g, privileges AS p WHERE g.userid=? AND g.privid=p.id AND p.name=?", self.id, name)
 
-	def getAvatar(self):
+	def getAvatar(self, size = 64):
 		email = "%s@microsemi-wl.com" % self.username
 		email = md5(email.strip().lower())
-		return "http://www.gravatar.com/avatar/%s?s=64&d=wavatar" % email
+		return "http://www.gravatar.com/avatar/%s?s=%d&d=wavatar" % (email, size)
 
 # print map(str, User.loadAll())
 # print User.load(1)
