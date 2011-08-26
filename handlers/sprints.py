@@ -1,6 +1,6 @@
-from __future__ import with_statement
+from __future__ import with_statement, division
 from datetime import datetime, date, timedelta
-import itertools
+from itertools import cycle
 from json import dumps as toJS
 
 from rorn.Session import delay, undelay
@@ -375,6 +375,9 @@ def showMetrics(handler, request, id):
 	oneday = timedelta(1)
 	start, end = tsToDate(sprint.start), tsToDate(sprint.end)
 
+	#TODO // This shouldn't be necessary
+	clrs = ['#4572A7', '#AA4643', '#89A54E', '#80699B', '#3D96AE', '#DB843D', '#92A8CD', '#A47D7C', '#B5CA92']
+
 	print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts.js\"></script>"
 	print """
 <script type=\"text/javascript\"> //"
@@ -565,6 +568,70 @@ $(document).ready(function() {
 	print """
 ]
 	});
+
+	new Highcharts.Chart({
+		chart: {
+			renderTo: 'chart-commitment',
+		},
+
+		title: {
+			text: ''
+		},
+
+		tooltip: {
+			formatter: function() {
+				return '<b>' + this.series.name + '</b><br>' + this.point.name + ': '+ this.point.x + ' (' + this.y + '%)';
+			}
+		},
+
+		credits: {
+			enabled: false
+		},
+
+		series: [
+			{
+				type: 'pie',
+				name: 'Start',
+				size: '45%',
+				innerSize: '20%',
+				showInLegend: true,
+				dataLabels: {
+					enabled: false
+				},
+				data: [
+"""
+
+	originalTasks = Task.loadAll(sprintid = sprint.id, revision = 1)
+	clrGen = cycle(clrs)
+	total = sum(t.hours for t in originalTasks)
+	for user in sorted(sprint.members):
+		hours = sum(t.hours for t in originalTasks if t.assignedid == user.id)
+		print "					{name: '%s', x: %d, y: %2.2f, color: '%s'}," % (user.username, hours, 100 * hours / total, clrGen.next())
+
+	print """
+				]
+			},
+			{
+				type: 'pie',
+				name: 'Now',
+				innerSize: '45%',
+				dataLabels: {
+					enabled: false
+				},
+				data: [
+"""
+
+	clrGen = cycle(clrs)
+	total = sum(t.hours for t in tasks)
+	for user in sorted(sprint.members):
+		hours = sum(t.hours for t in tasks if t.assignedid == user.id)
+		print "					{name: '%s', x: %d, y: %2.2f, color: '%s'}," % (user.username, hours, 100 * hours / total, clrGen.next())
+
+	print """
+				]
+			}
+		]
+	});
 });
 </script>
 """
@@ -576,6 +643,9 @@ $(document).ready(function() {
 
 	print "<h2>Hours (by user)</h2>"
 	print "<div id=\"chart-by-user\"></div>"
+
+	print "<h2>Total commitment</h2>"
+	print "<div id=\"chart-commitment\"></div>"
 
 @get('sprints/(?P<id>[0-9])/availability')
 def showAvailability(handler, request, id):
