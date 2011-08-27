@@ -34,4 +34,12 @@ $(document).ready(function() {
         e.stopImmediatePropagation();
 		window.location = next_url;
 	});
+
+	get_preview = function() {
+		$.post($('form').attr('action') + '&dryrun=true', $('form').serialize(), function(data, text, request) {
+			$('#preview').html(data);
+		});
+	};
+
+	$('#many-body').bind('paste', function() {setTimeout(get_preview, 0)}).typing({delay: 400, stop: get_preview});
 });

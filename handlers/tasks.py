@@ -1,7 +1,7 @@
 from __future__ import with_statement
 
 from rorn.Session import delay
-from rorn.Box import TintedBox, ErrorBox
+from rorn.Box import TintedBox, ErrorBox, CollapsibleBox
 from rorn.ResponseWriter import ResponseWriter
 
 from Privilege import requirePriv
@@ -205,20 +205,147 @@ $(document).ready(function() {
 
 @get('tasks/new/many')
 def newTaskMany(handler, request, group):
-	requirePriv(handler, 'User')
 	handler.title("New Tasks")
+	requirePriv(handler, 'User')
 	id = int(group)
+
+	defaultGroup = Group.load(group)
+	if not defaultGroup:
+		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+	sprint = defaultGroup.sprint
+
+	print "<script src=\"/static/jquery.typing-0.2.0.min.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/tasks.js\" type=\"text/javascript\"></script>"
+	print "<script type=\"text/javascript\">"
+	print "next_url = '/sprints/%d';" % sprint.id
+	print "</script>"
 
 	print (tabs << 'many') % id
 
-	group = Group.load(group)
-	if not group:
-		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+	help = ResponseWriter()
+	print "Each line needs to match the following syntax. Unparseable lines generate an error message but are otherwise ignored"
+	print "<ul>"
+	print "<li><b>X</b> -- A single character changes the field separator to that character. The default field separator is |, so that's used in the examples here</li>"
+	print "<li><b>X...X:</b> -- A line ending in a colon is a group name. All tasks after that line will be added to that group. If no group of that name exists, it will be created (the preview will label that group as \"(NEW)\"). A blank line switches back to the default group, which is the group you clicked the new task button on, %s" % defaultGroup.safe.name
+	print "<li><b>X...X|X...X|X...X[|X...X]</b> -- 3 or 4 fields are a new task. The fields can appear in any order:<ul>"
+	print "<li><b>assignee</b> -- The person assigned to this task</li>"
+	print "<li><b>hours</b> -- The number of hours this task will take</li>"
+	print "<li><b>status</b> -- The initial status of the task. This field is optional; it defaults to \"not started\"</li>"
+	print "<li><b>name</b> -- The name of the task</li>"
+	print "</ul></li>"
+	print "</ul>"
+	print CollapsibleBox('Help', help.done())
 
-	print TintedBox('Unimplemented', scheme = 'blood')
-	print "<br>"
-	print "sprint: %s<br>" % group.sprint
-	print "group: %s" % group
+	print CollapsibleBox('Groups', "<ul>%s</ul>" % ''.join("<li>%s</li>" % ("<b>%s</b> (default)" if group == defaultGroup else "%s") % group.safe.name for group in sprint.getGroups()))
+
+	print "<form method=\"post\" action=\"/tasks/new/many?group=%d\">" % defaultGroup.id
+	print "<textarea id=\"many-body\" name=\"body\" class=\"defaultfocus\"></textarea>"
+
+	print "<div id=\"preview\"></div>"
+	print "<div id=\"new-task-many-buttons\">"
+	print Button('Save All', id = 'save-button', type = 'button').positive()
+	print Button('Cancel', id = 'cancel-button', type = 'button').negative()
+	print "</div>"
+	print "</form>"
+
+@post('tasks/new/many')
+def newTaskMany(handler, request, group, p_body, dryrun = False):
+	request['wrappers'] = False
+	requirePriv(handler, 'User')
+	id = int(group)
+
+	defaultGroup = Group.load(group)
+	if not defaultGroup:
+		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+	sprint = defaultGroup.sprint
+
+	group = defaultGroup
+	groups = [group]
+	newGroups = []
+	tasks = {group: []}
+	sep = '|'
+	lines = map(lambda x: x.strip(), p_body.split('\n'))
+
+	for line in lines:
+		if line == '':
+			group = defaultGroup
+		elif len(line) == 1: # Separator
+			sep = line[0]
+		elif line[-1] == ':': # Group
+			line = line[:-1]
+			group = Group.load(sprintid = sprint.id, name = line)
+			if not group:
+				group = Group(sprint.id, line)
+				newGroups.append(group)
+			if not group in groups:
+				groups.append(group)
+				tasks[group] = []
+		else:
+			parts = line.split(sep)
+			name, assigned, status, hours = None, None, None, None
+			for case in switch(len(parts)):
+				if case(3):
+					status = 'not started'
+					# Fall-through
+				if case(4):
+					for part in parts:
+						part = part.strip()
+						# Hours
+						if not hours:
+							try:
+								hours = int(part)
+								continue
+							except ValueError: pass
+
+						# Status
+						if not status and part.lower() in statuses:
+							status = part.lower()
+							continue
+
+						# Assigned
+						if not assigned and part in map(lambda u: u.username, sprint.members):
+							assigned = User.load(username = part)
+							continue
+
+						# Name
+						if not name:
+							name = part
+							continue
+
+						print "<i>Unable to parse (no field match on '%s'): %s</i><br>" % (stripTags(part), stripTags(line))
+					break
+				if case():
+					print "<i>Unable to parse (field count mismatch): %s</i><br>" % stripTags(line)
+					break
+				break
+			if all([name, assigned, status, hours]):
+				tasks[group].append((name, assigned, status, hours))
+
+	if dryrun:
+		for group in groups:
+			print "<br>"
+			print "<b>%s%s</b><br>" % (group.safe.name, ' (NEW)' if group in newGroups else '')
+			for name, assigned, status, hours in tasks[group]:
+				print "%s (assigned to %s, %s, %d %s remain)<br>" % (stripTags(name), assigned, status, hours, 'hour' if hours == 1 else 'hours')
+	else:
+		for group in groups:
+			# Changing a group's ID will change its hash, so this pulls from tasks before saving the group
+			groupTasks = tasks[group]
+			group.save()
+			for name, assigned, status, hours in groupTasks:
+				Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, status, hours).save()
+
+		numGroups = len(newGroups)
+		numTasks = sum(map(lambda g: len(g), tasks.values()))
+		if numGroups > 0 and numGroups > 0:
+			delay(handler, TintedBox("Added %d %s, %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups', numTasks, 'task' if numTasks == 1 else 'tasks'), 'green'))
+		elif numGroups > 0:
+			delay(handler, TintedBox("Added %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups'), 'green'))
+		elif numTasks > 0:
+			delay(handler, TintedBox("Added %d %s" % (numTasks, 'task' if numTasks == 1 else 'tasks'), 'green'))
+		else:
+			delay(handler, TintedBox("No changes", 'yellow'))
+		request['code'] = 299
 
 @get('tasks/new/import')
 def newTaskImport(handler, request, group):
