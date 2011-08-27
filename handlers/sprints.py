@@ -673,7 +673,7 @@ $(document).ready(function() {
 	for goal in sprint.getGoals() + [None]:
 		if goal and goal.name == '':
 			continue
-		start = sum(t.hours for t in originalTasks if taskMap[t.id].goalid == (goal.id if goal else 0))
+		start = sum(t.hours for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
 		now = sum(t.hours for t in tasks if t.goalid == (goal.id if goal else 0))
 		pcnt = (start-now) / start if start > 0 and start > now else 0
 		print "			{name: %s, data: [%2.2f], dataLabels: {enabled: true}}," % (toJS(goal.name if goal else 'Other'), 100 * pcnt)
