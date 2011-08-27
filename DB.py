@@ -2,7 +2,7 @@ from sqlite3 import connect, Row
 from inspect import getargspec, getmembers
 import sys
 
-from utils import stripTags
+from utils import stripTags, log
 
 class DB:
 	def __init__(self):
@@ -10,7 +10,7 @@ class DB:
 		self.conn.row_factory = Row
 
 	def cursor(self, expr = None, *args):
-		# print >>sys.__stdout__, "Cursoring `%s' with bound args `%s'" % (expr, args)
+		# log("DB: %s with bound args %s" % (expr, args))
 		cur = self.conn.cursor()
 		if expr:
 			cur.execute(expr, args)

@@ -3,10 +3,15 @@ from rorn.ResponseWriter import ResponseWriter
 
 from wrappers import header, footer
 from User import User
+from utils import *
 
 class HTTPHandler(ParentHandler):
 	def __init__(self, request, address, server):
 		ParentHandler.__init__(self, request, address, server)
+
+	def log_message(self, format, *args):
+		user = self.session['user'].username if self.session['user'] else self.address_string()
+		log("[%s] %s(%s) %s" % (self.log_date_time_string(), self.session['user'].username if self.session['user'] else 'logged out', self.address_string(), format % args))
 
 	def wrapContent(self, request):
 		writer = ResponseWriter()

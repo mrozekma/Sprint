@@ -38,12 +38,12 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		BaseHTTPRequestHandler.__init__(self, request, address, server)
 
 	def buildResponse(self, method, data):
-		log("Building response")
+		# log("Building response")
 		self.contentType = 'text/html'
 
 		path = self.path
 		query = {}
-		log("Original path: %s" % path)
+		# log("Original path: %s" % path)
 
 		writer = ResponseWriter()
 
@@ -88,7 +88,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 				else:
 					query[key] = oldQuery[key]
 
-			log("Stripped path: %s" % path)
+			# log("Stripped path: %s" % path)
 
 			assert path[0] == '/'
 			path = path[1:]
@@ -114,20 +114,20 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			defaults = defaults or []
 
 			givenS, expectedS = set(given), set(expected)
-			log("expected = %s, defaults = %s" % (expected, defaults))
+			# log("expected = %s, defaults = %s" % (expected, defaults))
 			requiredS = set(expected[:-len(defaults)] if defaults else expected)
-			log("requiredS = %s" % requiredS)
+			# log("requiredS = %s" % requiredS)
 
 			expectedS -= set(['self', 'handler', 'request'])
 			requiredS -= set(['self', 'handler', 'request'])
 
 			over = givenS - expectedS
-			log("givenS (%s) - expectedS (%s) = %s" % (givenS, expectedS, over))
+			# log("givenS (%s) - expectedS (%s) = %s" % (givenS, expectedS, over))
 			if len(over):
 				self.error("Invalid request", "Unexpected request argument%s: %s" % ('s' if len(over) > 1 else '', ', '.join(over)))
 
 			under = requiredS - givenS
-			log("requiredS (%s) - givenS (%s) = %s" % (requiredS, givenS, under))
+			# log("requiredS (%s) - givenS (%s) = %s" % (requiredS, givenS, under))
 			if len(under):
 				self.error("Invalid request", "Missing expected request argument%s: %s" % ('s' if len(under) > 1 else '', ', '.join(under)))
 
@@ -170,7 +170,6 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		# self.leftMenu.clear()
 
 		for (fromStr, toStr, count) in self.replacements.values():
-			print "%s -> %s" % (fromStr, toStr)
 			self.response = self.response.replace(fromStr, toStr, count)
 
 		return request
@@ -227,10 +226,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 				self.wfile.write(self.response)
 				return
 			else:
-				print form[k]
 				data[k] = form[k].value
-		# data = dict([(k, map(lambda v: v.value, form[k]) if type(form[k]) is list else form[k].value) for k in form])
-		# print "DEBUG: %s" % self.rfile
 		self.do_HEAD('post', data)
 		self.wfile.write(self.response)
 
