@@ -202,6 +202,7 @@ def printTask(task, days, group = None):
 	print "<td class=\"actions\">"
 	print "<a href=\"/tasks/%d\" target=\"_new\"><img src=\"/static/images/task-history.png\" title=\"History\"></a>" % task.id
 	print "<a href=\"javascript:delete_task(%d);\"><img src=\"/static/images/task-delete.png\" title=\"Delete Task\"></a>" % task.id
+	print "<img class=\"saving\" src=\"/static/images/loading.gif\">"
 	print "</td>"
 	print "</tr>"
 

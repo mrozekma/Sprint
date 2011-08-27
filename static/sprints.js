@@ -8,6 +8,7 @@ $(document).ready(function() {
 	setup_group_arrows();
 
 	$('#post-status').hide();
+	$('.saving').css('visibility', 'hidden');
 });
 
 function setup_hours_events() {
@@ -407,17 +408,21 @@ function set_status(task, status_name) {
 savingMutex = false;
 function save_task(task, field, value, counter) {
 	console.log("Saving change to " + task.attr('taskid') + "(" + task.attr('revid') + "): " + field + " <- " + value + " (attempt " + (counter == undefined ? 0 : counter) + ")");
+	$('.saving', task).css('visibility', 'visible');
+
 	if(savingMutex) {
 		if(counter == 10) {
 			box = $('#post-status');
 			box.attr('class', 'tint red');
 			$('span', box).html("Timed out trying to set task " + task.attr('taskid') + " " + field + " to " + value);
 			box.fadeIn();
+			$('.saving', task).css('visibility', 'hidden');
 		} else {
 			setTimeout(function() {save_task(task, field, value, (counter == undefined ? 0 : counter) + 1);}, 200);
 		}
 		return;
 	}
+
 	savingMutex = true;
 	$.post("/sprints/" + sprintid, {'id': task.attr('taskid'), 'rev_id': task.attr('revid'), 'field': field, 'value': value}, function(data, text, request) {
 		box = $('#post-status')
@@ -433,6 +438,7 @@ function save_task(task, field, value, counter) {
 		case 299:
 			$('tr.task[taskid=' + task.attr('taskid') + ']').attr('revid', data);
 			console.log("Changed saved; new revision is " + data);
+			box.fadeOut();
 			box = null;
 			break;
 		default:
@@ -444,6 +450,7 @@ function save_task(task, field, value, counter) {
 		if(box) {
 			box.fadeIn();
 		}
+		$('.saving', task).css('visibility', 'hidden');
 		savingMutex = false;
 	});
 }
