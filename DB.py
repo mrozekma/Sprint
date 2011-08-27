@@ -179,7 +179,7 @@ class ActiveRecord(object):
 		return not (self == other)
 
 	def __hash__(self):
-		return self.id
+		return self.id or object.__hash__(self)
 
 class Safe(object):
 	def __init__(self, ar):
