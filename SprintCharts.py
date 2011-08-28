@@ -4,7 +4,6 @@ from itertools import cycle
 from Chart import Chart
 from Task import Task
 from Availability import Availability
-from datetime import timedelta
 from utils import *
 
 class HoursChart(Chart):
@@ -12,8 +11,6 @@ class HoursChart(Chart):
 		Chart.__init__(self, placeholder)
 
 		tasks = sprint.getTasks()
-		oneday = timedelta(1)
-		start, end = tsToDate(sprint.start), tsToDate(sprint.end)
 
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
@@ -44,11 +41,8 @@ class HoursChart(Chart):
 		}
 		seriesList.append(series)
 
-		seek = start
-		while seek <= end:
-			if seek.weekday() < 5: # Weekday
-				series['data'].append([dateToTs(seek) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in tasks])])
-			seek += oneday
+		for day in sprint.getDays():
+			series['data'].append([dateToTs(day) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks])])
 
 		series = {
 			'name': 'Availability',
@@ -59,11 +53,8 @@ class HoursChart(Chart):
 		seriesList.append(series)
 
 		avail = Availability(sprint)
-		seek = start
-		while seek <= end:
-			if seek.weekday() < 5: # Weekday
-				series['data'].append([dateToTs(seek) * 1000, avail.getAllForward(seek)])
-			seek += oneday
+		for day in sprint.getDays():
+			series['data'].append([dateToTs(day) * 1000, avail.getAllForward(day)])
 
 		series = {
 			'name': 'Deferred tasks',
@@ -73,19 +64,14 @@ class HoursChart(Chart):
 		}
 		seriesList.append(series)
 
-		seek = start
-		while seek <= end:
-			if seek.weekday() < 5: # Weekday
-				series['data'].append([dateToTs(seek) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in tasks if t.status == 'deferred'])])
-			seek += oneday
+		for day in sprint.getDays():
+			series['data'].append([dateToTs(day) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks if t.status == 'deferred'])])
 
 class HoursByUserChart(Chart):
 	def __init__(self, placeholder, sprint):
 		Chart.__init__(self, placeholder)
 
 		tasks = sprint.getTasks()
-		oneday = timedelta(1)
-		start, end = tsToDate(sprint.start), tsToDate(sprint.end)
 
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
@@ -118,19 +104,15 @@ class HoursByUserChart(Chart):
 			seriesList.append(series)
 
 			userTasks = filter(lambda t: t.assigned == user, tasks)
-			seek = start
-			while seek <= end:
-				if seek.weekday() < 5: # Weekday
-					series['data'].append([dateToTs(seek) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in userTasks])])
-				seek += oneday
+			for day in sprint.getDays():
+				series['data'].append([dateToTs(day) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in userTasks])])
 
 class CommitmentChart(Chart):
 	def __init__(self, placeholder, sprint):
 		Chart.__init__(self, placeholder)
 
 		tasks = sprint.getTasks()
-		oneday = timedelta(1)
-		start, end = tsToDate(sprint.start), tsToDate(sprint.end)
+		start = tsToDate(sprint.start)
 
 		#TODO
 		clrs = ['#4572A7', '#AA4643', '#89A54E', '#80699B', '#3D96AE', '#DB843D', '#92A8CD', '#A47D7C', '#B5CA92']
@@ -188,8 +170,7 @@ class SprintGoalsChart(Chart):
 		Chart.__init__(self, placeholder)
 
 		tasks = sprint.getTasks()
-		oneday = timedelta(1)
-		start, end = tsToDate(sprint.start), tsToDate(sprint.end)
+		start = tsToDate(sprint.start)
 
 		self.chart.defaultSeriesType = 'bar'
 		self.title.text = ''

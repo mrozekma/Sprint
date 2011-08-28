@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from utils import *
 from DB import ActiveRecord, db
 from User import User
@@ -28,6 +30,15 @@ class Sprint(ActiveRecord):
 
 	def getEndStr(self):
 		return formatDate(tsToDate(self.end))
+
+	def getDays(self, includeWeekends = False):
+		oneday = timedelta(1)
+		start, end = tsToDate(self.start), tsToDate(self.end)
+		seek = start
+		while seek <= end:
+			if includeWeekends or seek.weekday() < 5:
+				yield seek
+			seek += oneday
 
 	def isActive(self):
 		now = dateToTs(datetime.now())
