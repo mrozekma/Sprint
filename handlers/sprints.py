@@ -1,6 +1,5 @@
-from __future__ import with_statement, division
+from __future__ import with_statement
 from datetime import datetime, date, timedelta
-from itertools import cycle
 from json import dumps as toJS
 
 from rorn.Session import delay, undelay
@@ -18,6 +17,8 @@ from Group import Group
 from Tabs import Tabs
 from Goal import Goal
 from Availability import Availability
+from Chart import Chart
+from SprintCharts import *
 from utils import *
 
 # groupings = ['status', 'owner', 'hours']
@@ -368,336 +369,22 @@ def showMetrics(handler, request, id):
 	if not sprint:
 		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
 		done()
-	tasks = sprint.getTasks()
 
 	handler.title(sprint.safe.name)
 
-	tasks = sprint.getTasks()
-	oneday = timedelta(1)
-	start, end = tsToDate(sprint.start), tsToDate(sprint.end)
+	charts = [
+		('Hours (general)', HoursChart('chart-general', sprint)),
+		('Hours (by user)', HoursByUserChart('chart-by-user', sprint)),
+		('Total commitment', CommitmentChart('chart-commitment', sprint)),
+		('Sprint goals', SprintGoalsChart('chart-sprint-goals', sprint)),
+	]
 
-	#TODO // This shouldn't be necessary
-	clrs = ['#4572A7', '#AA4643', '#89A54E', '#80699B', '#3D96AE', '#DB843D', '#92A8CD', '#A47D7C', '#B5CA92']
-
-	print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts.js\"></script>"
-	print """
-<script type=\"text/javascript\"> //"
-$(document).ready(function() {
-	new Highcharts.Chart({
-		chart: {
-			renderTo: 'chart-general',
-			defaultSeriesType: 'line',
-			zoomType: 'x',
-		},
-
-		title: {
-			text: ''
-		},
-
-		plotOptions: {
-			line: {
-				dataLabels: {
-					enabled: true
-				}
-			}
-		},
-
-		tooltip: {
-			shared: true
-		},
-
-		credits: {
-			enabled: false
-		},
-
-		xAxis: {
-			type: 'datetime',
-			dateTimeLabelFormats: {
-				day: '%%a'
-			},
-			tickInterval: 24 * 3600 * 1000,
-			maxZoom: 48 * 3600 * 1000,
-			title: {
-				text: 'Day'
-			},
-			plotBands: [{
-				color: '#DDD',
-				from: %d,
-				to: %d
-			}],
-		},
-
-		yAxis: {
-			min: 0,
-			title: {
-				text: 'Hours'
-			}
-		},
-
-		series: [
-			{
-				name: 'Hours needed',
-				pointStart: %d,
-				pointInterval: 24 * 3600 * 1000,
-				data: [
-""" % (dateToTs(datetime.now()) * 1000, sprint.end * 1000, sprint.start * 1000)
-
-	seek = start
-	while seek <= end:
-		if seek.weekday() < 5: # Weekday
-			print "[%d, %d]," % (dateToTs(seek) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in tasks])),
-		seek += oneday
-
-	print """
-				]
-			},
-
-			{
-				name: 'Availability',
-				pointStart: %d,
-				pointInterval: 24 * 3600 * 1000,
-				data: [
-""" % (sprint.start * 1000)
-
-	avail = Availability(sprint)
-	seek = start
-	while seek <= end:
-		if seek.weekday() < 5: # Weekday
-			print "[%d, %d]," % (dateToTs(seek) * 1000, avail.getAllForward(seek)),
-		seek += oneday
-
-	#TODO Implement per-user availability
-	# perDay = len(sprint.members) * 8
-	# numDays = (end - start).days
-	# print ', '.join(map(str, range(numDays*perDay, -1, -perDay)))
-
-	print """
-				]
-			},
-
-			{
-				name: 'Deferred tasks',
-				pointStart: %d,
-				pointInterval: 24 * 3600 * 1000,
-				data: [
-""" % (sprint.start * 1000)
-
-	seek = start
-	while seek <= end:
-		if seek.weekday() < 5: # Weekday
-			print "[%d, %d]," % (dateToTs(seek) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in tasks if t.status == 'deferred']))
-		seek += oneday
-
-	print """
-				]
-			}
-		]
-	});
-
-	new Highcharts.Chart({
-		chart: {
-			renderTo: 'chart-by-user',
-			defaultSeriesType: 'line',
-			zoomType: 'x',
-		},
-
-		title: {
-			text: ''
-		},
-
-		/*
-		plotOptions: {
-			line: {
-				dataLabels: {
-					enabled: true
-				}
-			}
-		},
-		*/
-
-		tooltip: {
-			shared: true
-		},
-
-		credits: {
-			enabled: false
-		},
-
-		xAxis: {
-			type: 'datetime',
-			dateTimeLabelFormats: {
-				day: '%%a'
-			},
-			tickInterval: 24 * 3600 * 1000,
-			maxZoom: 48 * 3600 * 1000,
-			title: {
-				text: 'Day'
-			},
-			plotBands: [{
-				color: '#DDD',
-				from: %d,
-				to: %d
-			}],
-		},
-
-		yAxis: {
-			min: 0,
-			title: {
-				text: 'Hours'
-			}
-		},
-
-		series: [
-""" % (dateToTs(datetime.now()) * 1000, sprint.end * 1000)
-
-	for user in sorted(sprint.members):
-		print "			{"
-		print "				name: '%s'," % user.username
-		print "				pointStart: %d," % (sprint.start * 1000)
-		print "				pointInterval: 24 * 3600 * 1000,"
-		print "				data: [",
-		userTasks = filter(lambda t: t.assigned == user, tasks)
-		seek = start
-		while seek <= end:
-			if seek.weekday() < 5: # Weekday
-				print "[%d, %d]," % (dateToTs(seek) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in userTasks])),
-			seek += oneday
-		print "],"
-		print "				visible: true"
-		print "			},"
-
-	print """
-]
-	});
-
-	new Highcharts.Chart({
-		chart: {
-			renderTo: 'chart-commitment',
-		},
-
-		title: {
-			text: ''
-		},
-
-		tooltip: {
-			formatter: function() {
-				return '<b>' + this.series.name + '</b><br>' + this.point.name + ': '+ this.point.x + ' (' + this.y + '%)';
-			}
-		},
-
-		credits: {
-			enabled: false
-		},
-
-		series: [
-			{
-				type: 'pie',
-				name: 'Start',
-				size: '45%',
-				innerSize: '20%',
-				showInLegend: true,
-				dataLabels: {
-					enabled: false
-				},
-				data: [
-"""
-
-	originalTasks = Task.loadAll(sprintid = sprint.id, revision = 1)
-	clrGen = cycle(clrs)
-	total = sum(t.hours for t in originalTasks)
-	for user in sorted(sprint.members):
-		hours = sum(t.hours for t in originalTasks if t.assignedid == user.id)
-		print "					{name: '%s', x: %d, y: %2.2f, color: '%s'}," % (user.username, hours, 100 * hours / total, clrGen.next())
-
-	print """
-				]
-			},
-			{
-				type: 'pie',
-				name: 'Now',
-				innerSize: '45%',
-				dataLabels: {
-					enabled: false
-				},
-				data: [
-"""
-
-	clrGen = cycle(clrs)
-	total = sum(t.hours for t in tasks)
-	for user in sorted(sprint.members):
-		hours = sum(t.hours for t in tasks if t.assignedid == user.id)
-		print "					{name: '%s', x: %d, y: %2.2f, color: '%s'}," % (user.username, hours, 100 * hours / total, clrGen.next())
-
-	print """
-				]
-			}
-		]
-	});
-
-	new Highcharts.Chart({
-		chart: {
-			renderTo: 'chart-sprint-goals',
-			defaultSeriesType: 'bar'
-		},
-
-		title: {
-			text: ''
-		},
-
-		credits: {
-			enabled: false
-		},
-
-		tooltip: {
-			formatter: function() {
-				return '<b>' + this.series.name + '</b>: ' + this.point.y + '%';
-			}
-		},
-
-		xAxis: {
-			categories: [' '],
-			title: {
-				text: 'Goals'
-			},
-		},
-
-		yAxis: {
-			title: {
-				text: 'Percent complete'
-			}
-		},
-
-		series: [
-"""
-	taskMap = dict([(task.id, task) for task in tasks])
-	for goal in sprint.getGoals() + [None]:
-		if goal and goal.name == '':
-			continue
-		start = sum(t.hours for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
-		now = sum(t.hours for t in tasks if t.goalid == (goal.id if goal else 0))
-		pcnt = (start-now) / start if start > 0 and start > now else 0
-		print "			{name: %s, data: [%2.2f], dataLabels: {enabled: true}}," % (toJS(goal.name if goal else 'Other'), 100 * pcnt)
-
-	print """
-		]
-	});
-});
-</script>
-"""
-
+	Chart.include()
+	map(lambda (title, chart): chart.js(), charts)
 	print (tabs << 'metrics') % id
-
-	print "<h2>Hours (general)</h2>"
-	print "<div id=\"chart-general\"></div>"
-
-	print "<h2>Hours (by user)</h2>"
-	print "<div id=\"chart-by-user\"></div>"
-
-	print "<h2>Total commitment</h2>"
-	print "<div id=\"chart-commitment\"></div>"
-
-	print "<h2>Sprint goals</h2>"
-	print "<div id=\"chart-sprint-goals\"></div>"
+	for title, chart in charts:
+		print "<h2>%s</h2>" % title
+		chart.placeholder()
 
 @get('sprints/(?P<id>[0-9])/availability')
 def showAvailability(handler, request, id):
