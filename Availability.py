@@ -16,7 +16,10 @@ class Availability:
 	def set(self, user, timestamp, hours):
 		db().update("INSERT OR REPLACE INTO availability(sprintid, userid, timestamp, hours) VALUES(?, ?, ?, ?)", self.sprint.id, user.id, dateToTs(timestamp), hours)
 
-	def getAllForward(self, timestamp):
-		rows = db().select("SELECT SUM(hours) FROM availability WHERE sprintid = ? AND timestamp >= ?", self.sprint.id, dateToTs(timestamp))
+	def getAllForward(self, timestamp, user = None):
+		if user:
+			rows = db().select("SELECT COALESCE(SUM(hours), 0) FROM availability WHERE sprintid = ? AND userid = ? AND timestamp >= ?", self.sprint.id, user.id, dateToTs(timestamp))
+		else:
+			rows = db().select("SELECT COALESCE(SUM(hours), 0) FROM availability WHERE sprintid = ? AND timestamp >= ?", self.sprint.id, dateToTs(timestamp))
 		rows = [x for x in rows]
-		return int(rows[0]['SUM(hours)'])
+		return int(rows[0]['COALESCE(SUM(hours), 0)'])

@@ -15,6 +15,10 @@ class Sprint(ActiveRecord):
 		self.end = end
 		self.members = ActiveRecord.loadLink(self, 'members', 'sprintid', User, 'userid')
 
+	@classmethod
+	def loadAllActive(cls):
+		return filter(lambda s: s.isActive(), Sprint.loadAll())
+
 	def save(self):
 		ActiveRecord.save(self)
 		ActiveRecord.saveLink(self, self.members, 'members', 'sprintid', User, 'userid')

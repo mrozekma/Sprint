@@ -550,6 +550,13 @@ table.availability tr td button {
 	padding: 30px;
 }
 
+img.gravatar {
+	float: left;
+	position: relative;
+	top: -10px;
+	padding-right: 10px;
+}
+
 .buttons {
 	float: left;
 }

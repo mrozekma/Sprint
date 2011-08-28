@@ -9,7 +9,6 @@ from Task import Task, statuses, statusMenu
 from Group import Group
 from Goal import Goal
 from User import User
-from Table import LRTable
 from Button import Button
 from Tabs import Tabs
 from utils import *

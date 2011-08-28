@@ -6,7 +6,6 @@ from rorn.Session import delay
 from Privilege import requirePriv
 from Group import Group
 from User import User
-from Table import LRTable
 from Button import Button
 from utils import *
 
