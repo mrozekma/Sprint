@@ -48,7 +48,7 @@ class User(ActiveRecord):
 	def getAvatar(self, size = 64):
 		email = "%s@microsemi-wl.com" % self.username
 		email = md5(email.strip().lower())
-		return "http://www.gravatar.com/avatar/%s?s=%d&d=wavatar" % (email, size)
+		return "http://www.gravatar.com/avatar/%s?s=%d&d=wavatar&r=pg" % (email, size)
 
 # print map(str, User.loadAll())
 # print User.load(1)
