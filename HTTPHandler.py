@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from rorn.HTTPHandler import HTTPHandler as ParentHandler
 from rorn.ResponseWriter import ResponseWriter
 
@@ -20,8 +22,15 @@ class HTTPHandler(ParentHandler):
 		footer(self, request['path'])
 		self.response = writer.done()
 
-	def hackify(self):
-		self.session['user'] = User.load(username = 'mmrozek')
+	def processingRequest(self):
+		self.session['user'] = User.load(username = 'mmrozek') #TODO Remove
+
+		#HACK
+		if self.path.startswith('/static/'): return
+
+		if self.session['user']:
+			self.session['user'].lastseen = dateToTs(datetime.now())
+			self.session['user'].save()
 
 # Handlers
 # import index

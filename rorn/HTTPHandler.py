@@ -198,7 +198,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 	def do_HEAD(self, method = 'get', data = None):
 		self.session = Session.load(Session.determineKey(self))
-		self.hackify() #TODO Remove
+		self.processingRequest()
 
 		try:
 			request = self.buildResponse(method, data)
@@ -219,7 +219,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 				data[k[:-2]] = form.getlist(k)
 			elif type(form[k]) is list:
 				self.session = Session.load(Session.determineKey(self))
-				self.hackify() #TODO Remove
+				self.processingRequest() #TODO Remove
 				self.contentType = 'text/html'
 				self.response = "Multiple values for POST key: %s" % k
 				self.sendHead(200)
@@ -234,3 +234,5 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		print ErrorBox(title, text)
 		if isDone:
 			done()
+
+	def processingRequest(self): pass
