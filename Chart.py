@@ -1,4 +1,5 @@
 from json import dumps as toJS
+import re
 
 class Index(object):
 	def __init__(self, name, chartOrParent):
@@ -82,7 +83,7 @@ class Chart(object):
 		print "<script type=\"text/javascript\">"
 		print "$(document).ready(function() {",
 		print "new Highcharts.Chart(",
-		print toJS(self._m, sort_keys = True, indent = 4),
+		print re.sub('"function\(\) {(.*)}"', "function() {\\1}", toJS(self._m, sort_keys = True, indent = 4)),
 		print ");",
 		print "});"
 		print "</script>"
