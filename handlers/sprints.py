@@ -1,4 +1,4 @@
-from __future__ import with_statement
+from __future__ import with_statement, division
 from datetime import datetime, date, timedelta
 from json import dumps as toJS
 
@@ -385,6 +385,16 @@ def showMetrics(handler, request, id):
 	for title, chart in charts:
 		print "<h2>%s</h2>" % title
 		chart.placeholder()
+
+	print "<h2>Averages</h2>"
+	avail = Availability(sprint)
+	# numDays = (tsToDate(sprint.end) - tsToDate(sprint.start)).days + 1
+	numDays = len([day for day in sprint.getDays()])
+	availability = (avail.getAllForward(tsToDate(sprint.start)) / numDays)
+	tasking = (sum(task.hours if task else 0 for task in [task.getRevisionAt(tsToDate(sprint.start)) for task in sprint.getTasks()]) / numDays)
+	print "Daily availability: <b>%2.2f hours</b><br>" % availability
+	print "Daily tasking: <b>%2.2f hours</b> (%2.2f%%)<br>" % (tasking, 100 * tasking / availability)
+	print "<br>"
 
 @get('sprints/(?P<id>[0-9])/availability')
 def showAvailability(handler, request, id):
