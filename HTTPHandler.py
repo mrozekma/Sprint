@@ -23,6 +23,8 @@ class HTTPHandler(ParentHandler):
 		self.response = writer.done()
 
 	def processingRequest(self):
+		self.replace('$headerbg$', '#0152A1', 1)
+
 		self.session['user'] = User.load(username = 'mmrozek') #TODO Remove
 
 		#HACK

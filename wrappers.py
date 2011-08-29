@@ -44,13 +44,16 @@ def header(handler, path):
 
 	print "<script src=\"/static/script.js?v=%d\" type=\"text/javascript\"></script>" % randint(0, 1000000) # TODO Remove
 
+	print "<style type=\"text/css\">"
+	print "#main_a {"
+	print "    background-color: $headerbg$;"
+	print "}"
 	if handler.session['user']:
-		print "<style type=\"text/css\">"
 		print ".username[username=\"%s\"] {" % handler.session['user'].username
 		print "    color: #C00;"
 		print "    font-weight: bold;"
 		print "}"
-		print "</style>"
+	print "</style>"
 
 		# print "<script type=\"text/javascript\">"
 		# print "$(document).ready(function () {"
