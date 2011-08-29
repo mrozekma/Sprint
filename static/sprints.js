@@ -6,6 +6,7 @@ $(document).ready(function() {
 	setup_task_buttons();
 	setup_filter_buttons();
 	setup_group_arrows();
+	setup_bugzilla($('tr.task'));
 
 	$('#post-status').hide();
 	$('.saving').css('visibility', 'hidden');
@@ -203,6 +204,30 @@ function setup_group_arrows() {
 	});
 }
 
+function setup_bugzilla(tasks) {
+	tasks.each(function() {
+		name = $('td.name span', $(this)).text();
+		link = $('td.actions a.bugzilla', $(this));
+
+		//TODO Support multiple bugs in one task
+		/*
+		re = /(?:bug |bz)([0-9]+)/gi;
+		while(match = re.exec(name)) {
+			id = parseInt(match[1], 10);
+		}
+		*/
+
+		if(match = name.match(/(?:bug |bz)([0-9]+)/i)) {
+			id = parseInt(match[1], 10);
+			console.log(id);
+			link.attr('href', 'http://bugs.arxandefense.com/show_bug.cgi?id=' + id);
+			link.show();
+		} else {
+			link.hide();
+		}
+	});
+}
+
 // function dirty(cell) {
 	// cell.parents('tr.task').addClass('dirty');
 // }
@@ -347,6 +372,7 @@ function fancy_cells(table_selector) {
 			if(c.previous != c.current) {
 				task = $(this).parents('tr.task');
 				// dirty($(this));
+				setup_bugzilla(task);
 				save_task(task, 'name', c.current);
 			}
 		}
