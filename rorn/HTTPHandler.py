@@ -10,6 +10,7 @@ from Session import Session, timestamp
 from Box import ErrorBox
 from code import showCode, highlightCode
 from ResponseWriter import ResponseWriter
+from FrameworkException import FrameworkException
 from utils import *
 
 handlers = {'get': {}, 'post': {}}
@@ -196,6 +197,16 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		for name, value in headers.iteritems():
 			self.send_header(name, value)
 		self.end_headers()
+
+	def handle_one_request(self):
+		try:
+			BaseHTTPRequestHandler.handle_one_request(self)
+		except:
+			self.contentType = 'text/html'
+			self.response = str(FrameworkException(sys.exc_info()))
+			self.sendHead(200)
+			self.wfile.write(self.response)
+			raise
 
 	def do_HEAD(self, method = 'get', data = None):
 		self.session = Session.load(Session.determineKey(self))
