@@ -147,11 +147,12 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			self.title('Unhandled Error')
 
 			writer2 = ResponseWriter()
-			lpad = len(basePath()) + 1
+			base = basePath()
+			lpad = len(base) + 1
 			print "<br>"
 			print "<div class=\"code_default light\" style=\"padding: 4px\">"
 			for filename, line, fn, stmt in traceback.extract_tb(sys.exc_info()[2]):
-				print "<div class=\"code_header\">%s:%s(%d)</div>" % (filename[lpad:], fn, line)
+				print "<div class=\"code_header\">%s:%s(%d)</div>" % (filename[lpad:] if filename.startswith(base) else "<i>%s</i>" % filename.split('/')[-1], fn, line)
 				print "<div style=\"padding: 0px 0px 10px 20px\">"
 				print highlightCode(stmt)
 				print "</div>"
