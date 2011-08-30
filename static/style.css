@@ -135,22 +135,22 @@ img.avatar {
 }
 
 .box.yellow {
-	border-color: #FF0;
+	border-color: #EE0;
 }
 
 .box.yellow .title {
-	background-color: #FF0;
-	border-bottom-color: #FF0;
+	background-color: #EE0;
+	border-bottom-color: #EE0;
 	color: #000;
 }
 
 .box.green {
-	border-color: #0F0;
+	border-color: #0A0;
 }
 
 .box.green .title {
-	background-color: #0F0;
-	border-bottom-color: #0F0;
+	background-color: #0A0;
+	border-bottom-color: #0A0;
 	color: #000;
 }
 
