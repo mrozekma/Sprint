@@ -1,13 +1,17 @@
-from rorn.Box import LoginBox, ErrorBox
+from rorn.Box import LoginBox, ErrorBox, WarningBox, SuccessBox
 from rorn.Session import delay
 
 from User import User
+from Button import Button
 from utils import *
 
 @get('login')
 def login(handler, request):
 	handler.title('Login')
-	print LoginBox()
+	if handler.session['user']:
+		print WarningBox('Logged In', 'You are already logged in as %s' % handler.session['user'])
+	else:
+		print LoginBox()
 
 @post('login')
 def loginPost(handler, request, p_username, p_password):
@@ -15,7 +19,7 @@ def loginPost(handler, request, p_username, p_password):
 	user = User.load(username = p_username, password = md5(p_password))
 	if user:
 		handler.session['user'] = user
-		delay(handler, PropBox("Login Complete", "Logged in as %s" % user))
+		delay(handler, SuccessBox("Login Complete", "Logged in as %s" % user))
 		redirect('/')
 	else:
 		delay(handler, ErrorBox("Login Failed", "Invalid username/password combination"))
@@ -23,6 +27,12 @@ def loginPost(handler, request, p_username, p_password):
 
 @get('logout')
 def logout(handler, request):
+	print "<form method=\"post\" action=\"/logout\">"
+	print Button('Logout', type = 'submit').negative()
+	print "</form>"
+
+@post('logout')
+def logoutPost(handler, request):
 	if handler.session['user']:
 		del handler.session['user']
 		redirect('/')
