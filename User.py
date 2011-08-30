@@ -3,12 +3,13 @@ from Privilege import Privilege
 from utils import md5
 
 class User(ActiveRecord):
-	def __init__(self, username, password, lastseen = 0, id = None):
+	def __init__(self, username, password, lastseen = 0, resetkey = 0, id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.username = username
 		self.password = password
 		self.lastseen = lastseen
+		self.resetkey = resetkey
 
 		if not id:
 			self.password = md5(self.password)
