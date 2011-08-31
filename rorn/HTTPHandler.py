@@ -34,6 +34,7 @@ def log(str, target = sys.stdout):
 
 class HTTPHandler(BaseHTTPRequestHandler):
 	def __init__(self, request, address, server):
+		self.session = None
 		self.replacements = {}
 		# self.leftMenu = LeftMenu()
 		BaseHTTPRequestHandler.__init__(self, request, address, server)
@@ -183,13 +184,14 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		self.replace('$title$', "%s - Sprint" % title if title else "Sprint", 1)
 		self.replace('$bodytitle$', title if title else "Sprint", 1)
 
-	def sendHead(self, code = 200, additionalHeaders = {}):
+	def sendHead(self, code = 200, additionalHeaders = {}, includeCookie = True):
 		headers = {
 			'Content-type': self.contentType,
 			'Content-Length': str(len(self.response)),
 			'Last-Modified': self.date_time_string(),
-			'Set-Cookie': 'session=%s; expires=%s; path=/' % (self.session.key, timestamp())
-			}
+		}
+		if self.session:
+			headers['Set-Cookie'] = 'session=%s; expires=%s; path=/' % (self.session.key, timestamp())
 
 		headers.update(additionalHeaders)
 
