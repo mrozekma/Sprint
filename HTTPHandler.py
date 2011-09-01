@@ -29,6 +29,7 @@ class HTTPHandler(ParentHandler):
 		if self.path.startswith('/static/'): return
 
 		if self.session['user']:
+			self.session['user'] = User.load(self.session['user'].id) # Make sure the user isn't out of date
 			self.session['user'].lastseen = dateToTs(datetime.now())
 			self.session['user'].save()
 
