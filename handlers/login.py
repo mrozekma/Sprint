@@ -18,6 +18,10 @@ def loginPost(handler, request, p_username, p_password):
 	handler.title('Login')
 	user = User.load(username = p_username, password = User.crypt(p_username, p_password))
 	if user:
+		if user.resetkey:
+			user.resetkey = None
+			user.save()
+
 		handler.session['user'] = user
 		delay(handler, SuccessBox("Login Complete", "Logged in as %s" % user))
 		redirect('/')
