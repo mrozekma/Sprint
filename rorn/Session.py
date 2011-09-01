@@ -53,7 +53,6 @@ class Session:
 	def load(key):
 		if key not in sessions:
 			sessions[key] = Session(key)
-			print "New session: %s" % key
 			Session.saveAll()
 		return sessions[key]
 
@@ -63,15 +62,12 @@ class Session:
 		try:
 			with open('session', 'r') as f:
 				sessions = pickle.load(f)
-				print "Loaded sessions: %s" % sessions
 		except Exception: pass
 
 	@staticmethod
 	def saveAll():
 		with open('session', 'w') as f:
 			pickle.dump(sessions, f)
-		print "Saved sessions: %s" % sessions
-
 
 def timestamp(days = 7):
 	return (datetime.utcnow() + timedelta(days)).strftime("%a, %d-%b-%Y %H:%M:%S GMT")
