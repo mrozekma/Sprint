@@ -33,6 +33,10 @@ def user(handler, request, username):
 	print "<h1>%s</h1>" % user.safe.username
 	print "<div class=\"clear\"></div>"
 
+	if user == handler.session['user']:
+		print "<h3>Avatar</h3>"
+		print "Your avatar can be changed at <a href=\"http://gravatar.com/\" target=\"_new\">http://gravatar.com/</a>. It must be associated with the e-mail <b>%s@microsemi-wl.com</b>, and be rated PG" % user.safe.username
+
 	print "<h3>Last seen</h3>"
 	if not user.lastseen:
 		print "Never"
