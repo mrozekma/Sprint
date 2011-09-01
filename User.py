@@ -14,7 +14,7 @@ class User(ActiveRecord):
 		self.resetkey = resetkey
 
 		if not id:
-			self.password = md5(self.password)
+			self.password = User.crypt(self.username, self.password)
 
 	def str(self, role = None, link = True, id = None):
 		roles = {
@@ -34,6 +34,7 @@ class User(ActiveRecord):
 			s += "<span %sclass=\"username\" username=\"%s\">%s</span>" % ("id=\"%s\" " % id if id else '', self.username, self.username)
 
 		return s
+
 	def __str__(self):
 		return self.str()
 
@@ -61,6 +62,10 @@ class User(ActiveRecord):
 		email = "%s@microsemi-wl.com" % self.username
 		email = md5(email.strip().lower())
 		return "http://www.gravatar.com/avatar/%s?s=%d&d=wavatar&r=pg" % (email, size)
+
+	@staticmethod
+	def crypt(username, password):
+		return md5("%s\t%s" % (username, password))
 
 # print map(str, User.loadAll())
 # print User.load(1)
