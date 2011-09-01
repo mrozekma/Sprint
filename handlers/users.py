@@ -48,27 +48,29 @@ def user(handler, request, username):
 
 	# For now at least, don't show projects with no hours
 	projectHours = filter(lambda (p, h): h > 0, projectHours)
+	if len(projectHours) > 0:
+		chart = Chart('chart')
+		chart.title.text = ''
+		chart.tooltip.formatter = "function() {return '<b>' + this.point.name + '</b>: ' + this.point.y + '%';}"
+		chart.plotOptions.pie.allowPointSelect = True
+		chart.plotOptions.pie.cursor = 'pointer'
+		chart.plotOptions.pie.dataLabels.enabled = False
+		chart.plotOptions.pie.showInLegend = True
+		chart.credits.enabled = False
+		chart.series = seriesList = []
 
-	chart = Chart('chart')
-	chart.title.text = ''
-	chart.tooltip.formatter = "function() {return '<b>' + this.point.name + '</b>: ' + this.point.y + '%';}"
-	chart.plotOptions.pie.allowPointSelect = True
-	chart.plotOptions.pie.cursor = 'pointer'
-	chart.plotOptions.pie.dataLabels.enabled = False
-	chart.plotOptions.pie.showInLegend = True
-	chart.credits.enabled = False
-	chart.series = seriesList = []
+		series = {
+			'type': 'pie',
+			'name': '',
+			'data': []
+		}
+		seriesList.append(series)
 
-	series = {
-		'type': 'pie',
-		'name': '',
-		'data': []
-	}
-	seriesList.append(series)
+		total = sum(hours for project, hours in projectHours)
+		for project, hours in projectHours:
+			series['data'].append([project.name, float("%2.2f" % (100 * hours / total))])
 
-	total = sum(hours for project, hours in projectHours)
-	for project, hours in projectHours:
-		series['data'].append([project.name, float("%2.2f" % (100 * hours / total))])
-
-	chart.js()
-	chart.placeholder()
+		chart.js()
+		chart.placeholder()
+	else:
+		print "Not a member of any active sprints"
