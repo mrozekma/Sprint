@@ -25,8 +25,6 @@ class HTTPHandler(ParentHandler):
 	def processingRequest(self):
 		self.replace('$headerbg$', '#0152A1', 1)
 
-		self.session['user'] = User.load(username = 'mmrozek') #TODO Remove
-
 		#HACK
 		if self.path.startswith('/static/'): return
 

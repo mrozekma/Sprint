@@ -1,9 +1,11 @@
+from __future__ import with_statement
 from Cookie import SimpleCookie
 import time
 import base64
 import os
 from utils import md5, ucfirst
 from datetime import datetime, timedelta
+import pickle
 
 sessions = {}
 
@@ -11,8 +13,6 @@ class Session:
 	def __init__(self, key):
 		self.key = key
 		self.map = {}
-		#TODO Remove
-		# self.map.user = User.load(username = 'mmrozek')
 
 	def keys(self):
 		return self.map.keys()
@@ -25,9 +25,11 @@ class Session:
 
 	def __setitem__(self, k, v):
 		self.map[k] = v
+		Session.saveAll()
 
 	def __delitem__(self, k):
 		del self.map[k]
+		Session.saveAll()
 
 	def __iter__(self):
 		return self.map.__iter__()
@@ -51,7 +53,25 @@ class Session:
 	def load(key):
 		if key not in sessions:
 			sessions[key] = Session(key)
+			print "New session: %s" % key
+			Session.saveAll()
 		return sessions[key]
+
+	@staticmethod
+	def loadAll():
+		global sessions
+		try:
+			with open('session', 'r') as f:
+				sessions = pickle.load(f)
+				print "Loaded sessions: %s" % sessions
+		except Exception: pass
+
+	@staticmethod
+	def saveAll():
+		with open('session', 'w') as f:
+			pickle.dump(sessions, f)
+		print "Saved sessions: %s" % sessions
+
 
 def timestamp(days = 7):
 	return (datetime.utcnow() + timedelta(days)).strftime("%a, %d-%b-%Y %H:%M:%S GMT")
@@ -66,3 +86,5 @@ def undelay(handler):
 		for item in handler.session['delayed']:
 			print item
 		del handler.session['delayed']
+
+Session.loadAll()

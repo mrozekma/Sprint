@@ -1,3 +1,5 @@
+from inspect import getmembers
+
 from DB import ActiveRecord, db
 from Privilege import Privilege
 from utils import md5
@@ -37,6 +39,15 @@ class User(ActiveRecord):
 
 	def __cmp__(self, other):
 		return cmp(self.username, other.username)
+
+	def __getstate__(self):
+		return self.id
+
+	def __setstate__(self, state):
+		other = User.load(state)
+		fields = set(User.fields())
+		vals = dict(getmembers(other))
+		self.__init__(**dict([(field, vals[field]) for field in fields]))
 
 	def getPrivileges(self):
 		return Privilege.load(id = self.id)
