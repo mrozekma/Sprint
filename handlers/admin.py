@@ -97,8 +97,8 @@ def resetPassword(handler, request, username, key):
 		tbl[''] = Button('Change Password', type = 'submit').positive()
 		print tbl
 		print "</form>"
-
-	print user
+	else:
+		ErrorBox.die('Reset Password', 'Invalid reset key')
 
 @post('resetpw/(?P<username>[^/]+)')
 def resetPasswordPost(handler, request, username, key, p_newPassword, p_newPassword2):
