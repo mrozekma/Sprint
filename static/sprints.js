@@ -425,6 +425,10 @@ function set_status(task, status_name) {
 		node.attr('src', '/static/images/status-' + status_name.replace(' ', '-') + '.png');
 		node.attr('title', status_texts[status_name]);
 		save_task(task, 'status', status_name);
+		if(['canceled', 'deferred', 'split'].indexOf(status_name) >= 0) {
+			$('td.hours input', task).val('0');
+			save_task(task, 'hours', 0);
+		}
 	}
 }
 
