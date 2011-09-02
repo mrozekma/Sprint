@@ -263,7 +263,7 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 	newGroups = []
 	tasks = {group: []}
 	sep = '|'
-	lines = map(lambda x: x.strip(), p_body.split('\n'))
+	lines = map(lambda x: x.strip(" \r\n"), p_body.split('\n'))
 
 	for line in lines:
 		if line == '':
@@ -276,6 +276,7 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 			if not group:
 				group = Group(sprint.id, line)
 				newGroups.append(group)
+				group.id = -len(newGroups)
 			if not group in groups:
 				groups.append(group)
 				tasks[group] = []
@@ -330,6 +331,7 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 		for group in groups:
 			# Changing a group's ID will change its hash, so this pulls from tasks before saving the group
 			groupTasks = tasks[group]
+			group.id = 0
 			group.save()
 			for name, assigned, status, hours in groupTasks:
 				Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, status, hours).save()
