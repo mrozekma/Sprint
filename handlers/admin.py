@@ -20,6 +20,7 @@ def adminIndex(handler, request):
 	# print "<a href=\"/admin/db/reset\">Reset database</a><br>"
 	print "<a href=\"/admin/resetpw\">Reset password</a><br>"
 	print "<a href=\"/admin/test\">Test pages</a><br>"
+	print "<a href=\"/admin/impersonate-user\">Impersonate user</a><br>"
 
 # @get('admin/db/reset')
 # def resetDB(handler, request):
@@ -119,3 +120,26 @@ def resetPasswordPost(handler, request, username, key, p_newPassword, p_newPassw
 	user.save()
 
 	print SuccessBox('Password changed', "Your password has been reset; you can <a href=\"/login\">login</a> now")
+
+@get('admin/impersonate-user')
+def impersonateUser(handler, request):
+	handler.title('Impersonate User')
+	admin(handler)
+
+	users = User.loadAll(orderby = 'username')
+	for user in users:
+		print "<form method=\"post\" action=\"/admin/impersonate-user/%s\">" % user.safe.username
+		print "<div class=\"user-list-entry\"><input type=\"image\" src=\"%s\"><br>%s</div>" % (user.getAvatar(64), user.safe.username)
+		print "</form>"
+
+@post('admin/impersonate-user/(?P<username>[^/]+)')
+def adminImpersonateUserPost(handler, request, username, p_x = None, p_y = None):
+	handler.title('Reset password')
+	admin(handler)
+
+	user = User.load(username = username)
+	if not user:
+		ErrorBox.die('User', "No user named <b>%s</b>" % stripTags(username))
+
+	handler.session['user'] = user
+	redirect('/')
