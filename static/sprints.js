@@ -219,7 +219,6 @@ function setup_bugzilla(tasks) {
 
 		if(match = name.match(/(?:bug |bz)([0-9]+)/i)) {
 			id = parseInt(match[1], 10);
-			console.log(id);
 			link.attr('href', 'http://bugs.arxandefense.com/show_bug.cgi?id=' + id);
 			link.show();
 		} else {
@@ -406,8 +405,6 @@ function fancy_cells(table_selector) {
 		task = $(el).parents('tr.task');
 		id = $(el).attr('id').replace('goal_', '');
 		field = $('[name="goal[' + id + ']"]');
-		console.log(action);
-		console.log(id);
 		if(field.val() != action) {
 			task.attr('goal', action);
 			field.val(action);
