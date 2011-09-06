@@ -19,6 +19,7 @@ from Goal import Goal
 from Availability import Availability
 from Chart import Chart
 from SprintCharts import *
+from Export import exports
 from utils import *
 
 # groupings = ['status', 'owner', 'hours']
@@ -489,8 +490,7 @@ def newSprint(handler, request, project):
 	requirePriv(handler, 'User')
 	project = Project.load(id)
 	if not project:
-		print ErrorBox('Invalid project', "No project with ID <b>%d</b>" % id)
-		done()
+		ErrorBox.die('Invalid project', "No project with ID <b>%d</b>" % id)
 
 	print "<style type=\"text/css\">"
 	print "#post-status {display: none}"
@@ -571,3 +571,55 @@ def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members
 	request['code'] = 299
 	# delay(handler, TintedBox("Added sprint <b>%s</b>" % sprint.safe.name, 'green'))
 	print "/sprints/%d" % sprint.id
+
+@get('sprints/export')
+def exportSprints(handler, request, project):
+	id = int(project)
+	handler.title('Export Sprint')
+	requirePriv(handler, 'User')
+	project = Project.load(id)
+	if not project:
+		ErrorBox.die('Invalid project', "No project with ID <b>%d</b>" % id)
+	# handler.forceDownload = 'wef.wef'
+
+	print "<link href=\"/static/jquery.multiselect.css\" rel=\"stylesheet\" type=\"text/css\" />"
+	print "<script src=\"/static/jquery.multiselect.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/sprints-export.js\" type=\"text/javascript\"></script>"
+	print "<style type=\"text/css\">"
+	print "select {width: 50%;}"
+	print "img.format {"
+	print "    width: 64px;"
+	print "    cursor: pointer;"
+	print "    padding: 5px;"
+	print "    border: 3px solid #fff;"
+	print "}"
+	print "img.format.selected, .ui-effects-transfer {border: 3px solid #f00;}"
+	print "</style>"
+
+	print "<h2>Sprints</h2>"
+	print "<select name=\"sprints\" multiple>"
+	for sprint in project.getSprints():
+		print "<option value=\"%d\"%s>%s</option>" % (sprint.id, ' selected' if sprint.isActive() else '', sprint.safe.name)
+	print "</select>"
+
+	print "<h2>Format</h2>"
+	for export in exports.values():
+		print "<img class=\"format\" src=\"/static/images/%s.png\" title=\"%s\" export-name=\"%s\">" % (export.getIcon(), export.getFriendlyName(), export.getName())
+
+	print "<br><br>"
+	print Button('Export', id = 'export-button').positive()
+
+@get('sprints/export/render')
+def exportRender(handler, request, sprints, format):
+	ids = map(int, sprints.split(','))
+	sprints = map(Sprint.load, ids)
+
+	try:
+		export = exports[format]
+	except KeyError:
+		ErrorBox.die('Export format', "No format named <b>%s</b>" % stripTags(format))
+
+	for sprint in sprints:
+		print export.process(sprint)
+
+	handler.forceDownload = "%s.%s" % (sprints[0].name if len(sprints) == 1 else 'sprints', export.getExtension())
