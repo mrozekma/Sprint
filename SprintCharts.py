@@ -57,6 +57,17 @@ class HoursChart(Chart):
 			series['data'].append([dateToTs(day) * 1000, avail.getAllForward(day)])
 
 		series = {
+			'name': 'Earned value',
+			'pointStart': sprint.start * 1000,
+			'pointInterval': 24 * 3600 * 1000,
+			'data': []
+		}
+		seriesList.append(series)
+
+		for day in sprint.getDays():
+			series['data'].append([dateToTs(day) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks if t.status == 'complete'])])
+
+		series = {
 			'name': 'Deferred tasks',
 			'pointStart': sprint.start * 1000,
 			'pointInterval': 24 * 3600 * 1000,
@@ -66,6 +77,7 @@ class HoursChart(Chart):
 
 		for day in sprint.getDays():
 			series['data'].append([dateToTs(day) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks if t.status == 'deferred'])])
+
 
 class HoursByUserChart(Chart):
 	def __init__(self, placeholder, sprint):
