@@ -42,6 +42,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 	def buildResponse(self, method, data):
 		# log("Building response")
 		self.contentType = 'text/html'
+		self.forceDownload = False
 
 		path = self.path
 		query = {}
@@ -192,6 +193,8 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		}
 		if self.session:
 			headers['Set-Cookie'] = 'session=%s; expires=%s; path=/' % (self.session.key, timestamp())
+		if self.forceDownload:
+			headers['Content-disposition'] = "attachment; filename=%s" % self.forceDownload
 
 		headers.update(additionalHeaders)
 
