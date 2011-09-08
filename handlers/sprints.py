@@ -328,6 +328,7 @@ def showInfo(handler, request, id):
 		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
 		done()
 	tasks = sprint.getTasks()
+	scrummaster = (sprint.project.owner == handler.session['user'])
 
 	handler.title(sprint.safe.name)
 
@@ -348,15 +349,27 @@ def showInfo(handler, request, id):
 	print "<form method=\"post\" action=\"/sprints/info?id=%d\">" % sprint.id
 	print "<table border=0>"
 	for goal in sprint.getGoals():
-		print "<tr><td><img src=\"/static/images/tag-%s.png\"></td><td><input type=\"text\" class=\"goal\" name=\"goals[%d]\" goalid=\"%d\" value=\"%s\"></td></tr>" % (goal.color, goal.id, goal.id, goal.safe.name)
+		print "<tr>"
+		print "<td><img src=\"/static/images/tag-%s.png\"></td>" % goal.color
+		if scrummaster:
+			print "<td><input type=\"text\" class=\"goal\" name=\"goals[%d]\" goalid=\"%d\" value=\"%s\"></td>" % (goal.id, goal.id, goal.safe.name)
+		else:
+			print "<td>%s</td>" % goal.safe.name
+		print "</tr>"
 	print "</table>"
 	print "<br>"
 	print "<b>Members</b><br>"
-	print "<select name=\"members[]\" id=\"select-members\" multiple>"
-	for user in sorted(User.loadAll()):
-		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user in sprint.members else '', user.safe.username)
-	print "</select><br>"
-	print Button('Save', id = 'save-button', type = 'button').positive()
+	if scrummaster:
+		print "<select name=\"members[]\" id=\"select-members\" multiple>"
+		for user in sorted(User.loadAll()):
+			print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user in sprint.members else '', user.safe.username)
+		print "</select>"
+	else:
+		print ', '.join(map(str, sorted(sprint.members)))
+	print "<br>"
+
+	if scrummaster:
+		print Button('Save', id = 'save-button', type = 'button').positive()
 	print "</form>"
 
 @post('sprints/info')
@@ -373,6 +386,9 @@ def sprintInfoPost(handler, request, id, p_goals, p_members):
 	sprint = Sprint.load(id)
 	if not sprint:
 		die("There is no sprint with ID %d" % id)
+
+	if sprint.project.owner != handler.session['user']:
+		die("You must be the scrummaster to modify sprint information")
 
 	if not all([Goal.load(id) for id in p_goals]):
 		die("One or more goals do not exist")
