@@ -294,6 +294,32 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 	request['code'] = 299
 	print task.revision
 
+@get('sprints/active')
+def findActiveSprint(handler, request, project = None):
+	handler.title('Active Sprint')
+	requirePriv(handler, 'User')
+	if project:
+		projectid = int(project)
+		project = Project.load(projectid)
+		if not project:
+			ErrorBox.die('Load project', "No project with ID <b>%d</b>" % projectid)
+
+	sprints = Sprint.loadAll()
+	sprints = filter(lambda s: handler.session['user'] in s.members and s.isActive() and (s.project == project if project else True), sprints)
+
+	for case in switch(len(sprints)):
+		if case(0):
+			ErrorBox.die('Active sprint', 'No active sprints found')
+			break
+		if case(1):
+			redirect("/sprints/%d" % sprints[0].id)
+			break
+		if case():
+			print "You are active in multiple sprints%s:<br><br>" % (" in the %s project" % project.safe.name if project else '')
+			for sprint in sprints:
+				print "<a href=\"/sprints/%d\">%s</a><br>" % (sprint.id, sprint.safe.name)
+			break
+
 @get('sprints/(?P<id>[0-9])/info')
 def showInfo(handler, request, id):
 	requirePriv(handler, 'User')
