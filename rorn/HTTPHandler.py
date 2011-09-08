@@ -231,19 +231,21 @@ class HTTPHandler(BaseHTTPRequestHandler):
 	def do_POST(self):
 		form = cgi.FieldStorage(fp = self.rfile, headers = self.headers, environ={'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': self.headers['Content-Type']}, keep_blank_values = True)
 		data = {}
-		for k in form:
-			if k[-2:] == '[]':
-				data[k[:-2]] = form.getlist(k)
-			elif type(form[k]) is list:
-				self.session = Session.load(Session.determineKey(self))
-				self.processingRequest() #TODO Remove
-				self.contentType = 'text/html'
-				self.response = "Multiple values for POST key: %s" % k
-				self.sendHead(200)
-				self.wfile.write(self.response)
-				return
-			else:
-				data[k] = form[k].value
+		try:
+			for k in form:
+				if k[-2:] == '[]':
+					data[k[:-2]] = form.getlist(k)
+				elif type(form[k]) is list:
+					self.session = Session.load(Session.determineKey(self))
+					self.processingRequest() #TODO Remove
+					self.contentType = 'text/html'
+					self.response = "Multiple values for POST key: %s" % k
+					self.sendHead(200)
+					self.wfile.write(self.response)
+					return
+				else:
+					data[k] = form[k].value
+		except TypeError: pass # Happens with empty forms
 		self.do_HEAD('post', data)
 		self.wfile.write(self.response)
 
