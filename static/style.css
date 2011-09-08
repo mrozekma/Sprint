@@ -505,6 +505,10 @@ table.availability tr td button {
 	width: 80%;
 }
 
+ul#goal-menu {
+	width: 350px;
+}
+
 .revision-history img.bullet {
 	position: relative;
 	top: 3px;

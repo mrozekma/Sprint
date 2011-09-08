@@ -97,7 +97,7 @@ def showBacklog(handler, request, id, assigned = None):
 	print "<li><a href=\"#0\" style=\"background-image:url('/static/images/tag-none.png');\">None</a></li>"
 	for goal in sprint.getGoals():
 		if goal.name != '':
-			print "<li><a href=\"#%s\" style=\"background-image:url('/static/images/tag-%s.png');\">%s</a></li>" % (goal.id, goal.color, goal.safe.name)
+			print "<li><a href=\"#%s\" style=\"background-image:url('/static/images/tag-%s.png');\">%s</a></li>" % (goal.id, goal.color, goal.safe.name if len(goal.safe.name) <= 40 else "%s..." % goal.safe.name[:37])
 	print "</ul>"
 
 	print "<script type=\"text/javascript\">"
