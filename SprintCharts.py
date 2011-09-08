@@ -65,7 +65,7 @@ class HoursChart(Chart):
 		seriesList.append(series)
 
 		for day in sprint.getDays():
-			series['data'].append([dateToTs(day) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks if t.status == 'complete'])])
+			series['data'].append([dateToTs(day) * 1000, sum(tOrig.hours for (tOrig, tNow) in [(t.getRevisionAt(tsToDate(sprint.start)), t.getRevisionAt(day)) for t in tasks] if tOrig and tNow and tNow.status == 'complete')])
 
 		series = {
 			'name': 'Deferred tasks',
