@@ -208,6 +208,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			BaseHTTPRequestHandler.handle_one_request(self)
 		except:
 			self.contentType = 'text/html'
+			self.forceDownload = False
 			self.response = str(FrameworkException(sys.exc_info()))
 			self.sendHead(200)
 			self.wfile.write(self.response)
