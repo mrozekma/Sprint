@@ -190,6 +190,8 @@ class SprintGoalsChart(Chart):
 		self.credits.enabled = False
 		self.xAxis.categories = [' ']
 		self.xAxis.title.text = 'Goals'
+		self.yAxis.min = 0
+		self.yAxis.max = 100
 		self.yAxis.title.text = 'Percent complete'
 		self.series = seriesList = []
 
