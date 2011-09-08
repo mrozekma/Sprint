@@ -202,9 +202,9 @@ def printTask(task, days, group = None):
 		else:
 			print "<td class=\"%s\">%s</td>" % (' '.join(classes), dayTask.hours)
 	print "<td class=\"actions\">"
-	print "<a href=\"/tasks/%d\" target=\"_new\"><img src=\"/static/images/task-history.png\" title=\"History\"></a>" % task.id
+	print "<a href=\"/tasks/%d\" target=\"_blank\"><img src=\"/static/images/task-history.png\" title=\"History\"></a>" % task.id
 	print "<a href=\"javascript:delete_task(%d);\"><img src=\"/static/images/task-delete.png\" title=\"Delete Task\"></a>" % task.id
-	print "<a href=\"#\" class=\"bugzilla\" target=\"_new\"><img src=\"/static/images/bugzilla.png\" title=\"Link to bug\"></a>"
+	print "<a href=\"#\" class=\"bugzilla\" target=\"_blank\"><img src=\"/static/images/bugzilla.png\" title=\"Link to bug\"></a>"
 	print "<img class=\"saving\" src=\"/static/images/loading.gif\">"
 	print "</td>"
 	print "</tr>"
