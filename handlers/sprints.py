@@ -416,21 +416,27 @@ def showMetrics(handler, request, id):
 
 	handler.title(sprint.safe.name)
 
+	print "<style type=\"text/css\">"
+	print "h2 a {color: #000;}"
+	print "</style>"
+
 	charts = [
-		('Hours (general)', HoursChart('chart-general', sprint)),
-		('Hours (by user)', HoursByUserChart('chart-by-user', sprint)),
-		('Total commitment', CommitmentChart('chart-commitment', sprint)),
-		('Sprint goals', SprintGoalsChart('chart-sprint-goals', sprint)),
+		('general', 'Hours (general)', HoursChart('chart-general', sprint)),
+		('by-user', 'Hours (by user)', HoursByUserChart('chart-by-user', sprint)),
+		('commitment', 'Total commitment', CommitmentChart('chart-commitment', sprint)),
+		('goals', 'Sprint goals', SprintGoalsChart('chart-sprint-goals', sprint)),
 	]
 
 	Chart.include()
-	map(lambda (title, chart): chart.js(), charts)
+	map(lambda (anchor, title, chart): chart.js(), charts)
 	print (tabs << 'metrics') % id
-	for title, chart in charts:
-		print "<h2>%s</h2>" % title
+	for anchor, title, chart in charts:
+		print "<a name=\"%s\">" % anchor
+		print "<h2><a href=\"#%s\">%s</a></h2>" % (anchor, title)
 		chart.placeholder()
 
-	print "<h2>Averages</h2>"
+	print "<a name=\"availability\">"
+	print "<h2><a href=\"#availability\">Averages</a></h2>"
 	avail = Availability(sprint)
 	# numDays = (tsToDate(sprint.end) - tsToDate(sprint.start)).days + 1
 	numDays = len([day for day in sprint.getDays()])
