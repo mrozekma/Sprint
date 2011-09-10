@@ -5,6 +5,7 @@ from token import *
 import random
 
 from rorn.Box import ErrorBox, SuccessBox
+from rorn.Session import sessions, delay, undelay
 
 from Privilege import admin
 from User import User
@@ -21,6 +22,7 @@ def adminIndex(handler, request):
 	print "<a href=\"/admin/resetpw\">Reset password</a><br>"
 	print "<a href=\"/admin/test\">Test pages</a><br>"
 	print "<a href=\"/admin/impersonate-user\">Impersonate user</a><br>"
+	print "<a href=\"/admin/sessions\">Sessions</a><br>"
 
 # @get('admin/db/reset')
 # def resetDB(handler, request):
@@ -143,3 +145,64 @@ def adminImpersonateUserPost(handler, request, username, p_x = None, p_y = None)
 
 	handler.session['user'] = user
 	redirect('/')
+
+@get('admin/sessions')
+def adminSessions(handler, request):
+	handler.title('Sessions')
+	admin(handler)
+
+	undelay(handler)
+
+	print "<table border=0 cellspacing=4>"
+	print "<tr><th>Key</th><th>User</th><th>Last address</th><th>Last seen</th><th>&nbsp;</th></tr>"
+	for key, session in sessions.iteritems():
+		print "<tr>"
+		print "<td>%s</td>" % key
+		print "<td>%s</td>" % (session['user'] if 'user' in session else 'None')
+		print "<td>%s</td>" % (session['address'] if 'address' in session else 'None')
+		print "<td>%s</td>" % (session['timestamp'] if 'timestamp' in session else 'Never')
+		print "<td>"
+		print "<form method=\"post\" action=\"/admin/sessions\">"
+		print "<input type=\"hidden\" name=\"key\" value=\"%s\">" % key
+		print "<button type=\"submit\" class=\"fancy\" name=\"action\" value=\"reassign\">reassign</button>"
+		print "<button type=\"submit\" class=\"fancy\" name=\"action\" value=\"destroy\">destroy</button>"
+		print "</form>"
+		print "</td>"
+		print "</tr>"
+	print "</table>"
+
+@post('admin/sessions')
+def adminSessionsPost(handler, request, p_key, p_action, p_value = None):
+	handler.title('Sessions')
+	admin(handler)
+	print "<script src=\"/static/admin-sessions.js\" type=\"text/javascript\"></script>"
+
+	if not p_key in sessions:
+		ErrorBox.die("Retrieve session", "No session exists with key <b>%s</b>" % stripTags(p_key))
+
+	for case in switch(p_action):
+		if case('reassign'):
+			handler.title('Reassign Session')
+			if p_value:
+				user = User.load(int(p_value))
+				if not user:
+					ErrorBox.die("Load user", "No user exists with ID <b>%s</b>" % stripTags(p_value))
+				sessions[p_key]['user'] = user
+				redirect('/admin/sessions')
+			else:
+				print "<form method=\"post\" action=\"/admin/sessions\">"
+				print "<input type=\"hidden\" name=\"action\" value=\"reassign\">"
+				print "<input type=\"hidden\" name=\"key\" value=\"%s\">" % p_key
+				print "<select id=\"selectUser\" name=\"value\">"
+				for user in sorted(User.loadAll()):
+					print "<option value=\"%d\">%s</option>" % (user.id, user.safe.username)
+				print "</select><br>"
+				print Button('Reassign', type = 'submit').positive()
+				print Button('Cancel', id = 'cancel-button', type = 'button').negative()
+				print "</form>"
+				break
+		if case('destroy'):
+			del sessions[p_key]
+			redirect('/admin/sessions')
+			break
+		break

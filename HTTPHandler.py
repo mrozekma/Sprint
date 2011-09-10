@@ -28,6 +28,9 @@ class HTTPHandler(ParentHandler):
 		#HACK
 		if self.path.startswith('/static/'): return
 
+		self.session['address'] = self.address_string()
+		self.session['timestamp'] = datetime.now()
+
 		if self.session['user']:
 			self.session['user'] = User.load(self.session['user'].id) # Make sure the user isn't out of date
 			self.session['user'].lastseen = dateToTs(datetime.now())
