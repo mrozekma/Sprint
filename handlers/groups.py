@@ -11,8 +11,8 @@ from utils import *
 
 @get('groups/new')
 def newGroup(handler, request, after):
+	handler.title('New Group')
 	requirePriv(handler, 'User')
-	handler.title("New Group")
 	afterID = int(after)
 
 	afterGroup = Group.load(afterID)
@@ -55,6 +55,8 @@ def newGroupkPost(handler, request, p_group, p_name):
 		print msg
 		done()
 
+	handler.title('New Group')
+	requirePriv(handler, 'User')
 	request['wrappers'] = False
 
 	predid = to_int(p_group, 'group', die)
@@ -62,7 +64,6 @@ def newGroupkPost(handler, request, p_group, p_name):
 	if not pred:
 		die("No group with ID <b>%d</b>" % predid)
 
-	# def __init__(self, sprintid, name, seq = None, deletable = True, id = None):
 	group = Group(pred.sprint.id, p_name, pred.seq)
 	group.save()
 
