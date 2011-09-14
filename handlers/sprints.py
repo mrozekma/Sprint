@@ -149,6 +149,7 @@ def showBacklog(handler, request, id, assigned = None):
 		print "<td colspan=\"6\"><img src=\"/static/images/collapse.png\">&nbsp;<span>%s</span></td>" % group.name
 		print "<td class=\"actions\">"
 		print "<a href=\"/groups/new?after=%d\"><img src=\"/static/images/group-new.png\" title=\"New Group\"></a>" % group.id
+		print "<a href=\"/groups/edit/%d\"><img src=\"/static/images/group-edit.png\" title=\"Edit Group\"></a>" % group.id
 		print "<a href=\"/tasks/new?group=%d\"><img src=\"/static/images/task-new.png\" title=\"New Task\"></a>" % group.id
 		print "</td>"
 		print "</tr>"
