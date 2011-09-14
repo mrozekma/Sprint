@@ -21,7 +21,7 @@ class Button:
 			if self.url == '#':
 				return "<button %sclass=\"%s\">%s</button>" % (id, self.clazz, body)
 			else:
-				return "<button %sclass=\"%s\" onClick=\"document.location='%s'\">%s</button>" % (id, self.clazz, self.url, body)
+				return "<button %sclass=\"%s\" onClick=\"document.location='%s'; return false;\">%s</button>" % (id, self.clazz, self.url, body)
 		if self.type == 'submit':
 			return "<button %sclass=\"%s\" onClick=\"$('form').submit();\">%s</button>" % (id, self.clazz, body)
 		raise ValueError, "Unknown type '%s'" % self.type
