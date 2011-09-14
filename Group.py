@@ -23,5 +23,18 @@ class Group(ActiveRecord):
 			db().update("UPDATE groups SET seq = seq + 1 WHERE seq >= ?", self.seq)
 		return ActiveRecord.save(self)
 
+	def move(self, newSeq):
+		# Remove group from the list
+		db().update("UPDATE groups SET seq = seq - 1 WHERE seq > ?", self.seq)
+
+		# Insert it at the new spot
+		if newSeq:
+			self.seq = newSeq
+			db().update("UPDATE groups SET seq = seq + 1 WHERE seq > ?", self.seq)
+
+	def delete(self):
+		self.move(None)
+		return ActiveRecord.delete(self)
+
 	def __str__(self):
 		return self.safe.name
