@@ -153,7 +153,7 @@ class CommitmentChart(Chart):
 			series['data'].append({
 				'name': user.username,
 				'x': hours,
-				'y': float("%2.2f" % (100 * hours / total)),
+				'y': float("%2.2f" % (100 * hours / total if total > 0 else 0)),
 				'color': clrGen.next()
 			})
 
@@ -173,7 +173,7 @@ class CommitmentChart(Chart):
 			series['data'].append({
 				'name': user.username,
 				'x': hours,
-				'y': float("%2.2f" % (100 * hours / total)),
+				'y': float("%2.2f" % (100 * hours / total if total > 0 else 0)),
 				'color': clrGen.next()
 			})
 
