@@ -135,6 +135,11 @@ class ActiveRecord(object):
 
 			self.id = cls.loadAll(orderby = None)[-1].id
 
+	def delete(self):
+		cls = self.__class__
+		if self.id:
+			db().update("DELETE FROM %s WHERE %s = ?" % (cls.table(), 'id'), self.id)
+
 	@staticmethod
 	def saveAll(objs):
 		for obj in objs:
