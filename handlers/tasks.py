@@ -329,9 +329,10 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 				print "%s (assigned to %s, %s, %d %s remain)<br>" % (stripTags(name), assigned, status, hours, 'hour' if hours == 1 else 'hours')
 	else:
 		for group in groups:
-			# Changing a group's ID will change its hash, so this pulls from tasks before saving the group
+			# Changing a group's ID will change its hash, so this pulls from tasks before saving the group in case it's new
 			groupTasks = tasks[group]
-			group.id = 0
+			if group in newGroups:
+				group.id = 0
 			group.save()
 			for name, assigned, status, hours in groupTasks:
 				Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, status, hours).save()
