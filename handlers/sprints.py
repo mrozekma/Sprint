@@ -444,7 +444,7 @@ def showMetrics(handler, request, id):
 	availability = (avail.getAllForward(tsToDate(sprint.start)) / numDays)
 	tasking = (sum(task.hours if task else 0 for task in [task.getRevisionAt(tsToDate(sprint.start)) for task in sprint.getTasks()]) / numDays)
 	print "Daily availability: <b>%2.2f hours</b><br>" % availability
-	print "Daily tasking: <b>%2.2f hours</b> (%2.2f%%)<br>" % (tasking, 100 * tasking / availability)
+	print "Daily tasking: <b>%2.2f hours</b> (%2.2f%%)<br>" % (tasking, 100 * tasking / availability if availability > 0 else 0)
 	print "<br>"
 
 @get('sprints/(?P<id>[0-9])/availability')
