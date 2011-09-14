@@ -19,6 +19,7 @@ from Goal import Goal
 from Availability import Availability
 from Chart import Chart
 from SprintCharts import *
+from History import showHistory
 from Export import exports
 from utils import *
 
@@ -28,6 +29,7 @@ tabs = Tabs()
 tabs['info'] = '/sprints/%d/info'
 tabs['backlog'] = '/sprints/%d'
 tabs['metrics'] = '/sprints/%d/metrics'
+tabs['history'] = '/sprints/%d/history'
 tabs['availability'] = '/sprints/%d/availability'
 
 @get('sprints')
@@ -446,6 +448,23 @@ def showMetrics(handler, request, id):
 	print "Daily availability: <b>%2.2f hours</b><br>" % availability
 	print "Daily tasking: <b>%2.2f hours</b> (%2.2f%%)<br>" % (tasking, 100 * tasking / availability if availability > 0 else 0)
 	print "<br>"
+
+@get('sprints/(?P<id>[0-9])/history')
+def showSprintHistory(handler, request, id):
+	requirePriv(handler, 'User')
+	sprint = Sprint.load(id)
+	if not sprint:
+		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
+		done()
+
+	handler.title(sprint.safe.name)
+
+	print (tabs << 'history') % id
+
+	from Privilege import dev
+	dev(handler)
+
+	showHistory(sprint.getTasks())
 
 @get('sprints/(?P<id>[0-9])/availability')
 def showAvailability(handler, request, id):
