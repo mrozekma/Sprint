@@ -459,7 +459,7 @@ def showSprintHistory(handler, request, id):
 
 	handler.title(sprint.safe.name)
 	print (tabs << 'history') % id
-	showHistory(sprint.getTasks(), True)
+	showHistory(sprint.getTasks(includeDeleted = True), True)
 	print "<br>"
 
 @get('sprints/(?P<id>[0-9])/availability')
