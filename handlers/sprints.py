@@ -458,13 +458,9 @@ def showSprintHistory(handler, request, id):
 		done()
 
 	handler.title(sprint.safe.name)
-
 	print (tabs << 'history') % id
-
-	from Privilege import dev
-	dev(handler)
-
-	showHistory(sprint.getTasks())
+	showHistory(sprint.getTasks(), True)
+	print "<br>"
 
 @get('sprints/(?P<id>[0-9])/availability')
 def showAvailability(handler, request, id):

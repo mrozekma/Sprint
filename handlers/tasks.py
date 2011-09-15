@@ -22,7 +22,8 @@ def task(handler, request, id):
 		ErrorBox.die('Tasks', "No task with ID <b>%d</b>" % id)
 
 	handler.title(task.safe.name)
-	showHistory(task)
+	showHistory(task, False)
+	print "<br>"
 
 tabs = Tabs()
 tabs['single'] = '/tasks/new/single?group=%d'
