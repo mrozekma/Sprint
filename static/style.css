@@ -576,6 +576,7 @@ button.fancy, a.fancy {
 button.fancy>img, a.fancy>img {
 	position: relative;
 	top: 2px;
+	left: -3px;
 	border: 0px;
 }
 
