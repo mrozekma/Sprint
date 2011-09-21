@@ -16,6 +16,9 @@ class Availability:
 	def set(self, user, timestamp, hours):
 		db().update("INSERT OR REPLACE INTO availability(sprintid, userid, timestamp, hours) VALUES(?, ?, ?, ?)", self.sprint.id, user.id, dateToTs(timestamp), hours)
 
+	def delete(self, user):
+		db().update("DELETE FROM availability WHERE sprintid = ? AND userid = ?", self.sprint.id, user.id)
+
 	def getAllForward(self, timestamp, user = None):
 		if user:
 			rows = db().select("SELECT COALESCE(SUM(hours), 0) FROM availability WHERE sprintid = ? AND userid = ? AND timestamp >= ?", self.sprint.id, user.id, dateToTs(timestamp))

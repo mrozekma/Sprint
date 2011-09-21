@@ -384,7 +384,7 @@ def showInfo(handler, request, id):
 	print "</form>"
 
 @post('sprints/info')
-def sprintInfoPost(handler, request, id, p_name, p_goals, p_members):
+def sprintInfoPost(handler, request, id, p_name, p_goals, p_members = None):
 	def die(msg):
 		print msg
 		done()
@@ -404,13 +404,30 @@ def sprintInfoPost(handler, request, id, p_name, p_goals, p_members):
 	if not sprint.isActive():
 		die("You cannot modify an inactive sprint")
 
-	if not all([Goal.load(id) for id in p_goals]):
+	goals = map(Goal.load, p_goals)
+	if not all(goals):
 		die("One or more goals do not exist")
-	if not all([User.load(int(id)) for id in p_members]):
-		die("One or more members do not exist")
 
+	members = map(User.load, p_members) if p_members else []
+	if not all(members):
+		die("One or more members do not exist")
+	if sprint.project.owner not in members:
+		die("The scrummaster (%s) must be a sprint member" % project.owner)
+
+	avail = Availability(sprint)
+	addMembers = list(set(members) - set(sprint.members))
+	delMembers = list(set(sprint.members) - set(members))
+	for user in delMembers:
+		for task in filter(lambda task: task.assigned == user, sprint.getTasks()):
+			task.assigned = sprint.project.owner
+			task.creator = handler.session['user']
+			task.timestamp = dateToTs(datetime.now())
+			task.revise()
+		avail.delete(user)
+		sprint.members.remove(user)
+
+	sprint.members += addMembers
 	sprint.name = p_name
-	sprint.members = map(User.load, p_members)
 	sprint.save()
 
 	for id in p_goals:
@@ -617,7 +634,7 @@ def newSprint(handler, request, project):
 	print "<tr><td class=\"left\">Members:</td><td class=\"right\">"
 	print "<select name=\"members[]\" id=\"select-members\" multiple>"
 	for user in sorted(User.loadAll()):
-		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user == handler.session['user'] else '', user.safe.username)
+		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user == handler.session['user'] or user == project.owner else '', user.safe.username)
 	print "</select>"
 	print "</td></tr>"
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
@@ -628,7 +645,7 @@ def newSprint(handler, request, project):
 	print "</form>"
 
 @post('sprints/new')
-def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members):
+def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members = None):
 	def die(msg):
 		print msg
 		done()
@@ -660,9 +677,11 @@ def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members
 	except ValueError:
 		die("Malformed end date: %s" % stripTags(p_end))
 
-	members = map(User.load, p_members)
+	members = map(User.load, p_members) if p_members else []
 	if None in members:
 		die("Unknown username")
+	if project.owner not in members:
+		die("The scrummaster (%s) must be a sprint member" % project.owner)
 
 	sprint = Sprint(project.id, p_name, dateToTs(start), dateToTs(end))
 	sprint.members += members
