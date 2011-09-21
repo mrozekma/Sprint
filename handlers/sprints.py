@@ -229,6 +229,9 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 	if not sprint:
 		die("There is no sprint with ID %d" % sprintid)
 
+	if not sprint.isActive():
+		die("Unable to modify inactive sprint")
+
 	task = Task.load(p_id)
 	if task.sprint != sprint:
 		die("Attempting to modify task outside the specified sprint")
@@ -331,7 +334,7 @@ def showInfo(handler, request, id):
 		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
 		done()
 	tasks = sprint.getTasks()
-	scrummaster = (sprint.project.owner == handler.session['user'])
+	editable = sprint.isActive() and sprint.project.owner == handler.session['user']
 
 	handler.title(sprint.safe.name)
 
@@ -352,7 +355,7 @@ def showInfo(handler, request, id):
 
 	print "<form method=\"post\" action=\"/sprints/info?id=%d\">" % sprint.id
 	print "<b>Name</b><br>"
-	if scrummaster:
+	if editable:
 		print "<input type=\"text\" name=\"name\" class=\"name\" value=\"%s\"><br><br>" % sprint.safe.name
 	else:
 		print "%s<br><br>" % sprint.safe.name
@@ -360,14 +363,14 @@ def showInfo(handler, request, id):
 	print "%s - %s<br><br>" % (tsToDate(sprint.start).strftime('%d %b %Y'), tsToDate(sprint.end).strftime('%d %b %Y'))
 	print "<b>Sprint goals</b><br>"
 	for goal in sprint.getGoals():
-		if scrummaster:
+		if editable:
 			print "<input type=\"text\" class=\"goal\" style=\"background-image: url(/static/images/tag-%s.png)\" name=\"goals[%d]\" goalid=\"%d\" value=\"%s\"><br>" % (goal.color, goal.id, goal.id, goal.safe.name)
 		elif goal.name:
 			print "<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;%s<br>" % (goal.color, goal.safe.name)
 	print "</table>"
 	print "<br>"
 	print "<b>Members</b><br>"
-	if scrummaster:
+	if editable:
 		print "<select name=\"members[]\" id=\"select-members\" multiple>"
 		for user in sorted(User.loadAll()):
 			print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user in sprint.members else '', user.safe.username)
@@ -376,7 +379,7 @@ def showInfo(handler, request, id):
 		print ', '.join(map(str, sorted(sprint.members)))
 	print "<br>"
 
-	if scrummaster:
+	if editable:
 		print Button('Save', id = 'save-button', type = 'button').positive()
 	print "</form>"
 
@@ -397,6 +400,9 @@ def sprintInfoPost(handler, request, id, p_name, p_goals, p_members):
 
 	if sprint.project.owner != handler.session['user']:
 		die("You must be the scrummaster to modify sprint information")
+
+	if not sprint.isActive():
+		die("You cannot modify an inactive sprint")
 
 	if not all([Goal.load(id) for id in p_goals]):
 		die("One or more goals do not exist")
@@ -519,7 +525,8 @@ def showAvailability(handler, request, id):
 		if seek.weekday() < 5: # Weekday
 			print "<td>%s<br>%s</td>" % (seek.strftime('%d'), seek.strftime('%a'))
 		seek += oneday
-	print "<td>%s</td>" % Button('set all 8', type = 'button')
+	if sprint.isActive():
+		print "<td>%s</td>" % Button('set all 8', type = 'button')
 	print "</tr>"
 
 	for user in sorted(sprint.members):
@@ -528,13 +535,18 @@ def showAvailability(handler, request, id):
 		seek = start
 		while seek <= end:
 			if seek.weekday() < 5: # Weekday
-				print "<td><input type=\"text\" name=\"hours[%d,%d]\" value=\"%d\"></td>" % (user.id, dateToTs(seek), avail.get(user, seek))
+				if sprint.isActive():
+					print "<td><input type=\"text\" name=\"hours[%d,%d]\" value=\"%d\"></td>" % (user.id, dateToTs(seek), avail.get(user, seek))
+				else:
+					print "<td style=\"text-align: center\">%d</td>" % avail.get(user, seek)
 			seek += oneday
-		print "<td>%s</td>" % Button('copy first', type = 'button')
+		if sprint.isActive():
+			print "<td>%s</td>" % Button('copy first', type = 'button')
 		print "</tr>"
 
 	print "</table>"
-	print Button('Save', id = 'save-button', type = 'button').positive()
+	if sprint.isActive():
+		print Button('Save', id = 'save-button', type = 'button').positive()
 	print "</form>"
 
 @post('sprints/(?P<id>[0-9])/availability')
@@ -551,6 +563,9 @@ def sprintAvailabilityPost(handler, request, id, p_hours):
 	sprint = Sprint.load(id)
 	if not sprint:
 		die("There is no sprint with ID %d" % id)
+
+	if not sprint.isActive():
+		die("Unable to modify inactive sprint")
 
 	avail = Availability(sprint)
 	for k, hours in p_hours.items():
