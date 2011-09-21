@@ -350,10 +350,15 @@ def showInfo(handler, request, id):
 
 	print (tabs << 'info') % id
 
+	print "<form method=\"post\" action=\"/sprints/info?id=%d\">" % sprint.id
+	print "<b>Name</b><br>"
+	if scrummaster:
+		print "<input type=\"text\" name=\"name\" class=\"name\" value=\"%s\"><br><br>" % sprint.safe.name
+	else:
+		print "%s<br><br>" % sprint.safe.name
 	print "<b>Duration</b><br>"
 	print "%s - %s<br><br>" % (tsToDate(sprint.start).strftime('%d %b %Y'), tsToDate(sprint.end).strftime('%d %b %Y'))
 	print "<b>Sprint goals</b><br>"
-	print "<form method=\"post\" action=\"/sprints/info?id=%d\">" % sprint.id
 	for goal in sprint.getGoals():
 		if scrummaster:
 			print "<input type=\"text\" class=\"goal\" style=\"background-image: url(/static/images/tag-%s.png)\" name=\"goals[%d]\" goalid=\"%d\" value=\"%s\"><br>" % (goal.color, goal.id, goal.id, goal.safe.name)
@@ -376,7 +381,7 @@ def showInfo(handler, request, id):
 	print "</form>"
 
 @post('sprints/info')
-def sprintInfoPost(handler, request, id, p_goals, p_members):
+def sprintInfoPost(handler, request, id, p_name, p_goals, p_members):
 	def die(msg):
 		print msg
 		done()
@@ -398,13 +403,14 @@ def sprintInfoPost(handler, request, id, p_goals, p_members):
 	if not all([User.load(int(id)) for id in p_members]):
 		die("One or more members do not exist")
 
+	sprint.name = p_name
+	sprint.members = map(User.load, p_members)
+	sprint.save()
+
 	for id in p_goals:
 		goal = Goal.load(id)
 		goal.name = p_goals[id]
 		goal.save()
-
-	sprint.members = map(User.load, p_members)
-	sprint.save()
 
 	request['code'] = 299
 	print "Saved changes"
