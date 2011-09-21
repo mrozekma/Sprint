@@ -639,6 +639,9 @@ def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members
 	if not project:
 		die("Unknown project ID: %d" % p_project)
 
+	if p_name == '':
+		die("The sprint name cannot be empty")
+
 	try:
 		start = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_start)
 		if not start:
