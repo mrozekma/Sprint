@@ -729,6 +729,10 @@ div.clear {
 	position: relative;
 }
 
+.task-progress-total .progress-current-red {
+	background-color: #AA4643;
+}
+
 .task-progress-total .progress-current .progress-percentage {
 	color: #999;
 	font-size: 11px;

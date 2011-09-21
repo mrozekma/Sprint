@@ -445,6 +445,7 @@ def showMetrics(handler, request, id):
 	if not sprint:
 		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
 		done()
+	tasks = sprint.getTasks()
 
 	handler.title(sprint.safe.name)
 
@@ -467,8 +468,18 @@ def showMetrics(handler, request, id):
 		print "<h2><a href=\"#%s\">%s</a></h2>" % (anchor, title)
 		chart.placeholder()
 
+	print "<a name=\"commitment-by-user\">"
+	print "<h2><a href\"#commitment-by-user\">Commitment (by user)</a></h2>"
+	avail = Availability(sprint)
+	inf = float('inf')
+	for user in sorted(sprint.members):
+		hours = sum(t.hours for t in tasks if t.assigned == user)
+		total = avail.getAllForward(datetime.now())
+		pcnt = hours / total * 100 if total > 0 else 0 if hours == 0 else inf
+		print "%s <div class=\"task-progress-total\" style=\"position: relative; top: 5px\"><div class=\"progress-current%s\" style=\"width: %d%%;\"><span class=\"progress-percentage\">%d/%d hours (%s%%)</span></div></div>" % (user.safe.username, ' progress-current-red' if pcnt == inf else '', min(pcnt, 100), hours, total, '&#8734;' if pcnt == inf else str(pcnt))
+
 	originalTasks = Task.loadAll(sprintid = sprint.id, revision = 1)
-	taskMap = dict([(task.id, task) for task in sprint.getTasks()])
+	taskMap = dict([(task.id, task) for task in tasks])
 	print "<a name=\"goals\">"
 	print "<h2><a href=\"#goals\">Sprint goals</a></h2>"
 	print "<table border=0>"
@@ -476,7 +487,7 @@ def showMetrics(handler, request, id):
 		if goal and goal.name == '':
 			continue
 		start = sum(t.hours for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
-		now = sum(t.hours for t in taskMap.values() if t.goalid == (goal.id if goal else 0))
+		now = sum(t.hours for t in tasks if t.goalid == (goal.id if goal else 0))
 		pcnt = (start-now) / start * 100 if start > 0 and start > now else 100 if start == 0 else 0
 		print "<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;%s" % (goal.color if goal else 'none', goal.safe.name if goal else 'Other')
 		print "<div class=\"task-progress-total\" style=\"position: relative; top: 5px\"><div class=\"progress-current\" style=\"width: %d%%;\"><span class=\"progress-percentage\">%d/%d hours (%d%%)</span></div></div>" % (pcnt, start-now, start, pcnt)
