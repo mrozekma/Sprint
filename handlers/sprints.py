@@ -476,7 +476,7 @@ def showMetrics(handler, request, id):
 		hours = sum(t.hours for t in tasks if t.assigned == user)
 		total = avail.getAllForward(datetime.now(), user)
 		pcnt = hours / total * 100 if total > 0 else 0 if hours == 0 else inf
-		print "%s <div class=\"task-progress-total\" style=\"position: relative; top: 5px\"><div class=\"progress-current%s\" style=\"width: %d%%;\"><span class=\"progress-percentage\">%d/%d hours (%s%%)</span></div></div>" % (user.safe.username, ' progress-current-red' if pcnt == inf else '', min(pcnt, 100), hours, total, '&#8734;' if pcnt == inf else "%d" % pcnt)
+		print "%s <div class=\"task-progress-total\" style=\"position: relative; top: 5px\"><div class=\"progress-current%s\" style=\"width: %d%%;\"><span class=\"progress-percentage\">%d/%d hours (%s%%)</span></div></div>" % (user.safe.username, ' progress-current-red' if pcnt > 100 else '', min(pcnt, 100), hours, total, '&#8734;' if pcnt == inf else "%d" % pcnt)
 
 	originalTasks = Task.loadAll(sprintid = sprint.id, revision = 1)
 	taskMap = dict([(task.id, task) for task in tasks])
