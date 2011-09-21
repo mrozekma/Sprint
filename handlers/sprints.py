@@ -337,8 +337,12 @@ def showInfo(handler, request, id):
 
 	print "<style type=\"text/css\">"
 	print "#post-status {display: none}"
-	print "table input.goal {width: 400px;}"
-	print "#select-members, #save-button {width: 432px}"
+	print "input.goal {"
+	print "    width: 400px;"
+	print "    background: url(/static/images/tag-none.png) no-repeat 2px 2px;"
+	print "    padding-left: 24px;"
+	print "}"
+	print "input.name, #select-members, #save-button {width: 424px}"
 	print "</style>"
 	print "<script src=\"/static/sprint-info.js\" type=\"text/javascript\"></script>"
 
@@ -350,17 +354,11 @@ def showInfo(handler, request, id):
 	print "%s - %s<br><br>" % (tsToDate(sprint.start).strftime('%d %b %Y'), tsToDate(sprint.end).strftime('%d %b %Y'))
 	print "<b>Sprint goals</b><br>"
 	print "<form method=\"post\" action=\"/sprints/info?id=%d\">" % sprint.id
-	print "<table border=0>"
 	for goal in sprint.getGoals():
-		if not (scrummaster or goal.name):
-			continue
-		print "<tr>"
-		print "<td><img src=\"/static/images/tag-%s.png\"></td>" % goal.color
 		if scrummaster:
-			print "<td><input type=\"text\" class=\"goal\" name=\"goals[%d]\" goalid=\"%d\" value=\"%s\"></td>" % (goal.id, goal.id, goal.safe.name)
-		else:
-			print "<td>%s</td>" % goal.safe.name
-		print "</tr>"
+			print "<input type=\"text\" class=\"goal\" style=\"background-image: url(/static/images/tag-%s.png)\" name=\"goals[%d]\" goalid=\"%d\" value=\"%s\"><br>" % (goal.color, goal.id, goal.id, goal.safe.name)
+		elif goal.name:
+			print "<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;%s<br>" % (goal.color, goal.safe.name)
 	print "</table>"
 	print "<br>"
 	print "<b>Members</b><br>"
