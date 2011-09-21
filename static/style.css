@@ -692,3 +692,50 @@ div.clear {
 .hide-temp {
 	display: none;
 }
+
+.bumpdown {
+	position: relative;
+	top: 3px;
+}
+
+/* Trello progress bar */
+.task-progress-total {
+	background: #DDD;
+	border-radius: 3px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	border: 1px solid #B9B9B9;
+	border-bottom-color: #CCC;
+	border-top-color: #AAA;
+	clear: both;
+	height: 10px;
+	margin: 0 6px 10px 150px;
+	box-shadow: 0 1px 0 white;
+	-moz-box-shadow: 0 1px 0 white;
+	-webkit-box-shadow: 0 1px 0 white;
+}
+
+.task-progress-total .progress-current {
+	background: #3468B2 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAAfCAYAAADN/hxhAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAADZJREFUeNp0xgkGADAQBMFs7uv/350IEdaYpikDEG728faIGomQNQqhajRC1xiEqbEI2+EIMACyIAbU7Y897gAAAABJRU5ErkJggg==) bottom left repeat-x;
+	border-radius: 3px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	-moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	-webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	border: 1px solid #172E4F;
+	height: 10px;
+	margin: -1px;
+	position: relative;
+}
+
+.task-progress-total .progress-current .progress-percentage {
+	color: #999;
+	font-size: 11px;
+	line-height: 10px;
+	position: absolute;
+	top: -1px;
+	left: -135px;
+	text-align: center;
+	width: 125px;
+}

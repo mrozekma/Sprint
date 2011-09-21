@@ -352,6 +352,8 @@ def showInfo(handler, request, id):
 	print "<form method=\"post\" action=\"/sprints/info?id=%d\">" % sprint.id
 	print "<table border=0>"
 	for goal in sprint.getGoals():
+		if not (scrummaster or goal.name):
+			continue
 		print "<tr>"
 		print "<td><img src=\"/static/images/tag-%s.png\"></td>" % goal.color
 		if scrummaster:
@@ -427,7 +429,7 @@ def showMetrics(handler, request, id):
 		('general', 'Hours (general)', HoursChart('chart-general', sprint)),
 		('by-user', 'Hours (by user)', HoursByUserChart('chart-by-user', sprint)),
 		('commitment', 'Total commitment', CommitmentChart('chart-commitment', sprint)),
-		('goals', 'Sprint goals', SprintGoalsChart('chart-sprint-goals', sprint)),
+		# ('goals', 'Sprint goals', SprintGoalsChart('chart-sprint-goals', sprint)),
 	]
 
 	Chart.include()
@@ -438,16 +440,32 @@ def showMetrics(handler, request, id):
 		print "<h2><a href=\"#%s\">%s</a></h2>" % (anchor, title)
 		chart.placeholder()
 
-	print "<a name=\"availability\">"
-	print "<h2><a href=\"#availability\">Averages</a></h2>"
+	originalTasks = Task.loadAll(sprintid = sprint.id, revision = 1)
+	taskMap = dict([(task.id, task) for task in sprint.getTasks()])
+	print "<a name=\"goals\">"
+	print "<h2><a href=\"#goals\">Sprint goals</a></h2>"
+	print "<table border=0>"
+	for goal in sprint.getGoals() + [None]:
+		if goal and goal.name == '':
+			continue
+		start = sum(t.hours for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
+		now = sum(t.hours for t in taskMap.values() if t.goalid == (goal.id if goal else 0))
+		pcnt = (start-now) / start * 100 if start > 0 and start > now else 100 if start == 0 else 0
+		print "<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;%s" % (goal.color if goal else 'none', goal.safe.name if goal else 'Other')
+		print "<div class=\"task-progress-total\" style=\"position: relative; top: 5px\"><div class=\"progress-current\" style=\"width: %d%%;\"><span class=\"progress-percentage\">%d/%d hours (%d%%)</span></div></div>" % (pcnt, start-now, start, pcnt)
+	print "</table>"
+
+	print "<a name=\"averages\">"
+	print "<h2><a href=\"#averages\">Averages</a></h2>"
 	avail = Availability(sprint)
 	# numDays = (tsToDate(sprint.end) - tsToDate(sprint.start)).days + 1
 	numDays = len([day for day in sprint.getDays()])
 	availability = (avail.getAllForward(tsToDate(sprint.start)) / numDays)
 	tasking = (sum(task.hours if task else 0 for task in [task.getRevisionAt(tsToDate(sprint.start)) for task in sprint.getTasks()]) / numDays)
+	pcnt = 100 * tasking / availability if availability > 0 else 0
 	print "Daily availability: <b>%2.2f hours</b><br>" % availability
-	print "Daily tasking: <b>%2.2f hours</b> (%2.2f%%)<br>" % (tasking, 100 * tasking / availability if availability > 0 else 0)
-	print "<br>"
+	print "Daily tasking: %2.2f hours (%2.2f%%)" % (tasking, pcnt)
+	print "<br><br>"
 
 @get('sprints/(?P<id>[0-9])/history')
 def showSprintHistory(handler, request, id):
