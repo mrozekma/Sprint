@@ -175,7 +175,11 @@ class ActiveRecord(object):
 	def saveLink(self, link, table, col, otherCls, otherCol):
 		if not self.id: raise ValueError("Attempted to save link before saving object")
 		for i in link:
-			db().update("INSERT INTO %s(%s, %s) VALUES(?, ?)" % (table, col, otherCol), self.id, i.id)
+			db().update("INSERT OR REPLACE INTO %s(%s, %s) VALUES(?, ?)" % (table, col, otherCol), self.id, i.id)
+
+		placeholders = ' AND '.join("%s != ?" % otherCol for i in link)
+		vals = [i.id for i in link]
+		db().update("DELETE FROM %s WHERE %s = ? AND %s" % (table, col, placeholders), self.id, *vals)
 
 	def __eq__(self, other):
 		return self and other and self.id == other.id
