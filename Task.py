@@ -9,7 +9,7 @@ from inspect import getmembers
 from datetime import datetime, date
 
 class Status:
-	def getIcon(self): return "/static/images/revision-%s.png" % self.name.replace(' ', '-')
+	def getIcon(self): return "/static/images/status-%s.png" % self.name.replace(' ', '-')
 	icon = property(getIcon)
 
 	def __init__(self, name, text, color, revisionVerb):
