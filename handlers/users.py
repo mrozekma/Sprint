@@ -37,6 +37,9 @@ def user(handler, request, username):
 		print "<h3>Avatar</h3>"
 		print "Your avatar can be changed at <a href=\"http://gravatar.com/\" target=\"_new\">http://gravatar.com/</a>. It must be associated with the e-mail <b>%s@microsemi-wl.com</b>, and be rated PG" % user.safe.username
 
+		print "<h3>Authentication</h3>"
+		print "Your password can be changed <a href=\"/resetpw\">here</a><br>"
+
 	print "<h3>Last seen</h3>"
 	if not user.lastseen:
 		print "Never"
