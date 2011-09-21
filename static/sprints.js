@@ -48,12 +48,19 @@ function setup_hours_events() {
 		set_status(task, val == 0 ? 'complete' : 'in progress');
 	});
 
-	$("td.hours input").blur(function(event) {
+	hours_cache = -1;
+	$("td.hours input").focus(function(event) {
+		hours_cache = parseInt($('input', $(this).parents('.hours')).val(), 10);
+	}).blur(function(event) {
 		task = $(this).parents('tr.task');
         field = $('input', $(this).parents('.hours'));
 		val = parseInt(field.val(), 10);
-		save_task(task, 'hours', val);
-		set_status(task, val == 0 ? 'complete' : 'in progress');
+		if(hours_cache < 0) {
+			console.log("Problem blurring hours field; hours cache is unset");
+		} else if(val != hours_cache) {
+			save_task(task, 'hours', val);
+			set_status(task, val == 0 ? 'complete' : 'in progress');
+		}
 	});
 }
 
