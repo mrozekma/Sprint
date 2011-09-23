@@ -3,6 +3,7 @@ from random import randint
 import os
 import HTTPHandler
 import menu
+from DB import db
 from utils import *
 
 # class LeftMenu:
@@ -106,7 +107,10 @@ def footer(handler, path):
 	revisionDate = tsToDate(int(revisionDate)).strftime('%d %b %Y %H:%M:%S')
 	print "<div class=\"footer_timestamp\">"
 	print "Current system time: %s<br>" % datetime.now()
-	print "Current revision: <a href=\"http://work.mrozekma.com:8080/?p=Sprint;a=commitdiff;h=%s\">%s</a> (<span title=\"%s\">%s</span>)" % (revisionHash, revisionHash, revisionDate, revisionRelative)
+	print "Current revision: <a href=\"http://work.mrozekma.com:8080/?p=Sprint;a=commitdiff;h=%s\">%s</a> (<span title=\"%s\">%s</span>)<br>" % (revisionHash, revisionHash, revisionDate, revisionRelative)
+	queries = db().resetCount()
+	if handler.session['user'] and handler.session['user'].hasPrivilege('Dev'):
+		print "Database requests: %d<br>" % queries
 	print "</div>"
 	
 	print "</body>"

@@ -8,12 +8,14 @@ class DB:
 	def __init__(self):
 		self.conn = connect('db')
 		self.conn.row_factory = Row
+		self.count = 0
 
 	def cursor(self, expr = None, *args):
 		# log("DB: %s with bound args %s" % (expr, args))
 		cur = self.conn.cursor()
 		if expr:
 			cur.execute(expr, args)
+		self.count += 1
 		return cur
 
 	def selectRow(self, expr, *args):
@@ -40,6 +42,11 @@ class DB:
 		cur = self.cursor(expr, *args)
 		self.conn.commit()
 		cur.close()
+
+	def resetCount(self):
+		c = self.count
+		self.count = 0
+		return c
 
 singleton = None
 def db():
