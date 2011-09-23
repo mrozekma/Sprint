@@ -560,6 +560,10 @@ img.gravatar {
 	padding-right: 10px;
 }
 
+#post-status {
+	display: none;
+}
+
 .buttons {
 	float: left;
 }

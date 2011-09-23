@@ -339,7 +339,6 @@ def showInfo(handler, request, id):
 	handler.title(sprint.safe.name)
 
 	print "<style type=\"text/css\">"
-	print "#post-status {display: none}"
 	print "input.goal {"
 	print "    width: 400px;"
 	print "    background: url(/static/images/tag-none.png) no-repeat 2px 2px;"
@@ -534,9 +533,6 @@ def showAvailability(handler, request, id):
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
 	print "</script>"
-	print "<style type=\"text/css\">"
-	print "#post-status {display: none}"
-	print "</style>"
 
 	print TintedBox('Loading...', scheme = 'blue', id = 'post-status')
 
@@ -622,7 +618,6 @@ def newSprint(handler, request, project):
 		ErrorBox.die('Invalid project', "No project with ID <b>%d</b>" % id)
 
 	print "<style type=\"text/css\">"
-	print "#post-status {display: none}"
 	print "table.list td.left {position: relative; top: 4px;}"
 	print "table.list td.right > * {width: 400px;}"
 	print "table.list td.right button {width: 200px;}" # Half of the above value
