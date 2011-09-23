@@ -747,3 +747,43 @@ div.clear {
 	text-align: center;
 	width: 125px;
 }
+
+div.shell-box {
+	float: left;
+	width: 49%;
+	margin-right: 5px;
+	border: 1px solid #000;
+}
+
+div.shell-box span.title {
+	display: block;
+	width: 100%;
+	padding: 2px 0px 2px 0px;
+	background-color: #000;
+	color: #fff;
+}
+
+div.shell-box pre {
+	display: block;
+	height: 600px;
+	margin: 0px;
+	/* overflow: scroll; */
+	overflow-x: visible;
+	overflow-y: scroll;
+	word-wrap: break-word;
+}
+
+input#input {
+	clear: both;
+	margin-top: 10px;
+	border: 1px solid #000;
+	width: 99%;
+}
+
+div.shell-box#console pre div.shell-code {}
+div.shell-box#console pre div.shell-stdout {
+	color: #00f;
+}
+div.shell-box#console pre div.shell-stderr {
+	color: #f00;
+}

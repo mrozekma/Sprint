@@ -3,9 +3,13 @@ import re
 import tokenize
 from token import *
 import random
+from pprint import pformat
+from json import dumps as toJS
 
 from rorn.Box import ErrorBox, SuccessBox
 from rorn.Session import sessions, delay, undelay
+from rorn.ResponseWriter import ResponseWriter
+from rorn.code import highlightCode
 
 from Privilege import admin
 from User import User
@@ -22,6 +26,7 @@ def adminIndex(handler, request):
 	print "<a href=\"/admin/test\">Test pages</a><br>"
 	print "<a href=\"/admin/impersonate-user\">Impersonate user</a><br>"
 	print "<a href=\"/admin/sessions\">Sessions</a><br>"
+	print "<a href=\"/admin/shell\">Shell</a><br>"
 
 # @get('admin/db/reset')
 # def resetDB(handler, request):
@@ -158,3 +163,31 @@ def adminSessionsPost(handler, request, p_key, p_action, p_value = None):
 			redirect('/admin/sessions')
 			break
 		break
+
+shells = {}
+
+@get('admin/shell')
+def adminShell(handler, request):
+	handler.title('Shell')
+	admin(handler)
+	print "<script src=\"/static/admin-shell.js\" type=\"text/javascript\"></script>"
+
+	shells[handler.session.key] = {'handler': handler}
+
+	print "<div id=\"variables\" class=\"shell-box\"><span class=\"title\">Variables</span><pre>{}</pre></div>"
+	print "<div id=\"console\" class=\"shell-box code_default light\"><span class=\"title\">Console</span><pre></pre></div>"
+	print "<input type=\"text\" id=\"input\" class=\"defaultfocus\">"
+
+@post('admin/shell')
+def adminShellPost(handler, request, p_code):
+	request['wrappers'] = False
+
+	writer = ResponseWriter()
+	try:
+		exec compile(p_code, '<admin shell>', 'single') in shells[handler.session.key]
+		stderr = ''
+	except:
+		stderr = "%s: %s" % (sys.exc_info()[0].__name__, sys.exc_info()[1])
+	stdout = writer.done()
+
+	print toJS({'code': highlightCode(p_code), 'stdout': stdout, 'stderr': stderr, 'vars': pformat(dict(filter(lambda (k, v): k != '__builtins__', shells[handler.session.key].items())), width = 80)})
