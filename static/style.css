@@ -748,6 +748,10 @@ div.clear {
 	width: 125px;
 }
 
+img.admin-icon {
+	width: 64px;
+}
+
 div.shell-box {
 	float: left;
 	width: 49%;

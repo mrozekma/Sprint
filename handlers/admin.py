@@ -22,11 +22,12 @@ def adminIndex(handler, request):
 	admin(handler)
 
 	# print "<a href=\"/admin/db/reset\">Reset database</a><br>"
-	print "<a href=\"/admin/resetpw\">Reset password</a><br>"
-	print "<a href=\"/admin/test\">Test pages</a><br>"
-	print "<a href=\"/admin/impersonate-user\">Impersonate user</a><br>"
-	print "<a href=\"/admin/sessions\">Sessions</a><br>"
-	print "<a href=\"/admin/shell\">Shell</a><br>"
+
+	print "<div class=\"user-list-entry\"><a href=\"/admin/resetpw\"><img class=\"admin-icon\" src=\"/static/images/admin-reset-password.png\"></a><br>Reset password</div>"
+	print "<div class=\"user-list-entry\"><a href=\"/admin/test\"><img class=\"admin-icon\" src=\"/static/images/admin-test-pages.png\"></a><br>Test pages</div>"
+	print "<div class=\"user-list-entry\"><a href=\"/admin/impersonate-user\"><img class=\"admin-icon\" src=\"/static/images/admin-impersonate.png\"></a><br>Impersonate user</div>"
+	print "<div class=\"user-list-entry\"><a href=\"/admin/sessions\"><img class=\"admin-icon\" src=\"/static/images/admin-sessions.png\"></a><br>Sessions</div>"
+	print "<div class=\"user-list-entry\"><a href=\"/admin/shell\"><img class=\"admin-icon\" src=\"/static/images/admin-shell.png\"></a><br>Shell</div>"
 
 # @get('admin/db/reset')
 # def resetDB(handler, request):
