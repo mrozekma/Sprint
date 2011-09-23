@@ -36,7 +36,7 @@ tabs['availability'] = '/sprints/%d/availability'
 def sprint(handler, request):
 	redirect('/projects')
 
-@get('sprints/(?P<id>[0-9])')
+@get('sprints/(?P<id>[0-9]+)')
 def showBacklog(handler, request, id, assigned = None):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
@@ -326,7 +326,7 @@ def findActiveSprint(handler, request, project = None):
 				print "<a href=\"/sprints/%d\">%s</a><br>" % (sprint.id, sprint.safe.name)
 			break
 
-@get('sprints/(?P<id>[0-9])/info')
+@get('sprints/(?P<id>[0-9]+)/info')
 def showInfo(handler, request, id):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
@@ -437,7 +437,7 @@ def sprintInfoPost(handler, request, id, p_name, p_goals, p_members = None):
 	request['code'] = 299
 	print "Saved changes"
 
-@get('sprints/(?P<id>[0-9])/metrics')
+@get('sprints/(?P<id>[0-9]+)/metrics')
 def showMetrics(handler, request, id):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
@@ -504,7 +504,7 @@ def showMetrics(handler, request, id):
 	print "Daily tasking: %2.2f hours (%2.2f%%)" % (tasking, pcnt)
 	print "<br><br>"
 
-@get('sprints/(?P<id>[0-9])/history')
+@get('sprints/(?P<id>[0-9]+)/history')
 def showSprintHistory(handler, request, id):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
@@ -517,7 +517,7 @@ def showSprintHistory(handler, request, id):
 	showHistory(sprint.getTasks(includeDeleted = True), True)
 	print "<br>"
 
-@get('sprints/(?P<id>[0-9])/availability')
+@get('sprints/(?P<id>[0-9]+)/availability')
 def showAvailability(handler, request, id):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
@@ -573,7 +573,7 @@ def showAvailability(handler, request, id):
 		print Button('Save', id = 'save-button', type = 'button').positive()
 	print "</form>"
 
-@post('sprints/(?P<id>[0-9])/availability')
+@post('sprints/(?P<id>[0-9]+)/availability')
 def sprintAvailabilityPost(handler, request, id, p_hours):
 	def die(msg):
 		print msg
