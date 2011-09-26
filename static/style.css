@@ -750,6 +750,7 @@ div.clear {
 
 img.admin-icon {
 	width: 64px;
+	border: 0px;
 }
 
 div.shell-box {
