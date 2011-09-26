@@ -175,8 +175,17 @@ def adminShell(handler, request):
 
 	shells[handler.session.key] = {'handler': handler}
 
-	print "<div id=\"variables\" class=\"shell-box\"><span class=\"title\">Variables</span><pre>{}</pre></div>"
-	print "<div id=\"console\" class=\"shell-box code_default light\"><span class=\"title\">Console</span><pre></pre></div>"
+	# print "<table border=1 cellspacing=0 cellpadding=4>"
+	# print "<thead><tr><th>Name</th><th>Value</th><th>String</th></tr></thead>"
+	# print "<tbody></tbody>"
+	# print "</table>"
+
+	print "<div id=\"variables\" class=\"shell-box\"><span class=\"title\">Variables</span>"
+	print "<div class=\"box-wrapper\">"
+	for col in ['Name', 'Value', 'String']:
+		print "<div class=\"elem header\">%s</div>" % col
+	print "</div></div>"
+	print "<div id=\"console\" class=\"shell-box\"><span class=\"title\">Console</span><pre class=\"box-wrapper code_default light\"></pre></div>"
 	print "<input type=\"text\" id=\"input\" class=\"defaultfocus\">"
 
 @post('admin/shell')
@@ -191,4 +200,5 @@ def adminShellPost(handler, request, p_code):
 		stderr = "%s: %s" % (sys.exc_info()[0].__name__, sys.exc_info()[1])
 	stdout = writer.done()
 
-	print toJS({'code': highlightCode(p_code), 'stdout': stdout, 'stderr': stderr, 'vars': pformat(dict(filter(lambda (k, v): k != '__builtins__', shells[handler.session.key].items())), width = 80)})
+	# 'vars': pformat(dict(filter(lambda (k, v): k != '__builtins__', shells[handler.session.key].items())), width = 80)}
+	print toJS({'code': highlightCode(p_code), 'stdout': stdout, 'stderr': stderr, 'vars': [(k, pformat(v), str(v)) for (k, v) in shells[handler.session.key].items() if k != '__builtins__']})

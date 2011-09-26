@@ -763,26 +763,18 @@ div.shell-box {
 div.shell-box span.title {
 	display: block;
 	width: 100%;
-	padding: 2px 0px 2px 0px;
+	padding: 2px 0px 2px 4px;
 	background-color: #000;
 	color: #fff;
 }
 
-div.shell-box pre {
+div.shell-box .box-wrapper {
 	display: block;
 	height: 600px;
 	margin: 0px;
-	/* overflow: scroll; */
 	overflow-x: visible;
 	overflow-y: scroll;
 	word-wrap: break-word;
-}
-
-input#input {
-	clear: both;
-	margin-top: 10px;
-	border: 1px solid #000;
-	width: 99%;
 }
 
 div.shell-box#console pre div.shell-code {}
@@ -791,4 +783,63 @@ div.shell-box#console pre div.shell-stdout {
 }
 div.shell-box#console pre div.shell-stderr {
 	color: #f00;
+}
+
+div.shell-box {
+	overflow: hidden;
+	width: 49%;
+}
+
+/* nth-of-type(4n) is a <div class="clear"> put before each row */
+
+div.shell-box div.elem:nth-of-type(4n+1) {
+	width: 20%;
+	float: left;
+	padding-right: 5px;
+}
+
+div.shell-box div.elem:nth-of-type(4n+2) {
+	width: 39%;
+	float: left;
+	padding-right: 5px;
+}
+
+div.shell-box div.elem:nth-of-type(4n+3) {
+	width: 39%;
+	float: left;
+}
+
+div.shell-box div.elem.header {
+	font-weight: bold;
+}
+
+/*
+div.shell-box table thead tr {
+	display: block
+}
+
+div.shell-box table tbody {
+	display: block;
+	height: 574px;
+	overflow: auto;
+	width: 100%
+}
+
+div.shell-box table thead th, div.shell-box table tbody td {
+	width: 100px;
+	word-wrap: break-word;
+}
+
+div.shell-box table tbody td + td {
+	position: relative;
+	padding-left: 20px;
+}
+
+*/
+
+input#input {
+	clear: both;
+	margin-top: 10px;
+	border: 1px solid #000;
+	width: 99%;
 }

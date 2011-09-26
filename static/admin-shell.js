@@ -12,7 +12,16 @@ $(document).ready(function() {
 			$.post('/admin/shell', {code: $(this).val()}, function(data, text, request) {
 				hist.push($('input#input').val());
 				$('input#input').val('');
-				$('#variables > pre').text(data['vars']);
+
+				v = $('#variables > .box-wrapper');
+				$('.elem:not(.header), .clear', v).remove();
+				$.each(data['vars'], function() {
+					arr = $(this);
+					v.append($('<div>').addClass('clear').addClass('panda'));
+					v.append($('<div>').addClass('elem').text(arr[0]));
+					v.append($('<div>').addClass('elem').text(arr[1]));
+					v.append($('<div>').addClass('elem').html(arr[2]));
+				});
 
 				c = $('#console > pre');
 				c.append($('<div>').addClass('shell-code').html("&gt;&nbsp;" + data.code));
