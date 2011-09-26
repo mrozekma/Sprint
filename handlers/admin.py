@@ -111,9 +111,19 @@ def adminSessions(handler, request):
 
 	undelay(handler)
 
+	def cmpSessionTimes(s1, s2):
+		if 'timestamp' in s1 and 'timestamp' in s2:
+			return cmp(s1['timestamp'], s2['timestamp'])
+		elif 'timestamp' in s1:
+			return 1
+		elif 'timestamp' in s2:
+			return -1
+		else:
+			return 0
+
 	print "<table border=0 cellspacing=4>"
 	print "<tr><th>Key</th><th>User</th><th>Last address</th><th>Last seen</th><th>&nbsp;</th></tr>"
-	for key, session in sessions.iteritems():
+	for key, session in sorted(sessions.iteritems(), lambda (k1, s1), (k2, s2): cmpSessionTimes(s1, s2), reverse = True):
 		print "<tr>"
 		print "<td>%s</td>" % key
 		print "<td>%s</td>" % (session['user'] if 'user' in session else 'None')
