@@ -17,7 +17,7 @@ def apiProjectActive(handler, request, id, action):
 	if not project:
 		die("No project with ID %d" % id)
 
-	sprints = sorted(filter(lambda sprint: sprint.isActive(), project.getSprints()), lambda (x, y): cmp(x.start, y.start))
+	sprints = sorted(filter(lambda sprint: sprint.isActive(), project.getSprints()), lambda x, y: cmp(x.start, y.start))
 	if len(sprints):
 		redirect("/api/sprints/%d/%s" % (sprints[-1].id, action))
 	else:
