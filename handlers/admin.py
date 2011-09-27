@@ -4,7 +4,8 @@ import tokenize
 from token import *
 import random
 from pprint import pformat
-from json import dumps as toJS
+from json import loads as fromJS, dumps as toJS
+from cgi import escape
 
 from rorn.Box import ErrorBox, SuccessBox
 from rorn.Session import sessions, delay, undelay
@@ -192,7 +193,7 @@ def adminShell(handler, request):
 
 	print "<div id=\"variables\" class=\"shell-box\"><span class=\"title\">Variables</span>"
 	print "<div class=\"box-wrapper\">"
-	for col in ['Name', 'Value', 'String']:
+	for col in ['Name', 'Value', 'Rendered']:
 		print "<div class=\"elem header\">%s</div>" % col
 	print "</div></div>"
 	print "<div id=\"console\" class=\"shell-box\"><span class=\"title\">Console</span><pre class=\"box-wrapper code_default light\"></pre></div>"
@@ -200,15 +201,36 @@ def adminShell(handler, request):
 
 @post('admin/shell')
 def adminShellPost(handler, request, p_code):
+	def makeStr(v):
+		if isinstance(v, list):
+			return "<ul>%s</ul>" % ''.join("<li>%s</li>" % item for item in v)
+		return escape(str(v))
+
 	request['wrappers'] = False
+
+	p_code = re.sub('^!([A-Za-z]+)$', 'from \\1 import \\1', p_code)
+	match = re.match('!([A-Za-z ]+)$', p_code)
+	if match:
+		parts = match.group(1).split(' ')
+		res = []
+		for part in parts:
+			w = ResponseWriter()
+			adminShellPost(handler, request, "!%s" % part)
+			res.append(fromJS(w.done()))
+		print toJS(res)
+		done()
+
+	if handler.session.key not in shells:
+		print toJS({'code': highlightCode(p_code), 'stdout': '', 'stderr': ['Session Expired', 'Shell session no longer exists'], 'vars': {}})
+		done()
 
 	writer = ResponseWriter()
 	try:
 		exec compile(p_code, '<admin shell>', 'single') in shells[handler.session.key]
 		stderr = ''
 	except:
-		stderr = "%s: %s" % (sys.exc_info()[0].__name__, sys.exc_info()[1])
+		stderr = map(str, [sys.exc_info()[0].__name__, sys.exc_info()[1]])
 	stdout = writer.done()
 
 	# 'vars': pformat(dict(filter(lambda (k, v): k != '__builtins__', shells[handler.session.key].items())), width = 80)}
-	print toJS({'code': highlightCode(p_code), 'stdout': stdout, 'stderr': stderr, 'vars': [(k, pformat(v), str(v)) for (k, v) in shells[handler.session.key].items() if k != '__builtins__']})
+	print toJS({'code': highlightCode(p_code), 'stdout': stdout, 'stderr': stderr, 'vars': [(k, pformat(v), makeStr(v)) for (k, v) in shells[handler.session.key].items() if k != '__builtins__']})

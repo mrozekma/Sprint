@@ -9,29 +9,34 @@ $(document).ready(function() {
 		switch(e.keyCode) {
 		case 13: // Enter
 			hist_index = -1;
-			$.post('/admin/shell', {code: $(this).val()}, function(data, text, request) {
+			$.post('/admin/shell', {code: $(this).val()}, function(dataL, text, request) {
+				if(!(dataL instanceof Array)) {
+					dataL = [dataL];
+				}
+
 				hist.push($('input#input').val());
 				$('input#input').val('');
 
-				v = $('#variables > .box-wrapper');
-				$('.elem:not(.header), .clear', v).remove();
-				$.each(data['vars'], function() {
-					arr = $(this);
-					v.append($('<div>').addClass('clear').addClass('panda'));
-					v.append($('<div>').addClass('elem').text(arr[0]));
-					v.append($('<div>').addClass('elem').text(arr[1]));
-					v.append($('<div>').addClass('elem').html(arr[2]));
-				});
+				$.each(dataL, function(index, data) {
+					v = $('#variables > .box-wrapper');
+					$('.elem:not(.header), .clear', v).remove();
+					$.each(data['vars'], function(index, arr) {
+						v.append($('<div>').addClass('clear'));
+						v.append($('<div>').addClass('elem').text(arr[0]));
+						v.append($('<div>').addClass('elem').text(arr[1]));
+						v.append($('<div>').addClass('elem').html(arr[2]));
+					});
 
-				c = $('#console > pre');
-				c.append($('<div>').addClass('shell-code').html("&gt;&nbsp;" + data.code));
-				if(data.stdout != '') {
-					c.append($('<div>').addClass('shell-stdout').text(data.stdout));
-				}
-				if(data.stderr != '') {
-					c.append($('<div>').addClass('shell-stderr').text(data.stderr));
-				}
-				c[0].scrollTop = c[0].scrollHeight;
+					c = $('#console > pre');
+					c.append($('<div>').addClass('shell-code').html("&gt;&nbsp;" + data.code));
+					if(data.stdout != '') {
+						c.append($('<div>').addClass('shell-stdout').text(data.stdout));
+					}
+					if(data.stderr != '') {
+						c.append($('<div>').addClass('shell-stderr').append($("<b>").text(data.stderr[0])).append($("<span>").text(": " + data.stderr[1])));
+					}
+					c[0].scrollTop = c[0].scrollHeight;
+				});
 			}, 'json');
 			break;
 		case 27: // Esc

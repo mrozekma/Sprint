@@ -800,18 +800,23 @@ div.shell-box div.elem:nth-of-type(4n+1) {
 }
 
 div.shell-box div.elem:nth-of-type(4n+2) {
-	width: 39%;
+	width: 38%;
 	float: left;
 	padding-right: 5px;
 }
 
 div.shell-box div.elem:nth-of-type(4n+3) {
-	width: 39%;
+	width: 38%;
 	float: left;
 }
 
 div.shell-box div.elem.header {
 	font-weight: bold;
+}
+
+div.shell-box ul {
+	margin: 0px;
+	-webkit-padding-start: 16px;
 }
 
 /*
