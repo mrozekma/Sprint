@@ -18,6 +18,7 @@ def apiSprintInfo(handler, request, id):
 		die("No sprint with ID %d" % id)
 
 	print toJS({
+			'id': sprint.id,
 			'name': sprint.name,
 			'start': sprint.start,
 			'end': sprint.end
