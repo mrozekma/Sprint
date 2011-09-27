@@ -738,7 +738,7 @@ div.clear {
 	border: 1px solid #4F172E;
 }
 
-.task-progress-total .progress-current .progress-percentage {
+.task-progress-total .progress-percentage {
 	color: #999;
 	font-size: 11px;
 	line-height: 10px;
