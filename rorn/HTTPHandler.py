@@ -146,7 +146,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			self.error('Database Error', e.message, False)
 		except Redirect: raise
 		except:
-			writer.clear()
+			writer.start()
 			self.title('Unhandled Error')
 
 			writer2 = ResponseWriter()

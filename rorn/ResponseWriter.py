@@ -7,10 +7,6 @@ class ResponseWriter:
 		if autoStart:
 			self.start()
 
-	# def __del__(self):
-		# if self.old:
-			# self.done()
-
 	def write(self, data):
 		if data[:1] == '|' and self.prefixSigil:
 			print >>self.old, data[1:]
