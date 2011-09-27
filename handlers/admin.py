@@ -204,7 +204,7 @@ def adminShellPost(handler, request, p_code):
 	def makeStr(v):
 		if isinstance(v, list):
 			return "<ul>%s</ul>" % ''.join("<li>%s</li>" % item for item in v)
-		return escape(str(v))
+		return str(v)
 
 	request['wrappers'] = False
 
