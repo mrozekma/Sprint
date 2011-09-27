@@ -468,7 +468,7 @@ def showMetrics(handler, request, id):
 		chart.placeholder()
 
 	print "<a name=\"commitment-by-user\">"
-	print "<h2><a href\"#commitment-by-user\">Commitment (by user)</a></h2>"
+	print "<h2><a href=\"#commitment-by-user\">Commitment (by user)</a></h2>"
 	avail = Availability(sprint)
 	inf = float('inf')
 	for user in sorted(sprint.members):
