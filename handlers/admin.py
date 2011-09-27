@@ -233,4 +233,5 @@ def adminShellPost(handler, request, p_code):
 	stdout = writer.done()
 
 	# 'vars': pformat(dict(filter(lambda (k, v): k != '__builtins__', shells[handler.session.key].items())), width = 80)}
-	print toJS({'code': highlightCode(p_code), 'stdout': stdout, 'stderr': stderr, 'vars': [(k, pformat(v), makeStr(v)) for (k, v) in shells[handler.session.key].items() if k != '__builtins__']})
+	vars = sorted([(k, pformat(v), makeStr(v)) for (k, v) in shells[handler.session.key].items() if k != '__builtins__'], lambda (k1, v1, vs1), (k2, v2, vs2): cmp(k1, k2))
+	print toJS({'code': highlightCode(p_code), 'stdout': stdout, 'stderr': stderr, 'vars': vars})
