@@ -6,6 +6,7 @@ import random
 from pprint import pformat
 from json import loads as fromJS, dumps as toJS
 from cgi import escape
+from datetime import time
 
 from rorn.Box import ErrorBox, SuccessBox
 from rorn.Session import sessions, delay, undelay
@@ -15,6 +16,7 @@ from rorn.code import highlightCode
 from Privilege import admin as requireAdmin
 from User import User
 from Button import Button
+from Table import LRTable
 from utils import *
 
 pages = []
@@ -233,3 +235,60 @@ def adminShellPost(handler, request, p_code):
 	# 'vars': pformat(dict(filter(lambda (k, v): k != '__builtins__', shells[handler.session.key].items())), width = 80)}
 	vars = sorted([(k, pformat(v), makeStr(v)) for (k, v) in shells[handler.session.key].items() if k != '__builtins__'], lambda (k1, v1, vs1), (k2, v2, vs2): cmp(k1, k2))
 	print toJS({'code': highlightCode(p_code), 'stdout': stdout, 'stderr': stderr, 'vars': vars})
+
+@admin('admin/time', 'Mock time', 'time')
+def adminTime(handler, request):
+	handler.title('Mock time')
+	requireAdmin(handler)
+	print "<link href=\"/static/jquery.ui.timepicker.css\" rel=\"stylesheet\" type=\"text/css\" />"
+	print "<script src=\"/static/jquery.ui.timepicker.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/admin-time.js\" type=\"text/javascript\"></script>"
+
+	nowDelta = getNowDelta()
+	real, effective = datetime.now(), getNow()
+	days = nowDelta.days
+	if nowDelta.seconds < 0:
+		prefix = '-'
+		times = tsToDate(0) + timedelta(hours = 24 - datetime.fromtimestamp(0).hour) - nowDelta
+	else:
+		prefix = ''
+		times = tsToDate(0) + timedelta(hours = 24 - datetime.fromtimestamp(0).hour) + nowDelta
+
+	tbl = LRTable()
+	tbl['Real time:'] = str(real)
+	tbl['Current delta:'] = "%d %s, %s%d:%02d" % (days, 'day' if days == 1 else 'days', prefix, times.hour, times.minute)
+	tbl['Effective time:'] = str(effective)
+	print tbl
+
+	print "<br>"
+	print "<form method=\"post\" action=\"/admin/time\">"
+	print "<input type=\"text\" name=\"date\" class=\"date\" value=\"%s\">" % effective.strftime('%m/%d/%Y')
+	print "<input type=\"text\" name=\"time\" class=\"time\" value=\"%s\">" % effective.strftime('%H:%M')
+	print Button('Set', type = 'submit').positive()
+	print "</form>"
+
+@post('admin/time')
+def adminTimePost(handler, request, p_date, p_time):
+	handler.title('Mock time')
+	requireAdmin(handler)
+
+	try:
+		ts = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_date)
+		if not ts:
+			raise ValueError("Malformed date: %s" % p_date)
+		month, day, year = map(int, ts.groups())
+
+		ts2 = re.match("^(\d{1,2}):(\d{1,2})$", p_time)
+		if not ts2:
+			raise ValueError("Malformed time: %s" % p_time)
+		hour, minute = map(int, ts2.groups())
+
+		effective = datetime(year, month, day, hour, minute, 0)
+		print effective
+		print effective - datetime.now()
+		setNowDelta(effective - datetime.now())
+	except ValueError, e:
+		die(e.message)
+
+	request['wrappers'] = False
+	redirect('/admin/time')
