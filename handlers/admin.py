@@ -12,32 +12,30 @@ from rorn.Session import sessions, delay, undelay
 from rorn.ResponseWriter import ResponseWriter
 from rorn.code import highlightCode
 
-from Privilege import admin
+from Privilege import admin as requireAdmin
 from User import User
 from Button import Button
 from utils import *
 
+pages = []
+def admin(url, name, icon):
+	def wrap(f):
+		pages.append({'url': url, 'name': name, 'icon': icon})
+		return get(url)(f)
+	return wrap
+
 @get('admin')
 def adminIndex(handler, request):
 	handler.title('Admin')
-	admin(handler)
+	requireAdmin(handler)
 
-	# print "<a href=\"/admin/db/reset\">Reset database</a><br>"
+	for page in pages:
+		print "<div class=\"admin-list-entry\"><a href=\"%(url)s\"><img class=\"admin-icon\" src=\"/static/images/admin-%(icon)s.png\"></a><br>%(name)s</div>" % page
 
-	print "<div class=\"user-list-entry\"><a href=\"/admin/resetpw\"><img class=\"admin-icon\" src=\"/static/images/admin-reset-password.png\"></a><br>Reset password</div>"
-	print "<div class=\"user-list-entry\"><a href=\"/admin/test\"><img class=\"admin-icon\" src=\"/static/images/admin-test-pages.png\"></a><br>Test pages</div>"
-	print "<div class=\"user-list-entry\"><a href=\"/admin/impersonate-user\"><img class=\"admin-icon\" src=\"/static/images/admin-impersonate.png\"></a><br>Impersonate user</div>"
-	print "<div class=\"user-list-entry\"><a href=\"/admin/sessions\"><img class=\"admin-icon\" src=\"/static/images/admin-sessions.png\"></a><br>Sessions</div>"
-	print "<div class=\"user-list-entry\"><a href=\"/admin/shell\"><img class=\"admin-icon\" src=\"/static/images/admin-shell.png\"></a><br>Shell</div>"
-
-# @get('admin/db/reset')
-# def resetDB(handler, request):
-	# handler.title('Reset database')
-
-@get('admin/test')
+@admin('admin/test', 'Test pages', 'test-pages')
 def adminTest(handler, request):
 	handler.title('Test pages')
-	admin(handler)
+	requireAdmin(handler)
 
 	with open('handlers/test.py') as f:
 		found = 0
@@ -53,10 +51,10 @@ def adminTest(handler, request):
 				print "<a href=\"/%s\">%s</a><br>" % (tokString, stripTags(tokString))
 				found = 0
 
-@get('admin/resetpw')
+@admin('admin/resetpw', 'Reset password', 'reset-password')
 def adminResetPassword(handler, request):
 	handler.title('Reset password')
-	admin(handler)
+	requireAdmin(handler)
 
 	users = User.loadAll(orderby = 'username')
 	for user in users:
@@ -67,7 +65,7 @@ def adminResetPassword(handler, request):
 @post('admin/resetpw/(?P<username>[^/]+)')
 def adminResetPasswordUser(handler, request, username, p_x = None, p_y = None):
 	handler.title('Reset password')
-	admin(handler)
+	requireAdmin(handler)
 
 	user = User.load(username = username)
 	if not user:
@@ -82,10 +80,10 @@ def adminResetPasswordUser(handler, request, username, p_x = None, p_y = None):
 	if hadPreviousKey:
 		print "<b>Warning</b>: This invalides the previous reset key for this user<br>"
 
-@get('admin/impersonate-user')
+@admin('admin/impersonate-user', 'Impersonate user', 'impersonate')
 def impersonateUser(handler, request):
 	handler.title('Impersonate User')
-	admin(handler)
+	requireAdmin(handler)
 
 	users = User.loadAll(orderby = 'username')
 	for user in users:
@@ -96,7 +94,7 @@ def impersonateUser(handler, request):
 @post('admin/impersonate-user/(?P<username>[^/]+)')
 def adminImpersonateUserPost(handler, request, username, p_x = None, p_y = None):
 	handler.title('Reset password')
-	admin(handler)
+	requireAdmin(handler)
 
 	user = User.load(username = username)
 	if not user:
@@ -105,10 +103,10 @@ def adminImpersonateUserPost(handler, request, username, p_x = None, p_y = None)
 	handler.session['user'] = user
 	redirect('/')
 
-@get('admin/sessions')
+@admin('admin/sessions', 'Sessions', 'sessions')
 def adminSessions(handler, request):
 	handler.title('Sessions')
-	admin(handler)
+	requireAdmin(handler)
 
 	undelay(handler)
 
@@ -143,7 +141,7 @@ def adminSessions(handler, request):
 @post('admin/sessions')
 def adminSessionsPost(handler, request, p_key, p_action, p_value = None):
 	handler.title('Sessions')
-	admin(handler)
+	requireAdmin(handler)
 	print "<script src=\"/static/admin-sessions.js\" type=\"text/javascript\"></script>"
 
 	if not p_key in sessions:
@@ -178,10 +176,10 @@ def adminSessionsPost(handler, request, p_key, p_action, p_value = None):
 
 shells = {}
 
-@get('admin/shell')
+@admin('admin/shell', 'Shell', 'shell')
 def adminShell(handler, request):
 	handler.title('Shell')
-	admin(handler)
+	requireAdmin(handler)
 	print "<script src=\"/static/admin-shell.js\" type=\"text/javascript\"></script>"
 
 	shells[handler.session.key] = {'handler': handler}

@@ -546,7 +546,7 @@ ul#goal-menu {
 	width: 49%;
 }
 
-.user-list-entry {
+.user-list-entry, .admin-list-entry {
 	float: left;
 	font-weight: bold;
 	text-align: center;
