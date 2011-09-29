@@ -665,7 +665,7 @@ def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members
 		if not start:
 			raise ValueError
 		month, day, year = map(int, start.groups())
-		start = date(year, month, day)
+		start = datetime(year, month, day)
 	except ValueError:
 		die("Malformed start date: %s" % stripTags(p_start))
 
@@ -674,7 +674,8 @@ def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members
 		if not end:
 			raise ValueError
 		month, day, year = map(int, end.groups())
-		end = date(year, month, day)
+		end = datetime(year, month, day)
+		end += timedelta(days = 1, seconds = -1)
 	except ValueError:
 		die("Malformed end date: %s" % stripTags(p_end))
 
