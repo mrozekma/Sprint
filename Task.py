@@ -55,7 +55,7 @@ class Task(ActiveRecord):
 		self.name = name
 		self.status = status
 		self.hours = hours
-		self.timestamp = timestamp if timestamp else dateToTs(datetime.now())
+		self.timestamp = timestamp if timestamp else dateToTs(getNow())
 		self.seq = seq if seq else maxOr(task.seq for task in self.group.getTasks())+1
 		self.deleted = deleted
 

@@ -26,7 +26,7 @@ class HoursChart(Chart):
 			xAxis.title.text = 'Day'
 			xAxis.plotBands = [{
 				'color': '#DDD',
-				'from': dateToTs(datetime.now()) * 1000,
+				'from': dateToTs(getNow()) * 1000,
 				'to': sprint.end * 1000
 			}]
 		self.yAxis.min = 0
@@ -99,7 +99,7 @@ class HoursByUserChart(Chart):
 			xAxis.title.text = 'Day'
 			xAxis.plotBands = [{
 				'color': '#DDD',
-				'from': dateToTs(datetime.now()) * 1000,
+				'from': dateToTs(getNow()) * 1000,
 				'to': sprint.end * 1000
 			}]
 		self.yAxis.min = 0

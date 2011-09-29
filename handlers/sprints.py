@@ -269,7 +269,7 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 		task.__setattr__(p_field, parsedValue)
 
 		# Is this within the 5-minute window, by the same user?
-		ts = dateToTs(datetime.now())
+		ts = dateToTs(getNow())
 		if task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60:
 			task.save()
 		else:
@@ -421,7 +421,7 @@ def sprintInfoPost(handler, request, id, p_name, p_goals, p_members = None):
 		for task in filter(lambda task: task.assigned == user, sprint.getTasks()):
 			task.assigned = sprint.project.owner
 			task.creator = handler.session['user']
-			task.timestamp = dateToTs(datetime.now())
+			task.timestamp = dateToTs(getNow())
 			task.revise()
 		avail.delete(user)
 		sprint.members.remove(user)
@@ -473,7 +473,7 @@ def showMetrics(handler, request, id):
 	avail = Availability(sprint)
 	for user in sorted(sprint.members):
 		hours = sum(t.hours for t in tasks if t.assigned == user)
-		total = avail.getAllForward(datetime.now(), user)
+		total = avail.getAllForward(getNow(), user)
 		print ProgressBar(user.safe.username, hours, total, zeroDivZero = True)
 
 	originalTasks = Task.loadAll(sprintid = sprint.id, revision = 1)

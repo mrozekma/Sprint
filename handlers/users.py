@@ -43,14 +43,14 @@ def user(handler, request, username):
 	print "<h3>Last seen</h3>"
 	if not user.lastseen:
 		print "Never"
-	elif dateToTs(datetime.now()) - user.lastseen < 60:
+	elif dateToTs(getNow()) - user.lastseen < 60:
 		print "Just now"
 	else:
 		print "%s ago" % timesince(tsToDate(user.lastseen))
 
 	print "<h3>Project distribution</h3>"
 	sprints = filter(lambda s: user in s.members, Sprint.loadAllActive())
-	sprintHours = map(lambda s: (s, Availability(s).getAllForward(datetime.now(), user)), sprints)
+	sprintHours = map(lambda s: (s, Availability(s).getAllForward(getNow(), user)), sprints)
 	projectHours = map(lambda (p, g): (p, sum(hours for sprint, hours in g)), groupby(sprintHours, lambda (s, a): s.project))
 
 	# For now at least, don't show projects with no hours

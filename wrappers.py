@@ -106,7 +106,7 @@ def footer(handler, path):
 	revisionHash, revisionDate, revisionRelative = os.popen('git log -n 1 --format=format:"%H %ct %cr"').read().split(' ', 2)
 	revisionDate = tsToDate(int(revisionDate)).strftime('%d %b %Y %H:%M:%S')
 	print "<div class=\"footer_timestamp\">"
-	print "Current system time: %s<br>" % datetime.now()
+	print "Current system time: %s<br>" % getNow()
 	print "Current revision: <a href=\"http://work.mrozekma.com:8080/?p=Sprint;a=commitdiff;h=%s\">%s</a> (<span title=\"%s\">%s</span>)<br>" % (revisionHash, revisionHash, revisionDate, revisionRelative)
 	queries = db().resetCount()
 	if handler.session['user'] and handler.session['user'].hasPrivilege('Dev'):

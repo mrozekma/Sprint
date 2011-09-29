@@ -54,7 +54,7 @@ class Weekday:
 
 	@staticmethod
 	def today():
-		day = datetime.now()
+		day = getNow()
 		while not Weekday.isWeekDay(day):
 			day += timedelta(1)
 		return day
@@ -90,6 +90,9 @@ def maxOr(vals, default = 0):
 
 def log(str):
 	sys.__stdout__.write("%s\n" % str)
+
+def getNow():
+	return datetime.now()
 
 def lipsum():
 	return """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum. Aliquam at sapien ante, sit amet fermentum nisi. Maecenas in arcu ante. Etiam ac ligula sed est elementum rhoncus vitae et urna. Vestibulum tempus enim quis nisi rutrum venenatis. Vivamus dapibus aliquet erat, pellentesque dapibus leo placerat lacinia. Suspendisse potenti. Etiam nisl felis, aliquam in molestie id, dapibus feugiat dolor. Duis sagittis auctor fringilla. Curabitur tellus neque, vehicula a imperdiet ut, ullamcorper in nunc. Aliquam tincidunt ornare fringilla. Suspendisse potenti. Vestibulum quis turpis dignissim lectus ullamcorper viverra.<br><br>

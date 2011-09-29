@@ -41,7 +41,7 @@ class Sprint(ActiveRecord):
 			seek += oneday
 
 	def isActive(self):
-		now = dateToTs(datetime.now())
+		now = dateToTs(getNow())
 		return self.start <= now <= self.end
 
 	def getTasks(self, orderby = 'seq ASC', includeDeleted = False):
