@@ -163,7 +163,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			# traceback.print_tb(sys.exc_info()[2], None, writer2)
 			ex = writer2.done()
 
-			print Box('Unhandled Error', "<b>%s: %s</b><br>%s" % (sys.exc_info()[0].__name__, sys.exc_info()[1], ex))
+			print Box('Unhandled Error', "<b>%s: %s</b><br>%s" % (sys.exc_info()[0].__name__, sys.exc_info()[1], ex), clr = 'red')
 			showCode(filename, line, 5)
 
 		self.response = writer.done()

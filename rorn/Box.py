@@ -2,7 +2,7 @@ from ResponseWriter import ResponseWriter
 from utils import *
 
 class Box:
-	def __init__(self, title, text = None, id = None):
+	def __init__(self, title, text = None, id = None, clr = 'black'):
 		if text:
 			self.title = title
 			self.text = text
@@ -10,13 +10,14 @@ class Box:
 			self.title = None
 			self.text = title
 		self.id = id
+		self.clr = clr
 
 	def __str__(self):
 		writer = ResponseWriter()
 		print "<div",
 		if self.id:
 			print "id=\"%s\"" % self.id,
-		print "class=\"box black rounded\">"
+		print "class=\"box %s rounded\">" % self.clr
 		if self.title:
 			print "<div class=\"title\">%s</div>" % self.title
 		print "<span class=\"boxBody\">"
