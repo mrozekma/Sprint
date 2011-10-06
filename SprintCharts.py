@@ -35,8 +35,6 @@ class HoursChart(Chart):
 
 		series = {
 			'name': 'Hours needed',
-			'pointStart': sprint.start * 1000,
-			'pointInterval': 24 * 3600 * 1000,
 			'data': []
 		}
 		seriesList.append(series)
@@ -46,8 +44,6 @@ class HoursChart(Chart):
 
 		series = {
 			'name': 'Availability',
-			'pointStart': sprint.start * 1000,
-			'pointInterval': 24 * 3600 * 1000,
 			'data': []
 		}
 		seriesList.append(series)
@@ -58,8 +54,6 @@ class HoursChart(Chart):
 
 		series = {
 			'name': 'Earned value',
-			'pointStart': sprint.start * 1000,
-			'pointInterval': 24 * 3600 * 1000,
 			'data': []
 		}
 		seriesList.append(series)
@@ -69,8 +63,6 @@ class HoursChart(Chart):
 
 		series = {
 			'name': 'Deferred tasks',
-			'pointStart': sprint.start * 1000,
-			'pointInterval': 24 * 3600 * 1000,
 			'data': []
 		}
 		seriesList.append(series)
@@ -109,8 +101,6 @@ class HoursByUserChart(Chart):
 		for user in sorted(sprint.members):
 			series = {
 				'name': user.username,
-				'pointStart': sprint.start * 1000,
-				'pointInterval': 24 * 3600 * 1000,
 				'data': []
 			}
 			seriesList.append(series)
