@@ -1,96 +1,97 @@
 from ResponseWriter import ResponseWriter
 from utils import *
 
-# colorSchemes = {
-	# 'black':  {'solid': '#000',    'contrast': '#FFF', 'tint': '#F2DEE8', 'border': '#630'},
-	# 'red':    {'solid': '#F00',    'contrast': '#000', 'tint': '#FCC',    'border': '#C00'},
-	# 'yellow': {'solid': '#FF0',    'contrast': '#000', 'tint': '#FFC',    'border': '#FC0'},
-	# 'green':  {'solid': '#0F0',    'contrast': '#000', 'tint': '#CFC',    'border': '#090'},
-	# 'blue':   {'solid': '#0152A1', 'contrast': '#FFF', 'tint': '#DEE',    'border': '#00C'},
-	# }
-
 class Box:
-	def __init__(self, title, text, scheme = 'black', id = None, tinted = False, rounded = True):
-		self.title = title
-		self.text = text
-		self.scheme = scheme
+	def __init__(self, title, text = None, id = None):
+		if text:
+			self.title = title
+			self.text = text
+		else:
+			self.title = None
+			self.text = title
 		self.id = id
-		self.tinted = tinted
-		self.rounded = rounded
-
-	def extraClasses(self):
-		return []
 
 	def __str__(self):
-		w = ResponseWriter()
-
-		classes = []
-		classes.append('tint' if self.tinted else 'box')
-		if self.rounded:
-			classes.append('rounded')
-		if self.scheme:
-			classes.append(self.scheme)
-		classes += self.extraClasses()
-
+		writer = ResponseWriter()
 		print "<div",
 		if self.id:
 			print "id=\"%s\"" % self.id,
-		print "class=\"%s\">" % ' '.join(classes)
+		print "class=\"box black rounded\">"
 		if self.title:
 			print "<div class=\"title\">%s</div>" % self.title
-		print "<span class=\"boxBody\">%s</span>" % self.text
+		print "<span class=\"boxBody\">"
+		print self.text
+		print "</span>"
 		print "</div>"
+		return writer.done()
 
-		return w.done()
+class AlertBox:
+	def __init__(self, title, text = None, id = None):
+		if text:
+			self.title = title
+			self.text = text
+		else:
+			self.title = None
+			self.text = title
+		self.id = id
 
-class TintedBox(Box):
-	def __init__(self, text, scheme = 'black', id = None, centered = True):
-		Box.__init__(self, None, text, id = id, scheme = scheme, tinted = True)
-		self.centered = centered
+	def getClasses(self):
+		return ['alert-message']
 
-	def extraClasses(self):
-		return ['center'] if self.centered else []
+	def __str__(self):
+		writer = ResponseWriter()
+		print "<div",
+		if self.id:
+			print "id=\"%s\"" % self.id,
+		print "class=\"%s\">" % ' '.join(self.getClasses())
+		print "<a class=\"close\" href=\"#\">x</a>"
+		if self.title:
+			print "<strong>%s</strong>: " % self.title
+		print self.text
+		print "</div>"
+		return writer.done()
 
-##########################
+class InfoBox(AlertBox):
+	def __init__(self, *args, **kargs):
+		AlertBox.__init__(self, *args, **kargs)
 
-class ErrorBox(Box):
-	def __init__(self, title, text):
-		Box.__init__(self, title, text, scheme = 'red')
+	def getClasses(self):
+		return AlertBox.getClasses(self) + ['info']
 
-	def extraClasses(self):
-		return ['error']
+class SuccessBox(AlertBox):
+	def __init__(self, *args, **kargs):
+		AlertBox.__init__(self, *args, **kargs)
+
+	def getClasses(self):
+		return AlertBox.getClasses(self) + ['success']
+
+class WarningBox(AlertBox):
+	def __init__(self, *args, **kargs):
+		AlertBox.__init__(self, *args, **kargs)
+
+	def getClasses(self):
+		return AlertBox.getClasses(self) + ['warning']
+
+class ErrorBox(AlertBox):
+	def __init__(self, *args, **kargs):
+		AlertBox.__init__(self, *args, **kargs)
+
+	def getClasses(self):
+		return AlertBox.getClasses(self) + ['error']
 
 	@staticmethod
 	def die(*args):
 		print ErrorBox(*args)
 		done()
 
-class WarningBox(Box):
-	def __init__(self, title, text):
-		Box.__init__(self, title, text, scheme = 'yellow')
-
-	def extraClasses(self):
-		return ['warning']
-
-class SuccessBox(Box):
-	def __init__(self, title, text):
-		Box.__init__(self, title, text, scheme = 'green')
-
-	def extraClasses(self):
-		return ['success']
-
 ##########################
 
-class LoginBox(Box):
-	def __init__(self):
-		Box.__init__(self, 'Login', self.text(), scheme = 'blue')
-
-	def extraClasses(self):
-		return ['login']
-
-	def text(self):
+class LoginBox:
+	def __str__(self):
 		writer = ResponseWriter()
-
+		print "<div class=\"box blue rounded login\">"
+		print "<div class=\"title\">Login</div>"
+		print "<span class=\"boxBody\">"
 		print "<form method=\"post\" action=\"/login\">"
 		print "<table style=\"margin-left: 30px;\">"
 		print "<tr><td class=\"left\">Username:</td><td class=\"right\"><input type=\"text\" class=\"defaultfocus\" name=\"username\" class=\"username\"></td></tr>"
@@ -98,13 +99,30 @@ class LoginBox(Box):
 		print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\"><button type=\"submit\">Login</button></td></tr>"
 		print "</table>"
 		print "</form>"
-
+		print "</span>"
+		print "</div>"
 		return writer.done()
 
-class CollapsibleBox(Box):
+class CollapsibleBox:
 	def __init__(self, title, text, expanded = False, id = None):
-		Box.__init__(self, title, text, scheme = '', id = id)
+		self.title = title
+		self.text = text
 		self.expanded = expanded
+		self.id = id
 
-	def extraClasses(self):
-		return ['collapsible'] + (['expanded'] if self.expanded else [])
+	def __str__(self):
+		writer = ResponseWriter()
+		print "<div",
+		if self.id:
+			print "id=\"%s\"" % self.id,
+		print "class=\"box rounded collapsible",
+		if self.expanded:
+			print "expanded",
+		print "\">"
+		if self.title:
+			print "<div class=\"title\">%s</div>" % self.title
+		print "<span class=\"boxBody\">"
+		print self.text
+		print "</span>"
+		print "</div>"
+		return writer.done()

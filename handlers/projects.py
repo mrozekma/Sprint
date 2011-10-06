@@ -17,7 +17,6 @@ def projects(handler, request):
 
 def showProjects(handler):
 	undelay(handler)
-
 	print "<div class=\"indented\">"
 	for project in Project.loadAll():
 		sprints = project.getSprints()

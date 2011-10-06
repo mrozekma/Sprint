@@ -1,7 +1,7 @@
 from __future__ import with_statement
 
 from rorn.Session import delay
-from rorn.Box import TintedBox, ErrorBox, CollapsibleBox
+from rorn.Box import ErrorBox, CollapsibleBox, InfoBox, SuccessBox
 from rorn.ResponseWriter import ResponseWriter
 
 from Privilege import requirePriv
@@ -58,7 +58,7 @@ def newTaskSingle(handler, request, group):
 	print "</script>"
 	print "<script src=\"/static/tasks.js\" type=\"text/javascript\"></script>"
 
-	print TintedBox('', scheme = 'blue', id = 'post-status')
+	print InfoBox('', id = 'post-status')
 
 	print "<form method=\"post\" action=\"/tasks/new/single\">"
 	print "<table class=\"list\">"
@@ -138,7 +138,7 @@ $(document).ready(function() {
 	$('#task%d').effect('highlight', {}, 3000);
 });
 </script>""" % task.id)
-	delay(handler, TintedBox("Added task <b>%s</b>" % task.safe.name, 'green'))
+	delay(handler, SuccessBox("Added task <b>%s</b>" % task.safe.name))
 
 @get('tasks/new/many')
 def newTaskMany(handler, request, group):
@@ -278,13 +278,13 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 		numGroups = len(newGroups)
 		numTasks = sum(map(lambda g: len(g), tasks.values()))
 		if numGroups > 0 and numGroups > 0:
-			delay(handler, TintedBox("Added %d %s, %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups', numTasks, 'task' if numTasks == 1 else 'tasks'), 'green'))
+			delay(handler, SuccessBox("Added %d %s, %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups', numTasks, 'task' if numTasks == 1 else 'tasks')))
 		elif numGroups > 0:
-			delay(handler, TintedBox("Added %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups'), 'green'))
+			delay(handler, SuccessBox("Added %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups')))
 		elif numTasks > 0:
-			delay(handler, TintedBox("Added %d %s" % (numTasks, 'task' if numTasks == 1 else 'tasks'), 'green'))
+			delay(handler, SuccessBox("Added %d %s" % (numTasks, 'task' if numTasks == 1 else 'tasks')))
 		else:
-			delay(handler, TintedBox("No changes", 'yellow'))
+			delay(handler, WarningBox("No changes"))
 		request['code'] = 299
 
 @get('tasks/new/import')
@@ -299,7 +299,7 @@ def newTaskImport(handler, request, group):
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
 
-	print TintedBox('Unimplemented', scheme = 'blood')
+	print InfoBox('Unimplemented')
 	print "<br>"
 	print "sprint: %s<br>" % group.sprint
 	print "group: %s" % group

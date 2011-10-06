@@ -4,7 +4,7 @@ from StringIO import StringIO
 from os.path import abspath, isabs, isfile
 
 from ResponseWriter import ResponseWriter
-from rorn.Box import ErrorBox, TintedBox
+from rorn.Box import Box, ErrorBox
 from utils import *
 
 def showCode(filename, line, around = None):
@@ -32,7 +32,7 @@ def showCode(filename, line, around = None):
 		lines = lines[line-around-1:line+around]
 
 	lines = "<table class=\"code_default dark\">\n%s\n</table>" % '\n'.join(lines)
-	print TintedBox(lines, scheme = 'black', centered = False)
+	print Box(lines)
 
 def highlightCode(text):
 	target = StringIO()

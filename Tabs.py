@@ -25,10 +25,11 @@ class Tabs:
 	def __mod__(self, fmt):
 		w = ResponseWriter()
 		try:
-			print "<div class=\"tabs\">"
+			print "<ul class=\"tabs\">"
 			for tab in self.tabs:
-				print "<a href=\"%s\"%s>%s</a>" % ((tab['path'] % fmt) if fmt else tab['path'], ' class="current"' if tab['name'] == self.currentTab else '', tab['displayName'])
-			print "</div>"
+				print "<li%s><a href=\"%s\">%s</a></li>" % (' class="active"' if tab['name'] == self.currentTab else '', (tab['path'] % fmt) if fmt else tab['path'], tab['displayName'])
+			print "</ul>"
+			# print "<div class=\"clear\"></div>"
 			return w.done()
 		except:
 			w.done()

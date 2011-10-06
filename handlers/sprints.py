@@ -4,7 +4,7 @@ from json import dumps as toJS
 
 from rorn.Session import delay, undelay
 from rorn.ResponseWriter import ResponseWriter
-from rorn.Box import CollapsibleBox, ErrorBox, TintedBox
+from rorn.Box import CollapsibleBox, ErrorBox, InfoBox
 
 from Privilege import requirePriv
 from Project import Project
@@ -53,7 +53,7 @@ def showBacklog(handler, request, id, assigned = None):
 	print "<script src=\"/static/jquery.tablednd_0_5.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/sprints.js\" type=\"text/javascript\"></script>"
 
-	print TintedBox('Loading...', scheme = 'blue', id = 'post-status')
+	print InfoBox('Loading...', id = 'post-status')
 
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
@@ -64,18 +64,6 @@ def showBacklog(handler, request, id, assigned = None):
 	print "</script>"
 
 	print (tabs << 'backlog') % id
-
-	# print "<div class=\"group-buttons\">"
-	# for g in groupings:
-		# btn = Button(g, "/sprints/%d?grouping=%s" % (id, g))#.mini()
-		# if g == grouping:
-			# btn = btn.selected()
-		# print btn
-	# print "</div>"
-	# print "<div class=\"clear\"></div>"
-
-	# print "Filter: "
-	# print "<input type=\"text\" id=\"filter\">"
 
 	days = [
 		('ereyesterday', Weekday.shift(-2)),
@@ -349,7 +337,7 @@ def showInfo(handler, request, id):
 	print "</style>"
 	print "<script src=\"/static/sprint-info.js\" type=\"text/javascript\"></script>"
 
-	print TintedBox('Loading...', scheme = 'blue', id = 'post-status')
+	print InfoBox('Loading...', id = 'post-status')
 
 	print (tabs << 'info') % id
 
@@ -529,7 +517,7 @@ def showAvailability(handler, request, id):
 	print "var sprintid = %d;" % id
 	print "</script>"
 
-	print TintedBox('Loading...', scheme = 'blue', id = 'post-status')
+	print InfoBox('Loading...', id = 'post-status')
 
 	avail = Availability(sprint)
 	oneday = timedelta(1)
@@ -619,7 +607,7 @@ def newSprint(handler, request, project):
 	print "</style>"
 	print "<script src=\"/static/sprints-new.js\" type=\"text/javascript\"></script>"
 
-	print TintedBox('', scheme = 'blue', id = 'post-status')
+	print InfoBox('', id = 'post-status')
 
 	print "<form method=\"post\" action=\"/sprints/new\">"
 	print "<table class=\"list\">"
@@ -694,7 +682,6 @@ def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members
 	Goal.newSet(sprint)
 
 	request['code'] = 299
-	# delay(handler, TintedBox("Added sprint <b>%s</b>" % sprint.safe.name, 'green'))
 	print "/sprints/%d" % sprint.id
 
 @get('sprints/export')

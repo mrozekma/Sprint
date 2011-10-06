@@ -94,6 +94,8 @@ img.avatar {
 .box span.boxBody {
 	display: block;
 	padding: 6px;
+	overflow: hidden;
+	word-wrap: break-word;
 }
 
 .box.collapsible .title {
@@ -646,47 +648,6 @@ a.fancy.negative:active, button.fancy.negative:active {
 	background-color: #d12f19;
 	border: 1px solid #d12f19;
 	color: #fff;
-}
-
-div.tabs {
-	/* float: right; */
-	font-weight: bold;
-	border-bottom: 1px solid #000;
-	clear: both;
-	height: 34px;
-	padding-left: 20px;
-	margin-bottom: 15px;
-}
-
-div.tabs a {
-	border: 1px solid #FFF;
-	color: #000;
-	display: block;
-	float: left;
-	font-size: 90%;
-	height: 24px;
-	line-height: 22px;
-	margin: 8px 8px 0 0;
-	padding: 0 11px;
-	text-decoration: none;
-}
-
-div.tabs a.current {
-	-moz-border-bottom-colors: none;
-	-moz-border-image: none;
-	-moz-border-left-colors: none;
-	-moz-border-right-colors: none;
-	-moz-border-top-colors: none;
-	background: none repeat scroll 0 0 #FFFFFF;
-	border-color: #777777 #777777 #FFFFFF;
-	border-style: solid;
-	border-width: 1px;
-	color: black;
-	font-size: 110%;
-	height: 30px;
-	line-height: 28px;
-	margin-top: 3px;
-	padding: 0 11px;
 }
 
 div.clear {

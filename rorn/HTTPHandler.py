@@ -7,7 +7,7 @@ from sqlite3 import OperationalError
 import traceback
 
 from Session import Session, timestamp
-from Box import ErrorBox
+from Box import Box, ErrorBox
 from code import showCode, highlightCode
 from ResponseWriter import ResponseWriter
 from FrameworkException import FrameworkException
@@ -163,7 +163,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			# traceback.print_tb(sys.exc_info()[2], None, writer2)
 			ex = writer2.done()
 
-			self.error('Unhandled Error', "<b>%s: %s</b><br>%s" % (sys.exc_info()[0].__name__, sys.exc_info()[1], ex), False)
+			print Box('Unhandled Error', "<b>%s: %s</b><br>%s" % (sys.exc_info()[0].__name__, sys.exc_info()[1], ex))
 			showCode(filename, line, 5)
 
 		self.response = writer.done()

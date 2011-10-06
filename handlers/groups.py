@@ -1,6 +1,6 @@
 from __future__ import with_statement
 
-from rorn.Box import TintedBox, ErrorBox
+from rorn.Box import ErrorBox, InfoBox
 from rorn.Session import delay
 
 from Privilege import requirePriv
@@ -29,7 +29,7 @@ def newGroup(handler, request, after):
 	print "</script>"
 	print "<script src=\"/static/groups.js\" type=\"text/javascript\"></script>"
 
-	print TintedBox('', scheme = 'blue', id = 'post-status')
+	print InfoBox('', id = 'post-status')
 
 	print "<form method=\"post\" action=\"/groups/new\">"
 	print "<table class=\"list\">"

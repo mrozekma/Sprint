@@ -296,6 +296,62 @@ def iconsShow(handler, request, path):
 	with open("/home/mrozekma/icons/" + filename) as f:
 		print f.read()
 
+@get('test/bootstrap')
+def testBootstrap(handler, request):
+	handler.title('Bootstrap')
+	admin(handler)
+
+	print "<ul class=\"tabs\">"
+	print "<li><a href=\"#\">One</a></li>"
+	print "<li class=\"active\"><a href=\"#\">Two</a></li>"
+	print "<li><a href=\"#\">Three</a></li>"
+	print "<li><a href=\"#\">Four</a></li>"
+	print "<li><a href=\"#\">Five</a></li>"
+	print "</ul>"
+	print "<div class=\"clear\"></div>"
+
+	print "<div class=\"alert-message success\">Yay!</div>"
+	print "<div class=\"alert-message danger\"><a href=\"#\" class=\"close\">x</a>Boo!</div>"
+
+	print "Test <span class=\"label important\">Test</span><br>"
+	print "<button class=\"btn success\">Test</button>"
+	print "<br>"
+
+@get('test/boxes')
+def testBoxes(handler, request):
+	handler.title('Boxes')
+	admin(handler)
+
+	from rorn.Box import *
+	print Box("Box", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum")
+	print ErrorBox("ErrorBox", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum")
+	print WarningBox("WarningBox", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum")
+	print SuccessBox("SuccessBox", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum")
+	print LoginBox()
+	print CollapsibleBox("CollapsibleBox", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum")
+
+@get('test/savebutton')
+def testSaveButton(handler, request):
+	handler.title('Save Button')
+	admin(handler)
+
+	print "<script type=\"text/javascript\">"
+	print "$(document).ready(function() {"
+	print "$('#save-button').savebutton();"
+	print "});"
+	print "</script>"
+
+	print "<form method=\"post\" action=\"/test/savebutton\">"
+	print "<button id=\"save-button\">Post</button>"
+	print "</form>"
+
+@post('test/savebutton')
+def testSaveButtonPost(handler, request):
+	handler.title('Save Button')
+	admin(handler)
+
+	print "Post"
+
 # @get('test')
 # def test(handler, request):
 	# print """

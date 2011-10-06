@@ -1,4 +1,4 @@
-from rorn.Box import LoginBox, ErrorBox, TintedBox
+from rorn.Box import LoginBox, ErrorBox, WarningBox
 
 from DB import ActiveRecord
 from utils import *
@@ -35,9 +35,9 @@ def admin(handler):
 
 def dev(handler):
 	if handler.session['user'].hasPrivilege('Dev'):
-		print TintedBox('Under development', scheme = 'yellow')
+		print WarningBox('Under development')
 	else:
-		print TintedBox('This feature is still under development and is disabled', scheme = 'yellow')
+		print WarningBox('This feature is still under development and is disabled')
 		done()
 
 # print map(str, User.loadAll())

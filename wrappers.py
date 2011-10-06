@@ -30,6 +30,7 @@ def header(handler, path):
 	print "<head>"
 	print "<title>$title$</title>"
 	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/style.css\">"
+	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/bootstrap.css\">"
 	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/syntax-highlighting.css\">"
 	print "<link rel=\"shortcut icon\" href=\"/static/images/favicon.ico\">"
 	print "<script src=\"/static/jquery.js\" type=\"text/javascript\"></script>"
