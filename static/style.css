@@ -618,33 +618,33 @@ a.fancy.selected {
 	font-weight: bold;
 }
 
-a.fancy.positive, button.fancy.positive {
+a.fancy.positive, button.fancy.positive, a.fancy.success, button.fancy.success {
 	color: #529214;
 }
 
-a.fancy.positive:hover, button.fancy.positive:hover {
+a.fancy.positive:hover, button.fancy.positive:hover, a.fancy.success:hover, button.fancy.success:hover {
 	background-color: #E6EFC2;
 	border: 1px solid #C6D880;
 	color: #529214;
 }
 
-a.fancy.positive:active, button.fancy.positive:active {
+a.fancy.positive:active, button.fancy.positive:active, a.fancy.success:active, button.fancy.success:active {
 	background-color: #529214;
 	border: 1px solid #529214;
 	color: #fff;
 }
 
-a.fancy.negative, button.fancy.negative {
+a.fancy.negative, button.fancy.negative, a.fancy.danger, button.fancy.danger {
 	color: #d12f19;
 }
 
-a.fancy.negative:hover, button.fancy.negative:hover {
+a.fancy.negative:hover, button.fancy.negative:hover, a.fancy.danger:hover, button.fancy.danger:hover {
 	background: #fbe3e4;
 	border: 1px solid #fbc2c4;
 	color: #d12f19;
 }
 
-a.fancy.negative:active, button.fancy.negative:active {
+a.fancy.negative:active, button.fancy.negative:active, a.fancy.danger:active, button.fancy.danger:active {
 	background-color: #d12f19;
 	border: 1px solid #d12f19;
 	color: #fff;

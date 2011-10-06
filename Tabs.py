@@ -29,7 +29,7 @@ class Tabs:
 			for tab in self.tabs:
 				print "<li%s><a href=\"%s\">%s</a></li>" % (' class="active"' if tab['name'] == self.currentTab else '', (tab['path'] % fmt) if fmt else tab['path'], tab['displayName'])
 			print "</ul>"
-			# print "<div class=\"clear\"></div>"
+			print "<div class=\"clear\"></div>"
 			return w.done()
 		except:
 			w.done()

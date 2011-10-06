@@ -6,7 +6,7 @@ class Button:
 		self.image = image
 		self.type = type
 
-		self.clazz = 'fancy'
+		self.clazz = 'btn'
 
 	def __str__(self):
 		body = self.text
@@ -28,16 +28,25 @@ class Button:
 
 	# MODIFIERS
 
+	def simple(self):
+		self.clazz = 'fancy'
+		return self
+
 	def mini(self):
+		self.simple()
 		self.clazz += ' mini'
 		return self
 
 	def positive(self):
-		self.clazz += ' positive'
+		self.clazz += ' success'
 		return self
 
 	def negative(self):
-		self.clazz += ' negative'
+		self.clazz += ' danger'
+		return self
+
+	def info(self):
+		self.clazz += ' info'
 		return self
 
 	def selected(self):

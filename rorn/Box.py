@@ -46,9 +46,11 @@ class AlertBox:
 			print "id=\"%s\"" % self.id,
 		print "class=\"%s\">" % ' '.join(self.getClasses())
 		print "<a class=\"close\" href=\"#\">x</a>"
+		print "<span>"
 		if self.title:
 			print "<strong>%s</strong>: " % self.title
 		print self.text
+		print "</span>"
 		print "</div>"
 		return writer.done()
 

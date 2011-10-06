@@ -12,33 +12,33 @@ $.expr[":"].econtains = function(obj, index, meta, stack) {
 
 $.extend($.fn, {
 	savebutton: function(box, next_url) {
-		console.log($(this));
 		$(this).click(function(e) {
-			console.log($(this));
 			e.preventDefault();
 			e.stopImmediatePropagation();
 			form = $(this).parents('form');
 			$.post(form.attr('action'), form.serialize(), function(data, text, request) {
 				switch(request.status) {
 				case 200:
-					box.attr('class', 'tint red');
+					box.attr('class', 'alert-message error');
 					$('span', box).html(data);
 				case 298:
-					box.attr('class', 'tint yellow');
+					box.attr('class', 'alert-message warning');
 					$('span', box).html(data);
 					break;
 				case 299:
+					console.log("299 (-> " + next_url + "): " + data);
 					if(next_url == undefined) {
-						box.attr('class', 'tint green');
+						box.attr('class', 'alert-message success');
 						$('span', box).html(data);
+						break;
 					} else if(next_url == '') {
 						window.location = data;
 					} else if(typeof next_url == 'function') {
 						next_url(data);
 					} else {
 						window.location = next_url;
-						return;
 					}
+					return;
 				default:
 					box.attr('class', 'tint blood');
 					$('span', box).html("Unexpected response code " + request.status)

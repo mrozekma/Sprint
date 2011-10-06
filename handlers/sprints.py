@@ -109,13 +109,13 @@ def showBacklog(handler, request, id, assigned = None):
 	print "</script>"
 
 	print "<div id=\"filter-assigned\">"
-	print Button('None').negative()
+	print Button('None').simple().negative()
 	for member in sorted(sprint.members):
 		print "<a class=\"fancy\" assigned=\"%s\" href=\"/sprints/%d?assigned=%s\">%s</a>" % (member.username, id, member.username, member.username)
 	print "</div><br>"
 
 	print "<div id=\"filter-status\">"
-	print Button('None').negative()
+	print Button('None').simple().negative()
 	for status in sorted(statuses.values()):
 		print "<a class=\"fancy\" status=\"%s\" href=\"#\"><img src=\"%s\">%s</a>" % (status.name, status.getIcon(), status.text)
 	print "</div><br>"
@@ -533,7 +533,7 @@ def showAvailability(handler, request, id):
 			print "<td>%s<br>%s</td>" % (seek.strftime('%d'), seek.strftime('%a'))
 		seek += oneday
 	if sprint.isActive():
-		print "<td>%s</td>" % Button('set all 8', type = 'button')
+		print "<td>%s</td>" % Button('set all 8', type = 'button').info()
 	print "</tr>"
 
 	for user in sorted(sprint.members):
@@ -548,7 +548,7 @@ def showAvailability(handler, request, id):
 					print "<td style=\"text-align: center\">%d</td>" % avail.get(user, seek)
 			seek += oneday
 		if sprint.isActive():
-			print "<td>%s</td>" % Button('copy first', type = 'button')
+			print "<td>%s</td>" % Button('copy first', type = 'button').info()
 		print "</tr>"
 
 	print "</table>"
