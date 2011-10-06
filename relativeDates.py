@@ -1,9 +1,9 @@
 import datetime
 
 def ungettext(a,b,count):
-    if count:
-        return b
-    return a
+    if count == 1:
+        return a
+    return b
 
 def ugettext(a):
     return a
