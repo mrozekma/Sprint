@@ -3,6 +3,7 @@
 .code_default {
 	font-family: "Courier New", Courier, monospace;
 	font-size: 10pt;
+	width: 100%;
 }
 
 .code_default .code_header {
@@ -11,6 +12,7 @@
 
 .selected_line .icon {
 	background: black url(/static/images/smallbox.jpg) no-repeat 0px 6px;
+	padding-right: 5px;
 }
 
 .selected_line .p_linum {
@@ -20,6 +22,10 @@
 .p_linum {
 	text-align: right;
 	padding-right: 10px;
+}
+
+.code_line {
+	width: 100%;
 }
 
 .p_classname {

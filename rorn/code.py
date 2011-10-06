@@ -27,12 +27,12 @@ def showCode(filename, line, around = None):
 		line = 1
 	elif line > len(lines):
 		line = len(lines)
-	lines = ["<tr class=\"%s\"><td class=\"icon\">&nbsp;</td><td class=\"p_linum\"><a name=\"l%d\" href=\"#l%d\">%s</a></td><td>%s</td></tr>" % ('selected_line' if i == line else '', i, i, ("%3d" % i).replace(' ', '&nbsp;'), lines[i-1]) for i in range(1, len(lines)+1)]
+	lines = ["<tr class=\"%s\"><td class=\"icon\">&nbsp;</td><td class=\"p_linum\"><a name=\"l%d\" href=\"#l%d\">%s</a></td><td class=\"code_line\">%s</td></tr>" % ('selected_line' if i == line else '', i, i, ("%3d" % i).replace(' ', '&nbsp;'), lines[i-1]) for i in range(1, len(lines)+1)]
 	if around:
 		lines = lines[line-around-1:line+around]
 
 	lines = "<table class=\"code_default dark\">\n%s\n</table>" % '\n'.join(lines)
-	print Box(lines)
+	print lines
 
 def highlightCode(text):
 	target = StringIO()
