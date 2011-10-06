@@ -36,16 +36,16 @@ def task(handler, request, id):
 	print "<br>"
 	print "Assigned to %s<br>" % task.assigned
 	print "Last changed %s ago<br><br>" % timesince(tsToDate(task.timestamp))
-	hours, total = task.hours, revs[0].hours
+	hours, total, lbl = task.hours, revs[0].hours, "<b>%s</b>" % statuses[task.status].text
 	if task.deleted:
 		print "Deleted<br>"
 	elif task.status == 'complete':
-		print ProgressBar(statuses[task.status].text, total-hours, total, zeroDivZero = True, style = 'progress-current-green')
+		print ProgressBar(lbl, total-hours, total, zeroDivZero = True, style = 'progress-current-green')
 	elif task.status in ('blocked', 'canceled', 'deferred', 'split'):
 		hours = filter(lambda rev: rev.hours > 0, revs)[-1].hours
-		print ProgressBar(statuses[task.status].text, total-hours, total, zeroDivZero = True, style = 'progress-current-red')
+		print ProgressBar(lbl, total-hours, total, zeroDivZero = True, style = 'progress-current-red')
 	else:
-		print ProgressBar(statuses[task.status].text, total-hours, total, zeroDivZero = True)
+		print ProgressBar(lbl, total-hours, total, zeroDivZero = True)
 
 	print "<h2>History</h2>"
 	chart = TaskChart('chart', task)
