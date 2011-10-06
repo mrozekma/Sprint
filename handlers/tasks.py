@@ -30,7 +30,10 @@ def task(handler, request, id):
 	Chart.include()
 
 	print "<h2>Info</h2>"
-	print "Part of <a href=\"/sprints/%d\">%s</a>, <a href=\"/sprints/%d#group%d\">%s</a><br>" % (task.sprintid, task.sprint, task.sprintid, task.groupid, task.group)
+	print "Part of <a href=\"/sprints/%d\">%s</a>, <a href=\"/sprints/%d#group%d\">%s</a>" % (task.sprintid, task.sprint, task.sprintid, task.groupid, task.group),
+	if task.goal:
+		print "to meet the goal&nbsp;&nbsp;<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;<a href=\"/sprints/%d/info\">%s</a>" % (task.goal.color, task.sprintid, task.goal.safe.name),
+	print "<br>"
 	print "Assigned to %s<br>" % task.assigned
 	print "Last changed %s ago<br><br>" % timesince(tsToDate(task.timestamp))
 	hours, total = task.hours, revs[0].hours
