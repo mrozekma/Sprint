@@ -39,8 +39,13 @@ def task(handler, request, id):
 	hours, total = task.hours, revs[0].hours
 	if task.deleted:
 		print "Deleted<br>"
+	elif task.status == 'complete':
+		print ProgressBar(statuses[task.status].text, total-hours, total, zeroDivZero = True, style = 'progress-current-green')
+	elif task.status in ('blocked', 'canceled', 'deferred', 'split'):
+		hours = filter(lambda rev: rev.hours > 0, revs)[-1].hours
+		print ProgressBar(statuses[task.status].text, total-hours, total, zeroDivZero = True, style = 'progress-current-red')
 	else:
-		print ProgressBar(statuses[task.status].text, total-hours, total, zeroDivZero = True, styleChanges = {100: 'progress-current-green'})
+		print ProgressBar(statuses[task.status].text, total-hours, total, zeroDivZero = True)
 
 	print "<h2>History</h2>"
 	chart = TaskChart('chart', task)

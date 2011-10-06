@@ -462,7 +462,7 @@ def showMetrics(handler, request, id):
 	for user in sorted(sprint.members):
 		hours = sum(t.hours for t in tasks if t.assigned == user)
 		total = avail.getAllForward(getNow(), user)
-		print ProgressBar(user.safe.username, hours, total, zeroDivZero = True, styleChanges = {100.01: 'progress-current-red'})
+		print ProgressBar(user.safe.username, hours, total, zeroDivZero = True, style = {100.01: 'progress-current-red'})
 
 	originalTasks = Task.loadAll(sprintid = sprint.id, revision = 1)
 	taskMap = dict([(task.id, task) for task in tasks])
@@ -473,7 +473,7 @@ def showMetrics(handler, request, id):
 			continue
 		start = sum(t.hours for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
 		now = sum(t.hours for t in tasks if t.goalid == (goal.id if goal else 0))
-		print ProgressBar("<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;%s" % (goal.color if goal else 'none', goal.safe.name if goal else 'Other'), start - now, start, zeroDivZero = False, styleChanges = {100: 'progress-current-green'})
+		print ProgressBar("<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;%s" % (goal.color if goal else 'none', goal.safe.name if goal else 'Other'), start - now, start, zeroDivZero = False, style = {100: 'progress-current-green'})
 
 	print "<a name=\"averages\">"
 	print "<h2><a href=\"#averages\">Averages</a></h2>"
