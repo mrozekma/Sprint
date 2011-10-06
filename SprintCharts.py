@@ -199,3 +199,43 @@ class SprintGoalsChart(Chart):
 				'data': [float("%2.2f" % (100*pcnt))],
 				'dataLabels': {'enabled': True}
 			})
+
+class TaskChart(Chart):
+	def __init__(self, placeholder, task):
+		Chart.__init__(self, placeholder)
+		sprint = task.sprint
+		revs = task.getRevisions()
+
+		self.chart.defaultSeriesType = 'line'
+		self.chart.zoomType = 'x'
+		self.title.text = ''
+		self.plotOptions.line.dataLabels.enabled = True
+		self.plotOptions.line.step = True
+		self.plotOptions.line.dataLabels.x = -10
+		self.tooltip.shared = True
+		self.legend.enabled = False
+		self.credits.enabled = False
+		with self.xAxis as x:
+			x.type = 'datetime'
+			x.dateTimeLabelFormats.day = '%a'
+			x.tickInterval = 24 * 3600 * 1000
+			x.maxZoom = 24 * 3600 * 1000
+			x.min = (sprint.start - 24*3600) * 1000
+			x.max = sprint.end * 1000
+			x.title.text = 'Day'
+		with self.yAxis as y:
+			y.min = 0
+			y.tickInterval = 4
+			y.minorTickInterval = 1
+			y.title.text = 'Hours'
+		self.series = seriesList = []
+
+		series = {
+			'name': 'Hours',
+			'data': []
+		}
+		seriesList.append(series)
+
+		hoursByDay = dict((utcToLocal(tsStripHours(rev.timestamp)) * 1000, rev.hours) for rev in task.getRevisions())
+		for pair in hoursByDay.items():
+			series['data'].append(pair)

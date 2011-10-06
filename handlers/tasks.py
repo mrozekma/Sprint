@@ -12,6 +12,10 @@ from User import User
 from Button import Button
 from Tabs import Tabs
 from History import showHistory
+from Chart import Chart
+from SprintCharts import TaskChart
+from ProgressBar import ProgressBar
+from relativeDates import timesince
 from utils import *
 
 @get('tasks/(?P<id>[0-9]+)')
@@ -20,8 +24,26 @@ def task(handler, request, id):
 	task = Task.load(id)
 	if not task:
 		ErrorBox.die('Tasks', "No task with ID <b>%d</b>" % id)
+	revs = task.getRevisions()
 
 	handler.title(task.safe.name)
+	Chart.include()
+
+	print "<h2>Info</h2>"
+	print "Part of <a href=\"/sprints/%d\">%s</a>, <a href=\"/sprints/%d#group%d\">%s</a><br>" % (task.sprintid, task.sprint, task.sprintid, task.groupid, task.group)
+	print "Assigned to %s<br>" % task.assigned
+	print "Last changed %s ago<br><br>" % timesince(tsToDate(task.timestamp))
+	hours, total = task.hours, revs[0].hours
+	if task.deleted:
+		print "Deleted<br>"
+	else:
+		print ProgressBar(statuses[task.status].text, total-hours, total, zeroDivZero = True, styleChanges = {100: 'progress-current-green'})
+
+	print "<h2>History</h2>"
+	chart = TaskChart('chart', task)
+	chart.js()
+
+	chart.placeholder()
 	showHistory(task, False)
 	print "<br>"
 
