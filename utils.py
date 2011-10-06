@@ -1,14 +1,19 @@
 import re
 from datetime import datetime, date, timedelta
+import time
 from time import mktime
 import sys
 
 from rorn.utils import *
 
 DATE_FMT = '%d %b %Y'
+UTC_OFFSET = (time.timezone / -3600) + time.daylight
 
 def tsToDate(timestamp): return datetime.fromtimestamp(timestamp)
 def dateToTs(d): return mktime(d.timetuple())
+def tsStripHours(timestamp): return dateToTs(tsToDate(timestamp).date())
+def utcToLocal(timestamp): return timestamp + (UTC_OFFSET * 3600)
+def localToUTC(timestamp): return timestamp - (UTC_OFFSET * 3600)
 def tsStart(timestamp): return dateToTs(tsToDate(timestamp).replace(hour = 0, minute = 0, second = 0))
 def tsEnd(timestamp): return dateToTs(tsToDate(timestamp).replace(hour = 23, minute = 59, second = 59))
 def formatDate(d): return d.strftime(DATE_FMT)

@@ -42,7 +42,7 @@ class HoursChart(Chart):
 		seriesList.append(series)
 
 		for day in sprint.getDays():
-			series['data'].append([dateToTs(day) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks])])
+			series['data'].append([utcToLocal(dateToTs(day)) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks])])
 
 		series = {
 			'name': 'Availability',
@@ -54,7 +54,7 @@ class HoursChart(Chart):
 
 		avail = Availability(sprint)
 		for day in sprint.getDays():
-			series['data'].append([dateToTs(day) * 1000, avail.getAllForward(day)])
+			series['data'].append([utcToLocal(dateToTs(day)) * 1000, avail.getAllForward(day)])
 
 		series = {
 			'name': 'Earned value',
@@ -65,7 +65,7 @@ class HoursChart(Chart):
 		seriesList.append(series)
 
 		for day in sprint.getDays():
-			series['data'].append([dateToTs(day) * 1000, sum(tOrig.hours for (tOrig, tNow) in [(t.getRevisionAt(tsToDate(sprint.start)), t.getRevisionAt(day)) for t in tasks] if tOrig and tNow and tNow.status == 'complete')])
+			series['data'].append([utcToLocal(dateToTs(day)) * 1000, sum(tOrig.hours for (tOrig, tNow) in [(t.getRevisionAt(tsToDate(sprint.start)), t.getRevisionAt(day)) for t in tasks] if tOrig and tNow and tNow.status == 'complete')])
 
 		series = {
 			'name': 'Deferred tasks',
@@ -76,7 +76,7 @@ class HoursChart(Chart):
 		seriesList.append(series)
 
 		for day in sprint.getDays():
-			series['data'].append([dateToTs(day) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks if t.status == 'deferred'])])
+			series['data'].append([utcToLocal(dateToTs(day)) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks if t.status == 'deferred'])])
 
 
 class HoursByUserChart(Chart):
@@ -117,7 +117,7 @@ class HoursByUserChart(Chart):
 
 			userTasks = filter(lambda t: t.assigned == user, tasks)
 			for day in sprint.getDays():
-				series['data'].append([dateToTs(day) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in userTasks])])
+				series['data'].append([utcToLocal(dateToTs(day)) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in userTasks])])
 
 class CommitmentChart(Chart):
 	def __init__(self, placeholder, sprint):
