@@ -201,10 +201,16 @@ class SprintGoalsChart(Chart):
 			})
 
 class TaskChart(Chart):
-	def __init__(self, placeholder, task):
+	def __init__(self, placeholder, tasks):
 		Chart.__init__(self, placeholder)
-		sprint = task.sprint
-		revs = task.getRevisions()
+
+		many = isinstance(tasks, list)
+		if not many:
+			tasks = [tasks]
+		if len(set(task.sprint for task in tasks)) > 1:
+			raise Exception("All tasks must be in the same sprint")
+
+		sprint = tasks[0].sprint
 
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
@@ -212,7 +218,6 @@ class TaskChart(Chart):
 		self.plotOptions.line.dataLabels.enabled = True
 		self.plotOptions.line.step = True
 		self.plotOptions.line.dataLabels.x = -10
-		self.tooltip.shared = True
 		self.legend.enabled = False
 		self.credits.enabled = False
 		with self.xAxis as x:
@@ -228,16 +233,20 @@ class TaskChart(Chart):
 			y.tickInterval = 4
 			y.minorTickInterval = 1
 			y.title.text = 'Hours'
+
 		self.series = seriesList = []
+		for task in tasks:
+			revs = task.getRevisions()
+			series = {
+				'name': task.safe.name if many else 'Hours',
+				'data': [],
+			}
+			if many:
+				series['events'] = {'click': "function() {window.location = '/tasks/%d';}" % task.id}
+			seriesList.append(series)
 
-		series = {
-			'name': 'Hours',
-			'data': []
-		}
-		seriesList.append(series)
-
-		hoursByDay = dict((utcToLocal(tsStripHours(rev.timestamp)) * 1000, rev.hours) for rev in revs)
-		if task.status != 'complete':
-			hoursByDay[utcToLocal(tsStripHours(min(dateToTs(getNow()), sprint.end))) * 1000] = task.hours
-		for pair in hoursByDay.items():
-			series['data'].append(pair)
+			hoursByDay = dict((utcToLocal(tsStripHours(rev.timestamp)) * 1000, rev.hours) for rev in revs)
+			if task.status != 'complete':
+				hoursByDay[utcToLocal(tsStripHours(min(dateToTs(getNow()), sprint.end))) * 1000] = task.hours
+			for pair in hoursByDay.items():
+				series['data'].append(pair)

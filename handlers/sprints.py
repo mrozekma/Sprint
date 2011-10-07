@@ -497,7 +497,12 @@ def showSprintHistory(handler, request, id):
 		done()
 
 	handler.title(sprint.safe.name)
+	Chart.include()
+	chart = TaskChart('chart', sprint.getTasks())
+	chart.js()
+
 	print (tabs << 'history') % id
+	chart.placeholder()
 	showHistory(sprint.getTasks(includeDeleted = True), True)
 	print "<br>"
 
