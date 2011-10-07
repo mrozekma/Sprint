@@ -38,10 +38,14 @@ function setup_hours_events() {
 	$('td.hours img').click(function() {
 		task = $(this).parents('tr.task');
         field = $('input', $(this).parents('.hours'));
-		val = parseInt(field.val(), 10);
+		old_val = val = parseInt(field.val(), 10);
 		val += parseInt($(this).attr('amt'), 10);
 		if(val < 0) {
-			val = 0;
+			if(old_val == 0) {
+				return;
+			} else {
+				val = 0;
+			}
 		}
 		field.val('' + val)
 		save_task(task, 'hours', val);
