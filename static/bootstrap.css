@@ -169,6 +169,7 @@ button.btn::-moz-focus-inner, input[type=submit].btn::-moz-focus-inner {
 }
 .close {
 	float: right;
+	cursor: pointer;
 	color: #000000;
 	font-size: 20px;
 	font-weight: bold;

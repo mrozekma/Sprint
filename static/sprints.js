@@ -64,97 +64,6 @@ function setup_hours_events() {
 	});
 }
 
-/*
-function setup_task_dragging() {
-	$('table.tasks').sortable({'items': 'tr'});
-	return;
-
-	$('table.tasks').tableDnD({
-		onDragStart: function(tbl, row) {
-			row = $(row);
-			if(row.hasClass('group')) { // Moving a group
-				$('tr.task', $(tbl)).addClass('hide-temp');
-			} else if(row.hasClass('task')) { // Moving a task
-			}
-		},
-
-		onDrop: function(tbl, row) {
-			row = $(row);
-			$('tr.task.hide-temp').removeClass('hide-temp');
-			// row.addClass('dirty');
-			if(row.hasClass('group')) {
-				// Move all the group's tasks under the group header row
-				$('tr.group').each(function() {
-					groupid = $(this).attr('groupid');
-					$('tr.task[groupid=' + groupid + ']').insertAfter($(this));
-				});
-
-				//TODO Save new group position
-				unimplemented('Group move');
-			} else if(row.hasClass('task')) {
-				new_group_id = row.prevAll('tr.group').attr('groupid');
-				row.attr('groupid', new_group_id);
-
-				pred = row.prev();
-				if(pred.hasClass('task')) { // Inserted after a task
-					// $('form').append($('<input>').attr('type', 'hidden').attr('name', 'taskmove').attr('value', row.attr('taskid') + ':' + pred.attr('taskid')));
-					save_task(row, 'taskmove', pred.attr('taskid'));
-				} else if(pred.hasClass('group')) { // Inserted after a group header (top of the group)
-					//TODO Save
-					unimplemented('Index 0 task move');
-				} else {
-					//FAIL
-				}
-			}
-		}
-	});
-}
-
-function setup_save_button() {
-	$('#save-button').click(function() {
-		// Fix new rows that are missing values
-		$('tr.task[taskid="new"] td.name input')
-			.filter(function() {
-				return $(this).val() == '';
-			})
-			.val("Untitled Task");
-		$('tr.task[taskid="new"] td.hours input')
-			.filter(function() {
-				return $(this).val() == '';
-			})
-			.val("1");
-
-		$.post($('form').attr('action'), $('form').serialize(), function(data, text, request) {
-			box = $('#post-status')
-			switch(request.status) {
-			case 200:
-				box.attr('class', 'tint green');
-				$('span', box).html(data);
-
-				// $('.dirty').each(function() {
-					// $(this).removeClass('dirty');
-				// });
-				break;
-			case 298:
-				box.attr('class', 'tint yellow');
-				$('span', box).html(data);
-				break;
-			case 299:
-				box.attr('class', 'tint red');
-				$('span', box).html(data);
-				break;
-			default:
-				box.attr('class', 'tint blood');
-				$('span', box).html("Unexpected response code " + request.status)
-				break;
-			}
-
-			box.fadeIn();
-		});
-	});
-}
-*/
-
 function setup_task_buttons() {
 	$('.actions img.task-new').click(function() {
 		curRow = $(this).parents('tr.task');
@@ -447,8 +356,8 @@ function save_task(task, field, value, counter) {
 	if(savingMutex) {
 		if(counter == 10) {
 			box = $('#post-status');
-			box.attr('class', 'tint red');
-			$('span', box).html("Timed out trying to set task " + task.attr('taskid') + " " + field + " to " + value);
+			box.attr('class', 'alert-message error');
+			$('span.boxbody', box).html("Timed out trying to set task " + task.attr('taskid') + " " + field + " to " + value);
 			box.fadeIn();
 			$('.saving', task).css('visibility', 'hidden');
 		} else {
@@ -462,12 +371,12 @@ function save_task(task, field, value, counter) {
 		box = $('#post-status')
 		switch(request.status) {
 		case 200:
-			box.attr('class', 'tint red');
-			$('span', box).html(data);
+			box.attr('class', 'alert-message error');
+			$('span.boxbody', box).html(data);
 			break;
 		case 298:
-			box.attr('class', 'tint yellow');
-			$('span', box).html(data);
+			box.attr('class', 'alert-message warning');
+			$('span.boxbody', box).html(data);
 			break;
 		case 299:
 			$('tr.task[taskid=' + task.attr('taskid') + ']').attr('revid', data);
@@ -476,8 +385,8 @@ function save_task(task, field, value, counter) {
 			box = null;
 			break;
 		default:
-			box.attr('class', 'tint blood');
-			$('span', box).html("Unexpected response code " + request.status)
+			box.attr('class', 'alert-message success');
+			$('span.boxbody', box).html("Unexpected response code " + request.status)
 			break;
 		}
 
@@ -499,7 +408,7 @@ function delete_task(task_id) {
 
 function unimplemented(what) {
 	box = $('#post-status');
-	box.attr('class', 'tint yellow');
-	$('span', box).html("<b>Unimplemented</b>: " + what);
+	box.attr('class', 'alert-message warning');
+	$('span.boxbody', box).html("<b>Unimplemented</b>: " + what);
 	box.fadeIn();
 }

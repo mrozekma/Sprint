@@ -4,6 +4,10 @@ $(document).ready(function () {
 	$('.box.collapsible .title').click(function(event) {
 		$(this).parents('.box.collapsible').toggleClass('expanded');
 	});
+
+	$('.alert-message .close').click(function() {
+		hidebox($(this).parents('.alert-message'), 0);
+	});
 });
 
 $.expr[":"].econtains = function(obj, index, meta, stack) {
@@ -20,16 +24,16 @@ $.extend($.fn, {
 				switch(request.status) {
 				case 200:
 					box.attr('class', 'alert-message error');
-					$('span', box).html(data);
+					$('span.boxbody', box).html(data);
 				case 298:
 					box.attr('class', 'alert-message warning');
-					$('span', box).html(data);
+					$('span.boxbody', box).html(data);
 					break;
 				case 299:
 					console.log("299 (-> " + next_url + "): " + data);
 					if(next_url == undefined) {
 						box.attr('class', 'alert-message success');
-						$('span', box).html(data);
+						$('span.boxbody', box).html(data);
 						break;
 					} else if(next_url == '') {
 						window.location = data;
@@ -40,8 +44,8 @@ $.extend($.fn, {
 					}
 					return;
 				default:
-					box.attr('class', 'tint blood');
-					$('span', box).html("Unexpected response code " + request.status)
+					box.attr('class', 'alert-message error');
+					$('span.boxbody', box).html("Unexpected response code " + request.status)
 					break;
 				}
 
@@ -69,4 +73,14 @@ function hltable_out(row) {
 
 function hltable_click(url) {
 	document.location = url;
+}
+
+function hidebox(box, timeout) {
+	if(timeout == 0) {
+		console.log(box);
+		console.log($(box));
+		$(box).fadeOut();
+	} else {
+		setTimeout(function() {hidebox(box, 0);}, timeout * 1000);
+	}
 }

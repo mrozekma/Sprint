@@ -88,7 +88,7 @@ def newTaskSingle(handler, request, group):
 	print "</script>"
 	print "<script src=\"/static/tasks.js\" type=\"text/javascript\"></script>"
 
-	print InfoBox('', id = 'post-status')
+	print InfoBox('', id = 'post-status', close = True)
 
 	print "<form method=\"post\" action=\"/tasks/new/single\">"
 	print "<table class=\"list\">"
@@ -168,7 +168,7 @@ $(document).ready(function() {
 	$('#task%d').effect('highlight', {}, 3000);
 });
 </script>""" % task.id)
-	delay(handler, SuccessBox("Added task <b>%s</b>" % task.safe.name))
+	delay(handler, SuccessBox("Added task <b>%s</b>" % task.safe.name, close = 3))
 
 @get('tasks/new/many')
 def newTaskMany(handler, request, group):
@@ -308,13 +308,13 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 		numGroups = len(newGroups)
 		numTasks = sum(map(lambda g: len(g), tasks.values()))
 		if numGroups > 0 and numGroups > 0:
-			delay(handler, SuccessBox("Added %d %s, %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups', numTasks, 'task' if numTasks == 1 else 'tasks')))
+			delay(handler, SuccessBox("Added %d %s, %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups', numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3))
 		elif numGroups > 0:
-			delay(handler, SuccessBox("Added %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups')))
+			delay(handler, SuccessBox("Added %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups'), close = 3))
 		elif numTasks > 0:
-			delay(handler, SuccessBox("Added %d %s" % (numTasks, 'task' if numTasks == 1 else 'tasks')))
+			delay(handler, SuccessBox("Added %d %s" % (numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3))
 		else:
-			delay(handler, WarningBox("No changes"))
+			delay(handler, WarningBox("No changes", close = 3))
 		request['code'] = 299
 
 @get('tasks/new/import')

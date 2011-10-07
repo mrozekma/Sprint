@@ -1,3 +1,5 @@
+from random import randint
+
 from ResponseWriter import ResponseWriter
 from utils import *
 
@@ -26,27 +28,37 @@ class Box:
 		print "</div>"
 		return writer.done()
 
+getID = id
 class AlertBox:
-	def __init__(self, title, text = None, id = None):
+	def __init__(self, title, text = None, id = None, close = None):
 		if text:
 			self.title = title
 			self.text = text
 		else:
 			self.title = None
 			self.text = title
-		self.id = id
+
+		self.id = id or "alertbox-%x-%x" % (getID(self), randint(268435456, 4294967295))
+		self.close = 0 if close == True else close
 
 	def getClasses(self):
 		return ['alert-message']
 
 	def __str__(self):
 		writer = ResponseWriter()
+
+		if self.close:
+			print "<script type=\"text/javascript\">"
+			print "$(document).ready(function() {hidebox($('#%s'), %d);});" % (self.id, self.close)
+			print "</script>"
+
 		print "<div",
 		if self.id:
 			print "id=\"%s\"" % self.id,
 		print "class=\"%s\">" % ' '.join(self.getClasses())
-		print "<a class=\"close\" href=\"#\">x</a>"
-		print "<span>"
+		if self.close != None:
+			print "<span class=\"close\">x</span>"
+		print "<span class=\"boxbody\">"
 		if self.title:
 			print "<strong>%s</strong>: " % self.title
 		print self.text

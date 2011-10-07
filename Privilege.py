@@ -35,7 +35,7 @@ def admin(handler):
 
 def dev(handler):
 	if handler.session['user'].hasPrivilege('Dev'):
-		print WarningBox('Under development')
+		print WarningBox('Under development', close = True)
 	else:
 		print WarningBox('This feature is still under development and is disabled')
 		done()

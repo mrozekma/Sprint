@@ -53,8 +53,6 @@ def showBacklog(handler, request, id, assigned = None):
 	print "<script src=\"/static/jquery.tablednd_0_5.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/sprints.js\" type=\"text/javascript\"></script>"
 
-	print InfoBox('Loading...', id = 'post-status')
-
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
 	if assigned:
@@ -64,6 +62,7 @@ def showBacklog(handler, request, id, assigned = None):
 	print "</script>"
 
 	print (tabs << 'backlog') % id
+	print "<br>"
 
 	days = [
 		('ereyesterday', Weekday.shift(-2)),
@@ -90,6 +89,8 @@ def showBacklog(handler, request, id, assigned = None):
 		if goal.name != '':
 			print "<li><a href=\"#%s\" style=\"background-image:url('/static/images/tag-%s.png');\">%s</a></li>" % (goal.id, goal.color, goal.safe.name if len(goal.safe.name) <= 40 else "%s..." % goal.safe.name[:37])
 	print "</ul>"
+
+	print InfoBox('Loading...', id = 'post-status', close = True)
 
 	print "<script type=\"text/javascript\">"
 	print "usernames = Array(%s);" % ', '.join("'%s'" % user.username for user in sorted(sprint.members))
@@ -337,7 +338,7 @@ def showInfo(handler, request, id):
 	print "</style>"
 	print "<script src=\"/static/sprint-info.js\" type=\"text/javascript\"></script>"
 
-	print InfoBox('Loading...', id = 'post-status')
+	print InfoBox('Loading...', id = 'post-status', close = True)
 
 	print (tabs << 'info') % id
 
@@ -517,7 +518,7 @@ def showAvailability(handler, request, id):
 	print "var sprintid = %d;" % id
 	print "</script>"
 
-	print InfoBox('Loading...', id = 'post-status')
+	print InfoBox('Loading...', id = 'post-status', close = True)
 
 	avail = Availability(sprint)
 	oneday = timedelta(1)

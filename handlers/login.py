@@ -23,7 +23,7 @@ def loginPost(handler, request, p_username, p_password):
 			user.save()
 
 		handler.session['user'] = user
-		delay(handler, SuccessBox("Login Complete", "Logged in as %s" % user))
+		delay(handler, SuccessBox("Login Complete", "Logged in as %s" % user, close = True))
 		redirect('/')
 	else:
 		delay(handler, ErrorBox("Login Failed", "Invalid username/password combination"))
