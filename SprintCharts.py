@@ -68,8 +68,7 @@ class HoursChart(Chart):
 		seriesList.append(series)
 
 		for day in sprint.getDays():
-			series['data'].append([utcToLocal(dateToTs(day)) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks if t.status == 'deferred'])])
-
+			series['data'].append([utcToLocal(dateToTs(day)) * 1000, sum((t.getRevision(t.revision - 1).hours if t.revision > 1 else 0) for t in [t2.getRevisionAt(day) for t2 in tasks] if t and t.status == 'deferred')])
 
 class HoursByUserChart(Chart):
 	def __init__(self, placeholder, sprint):
