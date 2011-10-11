@@ -62,6 +62,11 @@ class Task(ActiveRecord):
 	def __str__(self):
 		return self.safe.name
 
+	def getRevision(self, revision):
+		rows = db().select("SELECT * FROM %s WHERE id = ? AND revision = ? LIMIT 1" % Task.table(), self.id, revision)
+		rows = [x for x in rows]
+		return Task(**rows[0]) if len(rows) > 0 else None
+
 	def getRevisions(self):
 		rows = db().select("SELECT * FROM %s WHERE id = ? ORDER BY revision" % Task.table(), self.id)
 		return map(lambda x: Task(**x), rows)
