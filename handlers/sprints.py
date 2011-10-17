@@ -462,7 +462,7 @@ def showMetrics(handler, request, id):
 	avail = Availability(sprint)
 	for user in sorted(sprint.members):
 		hours = sum(t.hours for t in tasks if t.assigned == user)
-		total = avail.getAllForward(getNow(), user)
+		total = avail.getAllForward(getNow().date(), user)
 		print ProgressBar(user.safe.username, hours, total, zeroDivZero = True, style = {100.01: 'progress-current-red'})
 
 	originalTasks = Task.loadAll(sprintid = sprint.id, revision = 1)
