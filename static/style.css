@@ -809,6 +809,13 @@ div.shell-box table tbody td + td {
 
 */
 
+div.cron-log {
+	margin-top: 10px;
+	border: 1px dashed #000;
+	overflow: auto;
+	word-wrap: wrap;
+}
+
 input#input {
 	clear: both;
 	margin-top: 10px;
