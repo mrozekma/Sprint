@@ -1,7 +1,7 @@
 import sys
 
 class ResponseWriter:
-	def __init__(self, autoStart = True, prefixSigil = True):
+	def __init__(self, autoStart = True, prefixSigil = False):
 		self.prefixSigil = prefixSigil
 		self.old = None
 		if autoStart:
