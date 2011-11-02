@@ -562,6 +562,24 @@ img.gravatar {
 	padding-right: 10px;
 }
 
+div.sprint-option {
+	cursor: pointer;
+	padding: 5px;
+	border: 3px solid #fff;
+}
+
+table.task-import td.name input {
+	width: 400px;
+}
+
+table.task-import td.group select {
+	max-width: 300px;
+}
+
+table.task-import td.hours input {
+	width: 32px;
+}
+
 #post-status {
 	display: none;
 }

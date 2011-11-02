@@ -5,6 +5,8 @@ from rorn.Box import ErrorBox, CollapsibleBox, InfoBox, SuccessBox
 from rorn.ResponseWriter import ResponseWriter
 
 from Privilege import requirePriv
+from Project import Project
+from Sprint import Sprint
 from Task import Task, statuses, statusMenu
 from Group import Group
 from Goal import Goal
@@ -318,18 +320,118 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 		request['code'] = 299
 
 @get('tasks/new/import')
-def newTaskImport(handler, request, group):
+def newTaskImport(handler, request, group, source = None):
 	requirePriv(handler, 'User')
 	handler.title("Import Tasks")
 	id = int(group)
+	print "<script src=\"/static/sprints-import.js\" type=\"text/javascript\"></script>"
 
 	print (tabs << 'import') % id
 
 	group = Group.load(group)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+	sprint = group.sprint
 
-	print InfoBox('Unimplemented')
-	print "<br>"
-	print "sprint: %s<br>" % group.sprint
-	print "group: %s" % group
+	if not source:
+		print "Select a sprint to import from:"
+		print "<form method=\"get\" action=\"/tasks/new/import\">"
+		print "<input type=\"hidden\" name=\"group\" value=\"%d\">" % group.id
+		for project in Project.loadAll():
+			print "<h3>%s</h3>" % project.name
+			for sprint in project.getSprints():
+				print "<input type=\"radio\" name=\"source\" id=\"source_%d\" value=\"%d\"><label for=\"source_%d\">%s</label>" % (sprint.id, sprint.id, sprint.id, sprint.name)
+		print "<br><br>"
+		print Button('Next').positive().post()
+		print "</form>"
+	else:
+		id = int(source)
+		source = Sprint.load(id)
+		if not source:
+			ErrorBox.die('Invalid Sprint', "No sprint with ID <b>%d</b>" % id)
+		print "<b>Source sprint</b>: <a href=\"/sprints/%d\">%s</a><br>" % (source.id, source.name)
+		print "<b>Target sprint</b>: <a href=\"/sprints/%d\">%s</a><br><br>" % (sprint.id, sprint.name)
+		print "All incomplete tasks are listed here, with their current values from the source sprint. You can change any of the fields before importing.<br><br>"
+
+		groups = source.getGroups()
+		names = [g.name for g in groups]
+		groups += [g for g in sprint.getGroups() if g.name not in names]
+		existingNames = [g.name for g in sprint.getGroups()]
+
+		print "<form method=\"post\" action=\"/tasks/new/import?group=%d&source=%d\">" % (group.id, source.id)
+		print "<table class=\"task-import\" border=0>"
+		print "<tr><th>&nbsp;</th><th>Task</th><th>Group</th><th>Assigned</th><th>Hours</th></tr>"
+		for task in source.getTasks():
+			if task.hours == 0 or task.status == 'complete':
+				continue
+			print "<tr>"
+			print "<td><input type=\"checkbox\" name=\"include[%d]\" checked=\"true\"></td>" % task.id
+			print "<td class=\"name\"><input type=\"text\" name=\"name[%d]\" value=\"%s\"></td>" % (task.id, task.name.replace('"', '&quot;'))
+			print "<td class=\"group\"><select name=\"group[%d]\">" % task.id
+			for g in groups:
+				print "<option value=\"%d\"%s>%s</option>" % (g.id, ' selected' if g == task.group else '', g.name + ('' if g.name in existingNames else ' (NEW)'))
+			print "</select></td>"
+			print "<td><select name=\"assigned[%d]\">" % task.id
+			for member in sprint.members:
+				print "<option value=\"%s\">%s</option>" % (member.id, member.username)
+			print "</select></td>"
+			print "<td class=\"hours\"><input type=\"text\" name=\"hours[%d]\" value=\"%d\"></td>" % (task.id, task.hours)
+			print "</tr>"
+		print "</table>"
+		print Button('Import').positive().post()
+		print "</form>"
+
+@post('tasks/new/import')
+def newTaskImportPost(handler, request, group, source, p_include, p_group, p_name, p_hours, p_assigned):
+	requirePriv(handler, 'User')
+	handler.title("Import Tasks")
+
+	id = int(group)
+	group = Group.load(group)
+	if not group:
+		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+	sprint = group.sprint
+
+	id = int(source)
+	source = Sprint.load(id)
+	if not source:
+		ErrorBox.die('Invalid Sprint', "No sprint with ID <b>%d</b>" % id)
+
+	ids = p_include.keys()
+	if not all(map(lambda id: id in p_group and id in p_name and id in p_hours and id in p_assigned, ids)):
+		ErrorBox.die('Malformed Request', 'Incomplete form data')
+
+	groups, numGroups = {}, 0
+	# Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, status, hours).save()
+	for id in ids:
+		groupID, name, hours, assignedID = p_group[id], p_name[id], p_hours[id], p_assigned[id]
+		if not groupID in groups:
+			groups[groupID] = Group.load(groupID)
+			if not groups[groupID]:
+				ErrorBox.die('Malformed Request', "Invalid group ID %d" % groupID)
+			if groups[groupID].sprint != sprint:
+				search = Group.loadAll(sprintid = sprint.id, name = groups[groupID].name) # Try to find a group with the same name
+				if len(search) > 0:
+					groups[groupID] = search[0]
+				else: # Duplicate the group
+					numGroups += 1
+					groups[groupID] = Group(sprint.id, groups[groupID].name)
+					groups[groupID].save()
+		group = groups[groupID]
+
+		assigned = User.load(assignedID)
+		if not assigned:
+			ErrorBox.die('Malformed Request', "Invalid user ID %d" % assignedID)
+
+		Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, 'not started', hours).save()
+
+	numTasks = len(ids)
+	if numGroups > 0 and numGroups > 0:
+		delay(handler, SuccessBox("Added %d %s, %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups', numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3))
+	elif numGroups > 0:
+		delay(handler, SuccessBox("Added %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups'), close = 3))
+	elif numTasks > 0:
+		delay(handler, SuccessBox("Added %d %s" % (numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3))
+	else:
+		delay(handler, WarningBox("No changes", close = 3))
+	redirect("/sprints/%d" % sprint.id)
