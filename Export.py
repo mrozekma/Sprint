@@ -4,7 +4,21 @@ class SprintExport:
 	def getIcon(self): return 'export-sprint'
 	def getExtension(self): return 'sprints'
 
-	def process(self, sprint): raise Exception('Unimplemented')
+	def process(self, sprint):
+		seps = [',', '|', ':', '~', '`']
+		sep = seps[0]
+		print "%s" % sep
+		for group in sprint.getGroups():
+			print "%s:" % group.name
+			for task in group.getTasks():
+				if sep in task.name:
+					for sep in seps:
+						if not sep in task.name:
+							print "%s" % sep
+							break
+					else:
+						raise Exception("Unable to find a valid separator for %s" % task.name)
+				print sep.join([task.assigned.username, str(task.hours), task.status, task.name])
 
 class ExcelExport:
 	def getName(self): return 'excel'

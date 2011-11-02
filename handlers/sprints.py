@@ -738,6 +738,7 @@ def exportRender(handler, request, sprints, format):
 		ErrorBox.die('Export format', "No format named <b>%s</b>" % stripTags(format))
 
 	for sprint in sprints:
-		print export.process(sprint)
+		export.process(sprint)
 
+	request['wrappers'] = False
 	handler.forceDownload = "%s.%s" % (sprints[0].name if len(sprints) == 1 else 'sprints', export.getExtension())
