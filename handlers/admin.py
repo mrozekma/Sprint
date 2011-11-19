@@ -18,6 +18,8 @@ from User import User
 from Button import Button
 from Table import LRTable
 from Cron import Cron
+from LoadValues import getLoadtime
+from relativeDates import timesince
 from utils import *
 
 pages = []
@@ -34,6 +36,16 @@ def adminIndex(handler, request):
 
 	for page in pages:
 		print "<div class=\"admin-list-entry\"><a href=\"%(url)s\"><img class=\"admin-icon\" src=\"/static/images/admin-%(icon)s.png\"></a><br>%(name)s</div>" % page
+
+@admin('admin/stats', 'Statistics', 'stats')
+def adminStats(handler, request):
+	handler.title('Statistics')
+	requireAdmin(handler)
+
+	print "<h3>Uptime</h3>"
+	loadTime = getLoadtime()
+	print "Started %s<br>" % loadTime
+	print "Up for %s<br>" % timesince(loadTime)
 
 @admin('admin/test', 'Test pages', 'test-pages')
 def adminTest(handler, request):

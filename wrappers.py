@@ -4,6 +4,7 @@ import os
 import HTTPHandler
 import menu
 from DB import db
+from LoadValues import getRevisionInfo
 from utils import *
 
 # class LeftMenu:
@@ -104,8 +105,7 @@ def footer(handler, path):
 
 	print "</div>"
 
-	revisionHash, revisionDate, revisionRelative = os.popen('git log -n 1 --format=format:"%H %ct %cr"').read().split(' ', 2)
-	revisionDate = tsToDate(int(revisionDate)).strftime('%d %b %Y %H:%M:%S')
+	revisionHash, revisionDate, revisionRelative = getRevisionInfo()
 	print "<div class=\"footer_timestamp\">"
 	print "Current system time: %s<br>" % getNow()
 	print "Current revision: <a href=\"http://work.mrozekma.com:8080/?p=Sprint;a=commitdiff;h=%s\">%s</a> (<span title=\"%s\">%s</span>)<br>" % (revisionHash, revisionHash, revisionDate, revisionRelative)
