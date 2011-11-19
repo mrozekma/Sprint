@@ -1,5 +1,8 @@
 from threading import Thread
 from time import sleep
+from os.path import isdir, exists
+from datetime import datetime
+from shutil import copy
 
 from rorn.ResponseWriter import ResponseWriter
 from rorn.Session import sessions
@@ -87,3 +90,21 @@ def oldSessions():
 	for key in toDelete:
 		del sessions[key]
 	print "done"
+
+@job('Backup')
+def backup():
+	if not isdir('backups'):
+		print "No backups directory exists; aborting"
+		return
+
+	filename = datetime.now().strftime('backups/%Y%m%d-%H%M%S.db')
+	if exists(filename):
+		print "Backup file %s already exists; aborting" % filename
+		return
+
+	copy('db', filename)
+	if not exists(filename):
+		print "Unable to write backup file %s" % filename
+		return
+
+	print "Backup to %s successful" % filename
