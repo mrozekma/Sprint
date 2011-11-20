@@ -1,4 +1,4 @@
-from json import dumps as toJS
+from json import dumps as toJS, loads as fromJS
 import re
 
 class Index(object):
@@ -83,7 +83,7 @@ class Chart(object):
 		print "<script type=\"text/javascript\">"
 		print "$(document).ready(function() {",
 		print "new Highcharts.Chart(",
-		print re.sub('"function\(\) {(.*)}"', "function() {\\1}", toJS(self._m, sort_keys = True, indent = 4)),
+		print re.sub('"(?:\\\\n)*function\(\) {(.*)}(?:\\\\n)*"', lambda match: fromJS(match.group(0)), toJS(self._m, sort_keys = True, indent = 4)),
 		print ");",
 		print "});"
 		print "</script>"
