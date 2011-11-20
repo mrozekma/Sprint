@@ -1,6 +1,7 @@
 from __future__ import with_statement
 from SilverCity import Python as SyntaxHighlighter
 from StringIO import StringIO
+import sys
 from os.path import abspath, isabs, isfile
 
 from ResponseWriter import ResponseWriter
@@ -9,8 +10,8 @@ from utils import *
 
 def showCode(filename, line, around = None):
 	parsedFilename = filename if isabs(filename) else abspath("%s/%s" % (basePath(), filename))
-	if not parsedFilename.startswith(basePath()):
-		print ErrorBox("Illegal filename", "File <b>%s</b> not part of codebase" % stripTags(filename))
+	if not any(parsedFilename.startswith(path) for path in [basePath()] + sys.path):
+		print ErrorBox("Illegal filename", "File <b>%s</b> not part of codebase or standard library" % stripTags(filename))
 		return
 	elif not isfile(parsedFilename):
 		print ErrorBox("Illegal filename", "Unknown file <b>%s</b>" % stripTags(filename))
