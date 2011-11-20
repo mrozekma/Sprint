@@ -11,6 +11,18 @@ class Index(object):
 			self._parent = None
 			self._chart = chartOrParent
 
+	def get(self):
+		path = []
+		next = self
+		while next:
+			path.append(next)
+			next = next._parent
+		val = self._chart._m
+		path.reverse()
+		for node in path:
+			val = val[node._name]
+		return val
+
 	def __getitem__(self, k):
 		return Index(k, self)
 
