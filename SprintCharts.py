@@ -22,6 +22,9 @@ function() {
 class HoursChart(Chart):
 	def __init__(self, placeholder, sprint):
 		Chart.__init__(self, placeholder)
+		days = [day for day in sprint.getDays()]
+		now = getNow()
+		futureStarts = minOr(filter(lambda day: day > now, days), None)
 
 		tasks = sprint.getTasks()
 
@@ -35,11 +38,12 @@ class HoursChart(Chart):
 			xAxis.tickmarkPlacement = 'on'
 			xAxis.maxZoom = 1
 			xAxis.title.text = 'Day'
-			xAxis.plotBands = [{
-				'color': '#DDD',
-				'from': dateToTs(getNow()) * 1000,
-				'to': sprint.end * 1000
-			}]
+			if futureStarts:
+				xAxis.plotBands = [{
+					'color': '#DDD',
+					'from': days.index(futureStarts),
+					'to': len(days) - 1
+				}]
 		self.yAxis.min = 0
 		self.yAxis.title.text = 'Hours'
 		self.series = seriesList = []
@@ -50,7 +54,7 @@ class HoursChart(Chart):
 		}
 		seriesList.append(series)
 
-		for day in sprint.getDays():
+		for day in days:
 			series['data'].append(sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks]))
 
 		series = {
@@ -60,14 +64,19 @@ class HoursChart(Chart):
 		seriesList.append(series)
 
 		avail = Availability(sprint)
-		for day in sprint.getDays():
+		for day in days:
 			series['data'].append(avail.getAllForward(day))
 
 		setupTimeline(self, sprint)
 
+		
+
 class EarnedValueChart(Chart):
 	def __init__(self, placeholder, sprint):
 		Chart.__init__(self, placeholder)
+		days = [day for day in sprint.getDays()]
+		now = getNow()
+		futureStarts = minOr(filter(lambda day: day > now, days), None)
 
 		tasks = sprint.getTasks()
 
@@ -82,11 +91,12 @@ class EarnedValueChart(Chart):
 			xAxis.tickmarkPlacement = 'on'
 			xAxis.maxZoom = 1
 			xAxis.title.text = 'Day'
-			xAxis.plotBands = [{
-				'color': '#DDD',
-				'from': dateToTs(getNow()) * 1000,
-				'to': sprint.end * 1000
-			}]
+			if futureStarts:
+				xAxis.plotBands = [{
+					'color': '#DDD',
+					'from': days.index(futureStarts),
+					'to': len(days) - 1
+				}]
 		self.yAxis.min = 0
 		self.yAxis.title.text = 'Hours'
 		self.series = seriesList = []
@@ -97,7 +107,7 @@ class EarnedValueChart(Chart):
 		}
 		seriesList.append(series)
 
-		for day in sprint.getDays():
+		for day in days:
 			series['data'].append(sum(tOrig.hours for (tOrig, tNow) in [(t.getRevisionAt(tsToDate(sprint.start)), t.getRevisionAt(day)) for t in tasks] if tOrig and tNow and tNow.status == 'complete'))
 
 		series = {
@@ -106,7 +116,7 @@ class EarnedValueChart(Chart):
 		}
 		seriesList.append(series)
 
-		for day in sprint.getDays():
+		for day in days:
 			series['data'].append(sum((t.getRevision(t.revision - 1).hours if t.revision > 1 else 0) for t in [t2.getRevisionAt(day) for t2 in tasks] if t and t.status == 'deferred'))
 
 		setupTimeline(self, sprint)
@@ -114,6 +124,9 @@ class EarnedValueChart(Chart):
 class HoursByUserChart(Chart):
 	def __init__(self, placeholder, sprint):
 		Chart.__init__(self, placeholder)
+		days = [day for day in sprint.getDays()]
+		now = getNow()
+		futureStarts = minOr(filter(lambda day: day > now, days), None)
 
 		tasks = sprint.getTasks()
 
@@ -126,11 +139,12 @@ class HoursByUserChart(Chart):
 			xAxis.tickmarkPlacement = 'on'
 			xAxis.maxZoom = 1
 			xAxis.title.text = 'Day'
-			xAxis.plotBands = [{
-				'color': '#DDD',
-				'from': dateToTs(getNow()) * 1000,
-				'to': sprint.end * 1000
-			}]
+			if futureStarts:
+				xAxis.plotBands = [{
+					'color': '#DDD',
+					'from': days.index(futureStarts),
+					'to': len(days) - 1
+				}]
 		self.yAxis.min = 0
 		self.yAxis.title.text = 'Hours'
 		self.series = seriesList = []
@@ -143,7 +157,7 @@ class HoursByUserChart(Chart):
 			seriesList.append(series)
 
 			userTasks = filter(lambda t: t.assigned == user, tasks)
-			for day in sprint.getDays():
+			for day in days:
 				series['data'].append(sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in userTasks]))
 
 		setupTimeline(self, sprint)
