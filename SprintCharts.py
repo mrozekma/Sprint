@@ -25,6 +25,7 @@ class HoursChart(Chart):
 		days = [day for day in sprint.getDays()]
 		now = getNow()
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
+		futureIndex = days.index(futureStarts) if futureStarts else None
 
 		tasks = sprint.getTasks()
 
@@ -38,10 +39,11 @@ class HoursChart(Chart):
 			xAxis.tickmarkPlacement = 'on'
 			xAxis.maxZoom = 1
 			xAxis.title.text = 'Day'
-			if futureStarts:
+			# Future bar
+			if futureIndex:
 				xAxis.plotBands = [{
 					'color': '#DDD',
-					'from': days.index(futureStarts),
+					'from': futureIndex,
 					'to': len(days) - 1
 				}]
 		self.yAxis.min = 0
@@ -69,7 +71,21 @@ class HoursChart(Chart):
 
 		setupTimeline(self, sprint)
 
-		
+		# Trendline
+		TREND_DAYS = 3
+		if futureIndex >= TREND_DAYS - 1:
+			data = self.series[0].data.get()
+			startPoint = [futureIndex - (TREND_DAYS - 1), data[futureIndex - (TREND_DAYS - 1)][1]]
+			midPoint = [futureIndex, data[futureIndex][1]]
+			slope = (midPoint[1] - startPoint[1]) / (TREND_DAYS - 1)
+			endPoint = [len(days) - 1, startPoint[1] + (slope * ((len(days) - 1) - (startPoint[0])))]
+			self.series.get().append({
+				'data': [midPoint, endPoint],
+				'color': '#666',
+				'showInLegend': False,
+				'dataLabels': {'formatter': "function() {return (this.point.x == %d) ? this.y : null;}" % endPoint[0]},
+				'marker': {'symbol': 'circle'}
+			})
 
 class EarnedValueChart(Chart):
 	def __init__(self, placeholder, sprint):
