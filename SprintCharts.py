@@ -6,6 +6,19 @@ from Task import Task
 from Availability import Availability
 from utils import *
 
+def setupTimeline(chart, sprint):
+	chart.tooltip.formatter = """
+function() {
+	rtn = '<span style="font-size: 7pt">' + this.points[0].point.name + '</span><br>';
+	this.points.forEach(function(point) {
+		rtn += '<span style="color: ' + point.series.color + '">' + point.series.name + '</span>: <b>' + point.y + '</b><br>';
+	});
+	return rtn;
+}
+"""
+	chart.xAxis.categories = [day.strftime('%a') for day in sprint.getDays()]
+	chart.series[0].data = [[a, b] for (a, b) in zip([day.strftime('%A, %b %d, %Y') for day in sprint.getDays()], chart.series[0].data.get())]
+
 class HoursChart(Chart):
 	def __init__(self, placeholder, sprint):
 		Chart.__init__(self, placeholder)
@@ -19,10 +32,8 @@ class HoursChart(Chart):
 		self.tooltip.shared = True
 		self.credits.enabled = False
 		with self.xAxis as xAxis:
-			xAxis.type = 'datetime'
-			xAxis.dateTimeLabelFormats.day = '%a'
-			xAxis.tickInterval = 24 * 3600 * 1000
-			xAxis.maxZoom = 48 * 3600 * 1000
+			xAxis.tickmarkPlacement = 'on'
+			xAxis.maxZoom = 1
 			xAxis.title.text = 'Day'
 			xAxis.plotBands = [{
 				'color': '#DDD',
@@ -40,7 +51,7 @@ class HoursChart(Chart):
 		seriesList.append(series)
 
 		for day in sprint.getDays():
-			series['data'].append([utcToLocal(dateToTs(day)) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks])])
+			series['data'].append(sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks]))
 
 		series = {
 			'name': 'Availability',
@@ -50,7 +61,7 @@ class HoursChart(Chart):
 
 		avail = Availability(sprint)
 		for day in sprint.getDays():
-			series['data'].append([utcToLocal(dateToTs(day)) * 1000, avail.getAllForward(day)])
+			series['data'].append(avail.getAllForward(day))
 
 		series = {
 			'name': 'Earned value',
@@ -59,7 +70,7 @@ class HoursChart(Chart):
 		seriesList.append(series)
 
 		for day in sprint.getDays():
-			series['data'].append([utcToLocal(dateToTs(day)) * 1000, sum(tOrig.hours for (tOrig, tNow) in [(t.getRevisionAt(tsToDate(sprint.start)), t.getRevisionAt(day)) for t in tasks] if tOrig and tNow and tNow.status == 'complete')])
+			series['data'].append(sum(tOrig.hours for (tOrig, tNow) in [(t.getRevisionAt(tsToDate(sprint.start)), t.getRevisionAt(day)) for t in tasks] if tOrig and tNow and tNow.status == 'complete'))
 
 		series = {
 			'name': 'Deferred tasks',
@@ -68,7 +79,9 @@ class HoursChart(Chart):
 		seriesList.append(series)
 
 		for day in sprint.getDays():
-			series['data'].append([utcToLocal(dateToTs(day)) * 1000, sum((t.getRevision(t.revision - 1).hours if t.revision > 1 else 0) for t in [t2.getRevisionAt(day) for t2 in tasks] if t and t.status == 'deferred')])
+			series['data'].append(sum((t.getRevision(t.revision - 1).hours if t.revision > 1 else 0) for t in [t2.getRevisionAt(day) for t2 in tasks] if t and t.status == 'deferred'))
+
+		setupTimeline(self, sprint)
 
 class HoursByUserChart(Chart):
 	def __init__(self, placeholder, sprint):
@@ -79,14 +92,11 @@ class HoursByUserChart(Chart):
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
 		self.title.text = ''
-		# self.plotOptions.line.dataLabels.enabled = True
 		self.tooltip.shared = True
 		self.credits.enabled = False
 		with self.xAxis as xAxis:
-			xAxis.type = 'datetime'
-			xAxis.dateTimeLabelFormats.day = '%a'
-			xAxis.tickInterval = 24 * 3600 * 1000
-			xAxis.maxZoom = 48 * 3600 * 1000
+			xAxis.tickmarkPlacement = 'on'
+			xAxis.maxZoom = 1
 			xAxis.title.text = 'Day'
 			xAxis.plotBands = [{
 				'color': '#DDD',
@@ -106,7 +116,9 @@ class HoursByUserChart(Chart):
 
 			userTasks = filter(lambda t: t.assigned == user, tasks)
 			for day in sprint.getDays():
-				series['data'].append([utcToLocal(dateToTs(day)) * 1000, sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in userTasks])])
+				series['data'].append(sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in userTasks]))
+
+		setupTimeline(self, sprint)
 
 class CommitmentChart(Chart):
 	def __init__(self, placeholder, sprint):
