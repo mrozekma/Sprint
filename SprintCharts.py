@@ -63,6 +63,34 @@ class HoursChart(Chart):
 		for day in sprint.getDays():
 			series['data'].append(avail.getAllForward(day))
 
+		setupTimeline(self, sprint)
+
+class EarnedValueChart(Chart):
+	def __init__(self, placeholder, sprint):
+		Chart.__init__(self, placeholder)
+
+		tasks = sprint.getTasks()
+
+		self.chart.defaultSeriesType = 'line'
+		self.chart.zoomType = 'x'
+		self.colors = ['#89A54E', '#80699B']
+		self.title.text = ''
+		self.plotOptions.line.dataLabels.enabled = True
+		self.tooltip.shared = True
+		self.credits.enabled = False
+		with self.xAxis as xAxis:
+			xAxis.tickmarkPlacement = 'on'
+			xAxis.maxZoom = 1
+			xAxis.title.text = 'Day'
+			xAxis.plotBands = [{
+				'color': '#DDD',
+				'from': dateToTs(getNow()) * 1000,
+				'to': sprint.end * 1000
+			}]
+		self.yAxis.min = 0
+		self.yAxis.title.text = 'Hours'
+		self.series = seriesList = []
+
 		series = {
 			'name': 'Earned value',
 			'data': []
