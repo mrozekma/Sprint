@@ -49,7 +49,9 @@ class Index(object):
 
 	def createKeys(self):
 		m = self._parent.createKeys() if self._parent else self._chart._m
-		if self._name not in m:
+		try:
+			m[self._name]
+		except: # If it doesn't exist ("in" checks fail for types like lists)
 			m[self._name] = {}
 		return m[self._name]
 
