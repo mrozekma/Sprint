@@ -87,6 +87,12 @@ def to_int(val, name, error_handler):
 def to_bool(val):
 	return val in [True, 'true', 1]
 
+def minOr(vals, default = 0):
+	try:
+		return min(vals)
+	except ValueError:
+		return default
+
 def maxOr(vals, default = 0):
 	try:
 		return max(vals)
