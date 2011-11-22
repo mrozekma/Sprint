@@ -43,8 +43,8 @@ class HoursChart(Chart):
 			if futureIndex:
 				xAxis.plotBands = [{
 					'color': '#DDD',
-					'from': futureIndex,
-					'to': len(days) - 1
+					'from': futureIndex - 0.75,
+					'to': len(days) - 0.5
 				}]
 		self.yAxis.min = 0
 		self.yAxis.title.text = 'Hours'
@@ -93,6 +93,7 @@ class EarnedValueChart(Chart):
 		days = [day for day in sprint.getDays()]
 		now = getNow()
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
+		futureIndex = days.index(futureStarts) if futureStarts else None
 
 		tasks = sprint.getTasks()
 
@@ -107,11 +108,12 @@ class EarnedValueChart(Chart):
 			xAxis.tickmarkPlacement = 'on'
 			xAxis.maxZoom = 1
 			xAxis.title.text = 'Day'
-			if futureStarts:
+			# Future bar
+			if futureIndex:
 				xAxis.plotBands = [{
 					'color': '#DDD',
-					'from': days.index(futureStarts),
-					'to': len(days) - 1
+					'from': futureIndex - 0.75,
+					'to': len(days) - 0.5
 				}]
 		self.yAxis.min = 0
 		self.yAxis.title.text = 'Hours'
@@ -143,6 +145,7 @@ class HoursByUserChart(Chart):
 		days = [day for day in sprint.getDays()]
 		now = getNow()
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
+		futureIndex = days.index(futureStarts) if futureStarts else None
 
 		tasks = sprint.getTasks()
 
@@ -155,11 +158,12 @@ class HoursByUserChart(Chart):
 			xAxis.tickmarkPlacement = 'on'
 			xAxis.maxZoom = 1
 			xAxis.title.text = 'Day'
-			if futureStarts:
+			# Future bar
+			if futureIndex:
 				xAxis.plotBands = [{
 					'color': '#DDD',
-					'from': days.index(futureStarts),
-					'to': len(days) - 1
+					'from': futureIndex - 0.75,
+					'to': len(days) - 0.5
 				}]
 		self.yAxis.min = 0
 		self.yAxis.title.text = 'Hours'
