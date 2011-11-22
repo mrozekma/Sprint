@@ -6,16 +6,17 @@ from Task import Task
 from Availability import Availability
 from utils import *
 
-def setupTimeline(chart, sprint):
+def setupTimeline(chart, sprint, skippedSeries = []):
 	chart.tooltip.formatter = """
 function() {
 	rtn = '<span style="font-size: 7pt">' + this.points[0].point.name + '</span><br>';
 	this.points.forEach(function(point) {
+		if(%s) {return;}
 		rtn += '<span style="color: ' + point.series.color + '">' + point.series.name + '</span>: <b>' + point.y + '</b><br>';
 	});
 	return rtn;
 }
-"""
+""" % ('false' if skippedSeries == [] else ' || '.join("point.series.name == '%s'" % series for series in skippedSeries))
 	chart.xAxis.categories = [day.strftime('%a') for day in sprint.getDays()]
 	chart.series[0].data = [[a, b] for (a, b) in zip([day.strftime('%A, %b %d, %Y') for day in sprint.getDays()], chart.series[0].data.get())]
 
@@ -52,7 +53,8 @@ class HoursChart(Chart):
 
 		series = {
 			'name': 'Hours needed',
-			'data': []
+			'data': [],
+			'zIndex': 2
 		}
 		seriesList.append(series)
 
@@ -61,7 +63,8 @@ class HoursChart(Chart):
 
 		series = {
 			'name': 'Availability',
-			'data': []
+			'data': [],
+			'zIndex': 2
 		}
 		seriesList.append(series)
 
@@ -69,22 +72,24 @@ class HoursChart(Chart):
 		for day in days:
 			series['data'].append(avail.getAllForward(day))
 
-		setupTimeline(self, sprint)
+		setupTimeline(self, sprint, ['Projected hours'])
 
 		# Trendline
 		TREND_DAYS = 3
 		if futureIndex >= TREND_DAYS - 1:
 			data = self.series[0].data.get()
-			startPoint = [futureIndex - (TREND_DAYS - 1), data[futureIndex - (TREND_DAYS - 1)][1]]
-			midPoint = [futureIndex, data[futureIndex][1]]
+			startPoint = [futureIndex - TREND_DAYS, data[futureIndex - TREND_DAYS][1]]
+			midPoint = [futureIndex - 1, data[futureIndex - 1][1]]
 			slope = (midPoint[1] - startPoint[1]) / (TREND_DAYS - 1)
 			endPoint = [len(days) - 1, startPoint[1] + (slope * ((len(days) - 1) - (startPoint[0])))]
 			self.series.get().append({
+				'name': 'Projected hours',
 				'data': [midPoint, endPoint],
 				'color': '#666',
-				'showInLegend': False,
+				# 'showInLegend': False,
 				'dataLabels': {'formatter': "function() {return (this.point.x == %d) ? this.y : null;}" % endPoint[0]},
-				'marker': {'symbol': 'circle'}
+				'marker': {'symbol': 'circle'},
+				'zIndex': 1
 			})
 
 class EarnedValueChart(Chart):
