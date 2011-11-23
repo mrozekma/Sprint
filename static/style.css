@@ -473,6 +473,10 @@ table.tasks tr.task td.actions a img {
 	border: 0px;
 }
 
+table.tasks tr.task.highlight {
+	background-color: #9cf;
+}
+
 /*
 table.tasks tr.task td.hours img[src="/static/images/arrow-top.png"],
 table.tasks tr.task td.hours img[src="/static/images/arrow-up.png"]
@@ -546,6 +550,10 @@ ul#goal-menu {
 
 #new-task-many-buttons button {
 	width: 49%;
+}
+
+a h2 {
+	color: #000;
 }
 
 .user-list-entry, .admin-list-entry {

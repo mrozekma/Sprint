@@ -38,12 +38,13 @@ def sprint(handler, request):
 	redirect('/projects')
 
 @get('sprints/(?P<id>[0-9]+)')
-def showBacklog(handler, request, id, assigned = None):
+def showBacklog(handler, request, id, assigned = None, highlight = None):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
 	if not sprint:
 		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
 		done()
+	highlight = map(int, highlight.split(',')) if highlight else []
 
 	# handler.title(sprint.project.safe.name)
 	handler.title(sprint.safe.name)
@@ -129,7 +130,7 @@ def showBacklog(handler, request, id, assigned = None):
 		print "<input type=\"hidden\" name=\"status[%d]\" value=\"%s\">" % (task.id, task.status)
 		print "<input type=\"hidden\" name=\"goal[%d]\" value=\"%s\">" % (task.id, task.goal.id if task.goal else 0)
 
-	print "<table border=0 id=\"all-tasks\" class=\"tasks\">"
+	print "<table border=0 cellspacing=0 cellpadding=2 id=\"all-tasks\" class=\"tasks\">"
 	print "<thead>"
 	print "<tr class=\"dateline nodrop nodrag\"><td colspan=\"3\">&nbsp;</td>" + ''.join(map(lambda (x,y): "<td class=\"%s\">%s</td>" % (x, x), days)) + "<td>&nbsp;</td></tr>"
 	print "<tr class=\"dateline2 nodrop nodrag\"><td colspan=\"3\">&nbsp;</td>" + ''.join(map(lambda (x,y): "<td class=\"%s\">%s</td>" % (x, formatDate(y)), days)) + "<td>&nbsp;</td></tr>"
@@ -146,7 +147,7 @@ def showBacklog(handler, request, id, assigned = None):
 		print "</td>"
 		print "</tr>"
 		for task in group.getTasks():
-			printTask(task, days, group = task.group)
+			printTask(task, days, group = task.group, highlight = (task.id in highlight))
 
 	# print "<tr class=\"group\" groupid=\"0\"><td colspan=\"7\"><img src=\"/static/images/collapse.png\">&nbsp;<span>Other</span></td></tr>"
 	# for task in filter(lambda t: not t.group, tasks):
@@ -157,8 +158,8 @@ def showBacklog(handler, request, id, assigned = None):
 	print "</table>"
 	print "</form>"
 
-def printTask(task, days, group = None):
-	print "<tr class=\"task\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" goalid=\"%d\" status=\"%s\" assigned=\"%s\">" % (task.id, task.id, task.revision, group.id if group else 0, task.goal.id if task.goal else 0, task.stat.name, task.assigned.username)
+def printTask(task, days, group = None, highlight = False):
+	print "<tr class=\"task%s\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" goalid=\"%d\" status=\"%s\" assigned=\"%s\">" % (' highlight' if highlight else '', task.id, task.id, task.revision, group.id if group else 0, task.goal.id if task.goal else 0, task.stat.name, task.assigned.username)
 
 	print "<td class=\"flags\">"
 	# print "<img src=\"/static/images/star.png\">&nbsp;"

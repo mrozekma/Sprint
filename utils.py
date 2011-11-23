@@ -99,6 +99,13 @@ def maxOr(vals, default = 0):
 	except ValueError:
 		return default
 
+def uniq(l):
+	rtn = []
+	for n in l:
+		if not n in rtn:
+			rtn.append(n)
+	return rtn
+
 def log(str):
 	sys.__stdout__.write("%s\n" % str)
 

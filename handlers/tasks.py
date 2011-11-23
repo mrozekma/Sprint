@@ -20,42 +20,78 @@ from ProgressBar import ProgressBar
 from relativeDates import timesince
 from utils import *
 
-@get('tasks/(?P<id>[0-9]+)')
-def task(handler, request, id):
+@get('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)')
+def task(handler, request, ids):
 	requirePriv(handler, 'User')
-	task = Task.load(id)
-	if not task:
-		ErrorBox.die('Tasks', "No task with ID <b>%d</b>" % id)
-	revs = task.getRevisions()
-
-	handler.title(task.safe.name)
 	Chart.include()
 
-	print "<h2>Info</h2>"
-	print "Part of <a href=\"/sprints/%d\">%s</a>, <a href=\"/sprints/%d#group%d\">%s</a>" % (task.sprintid, task.sprint, task.sprintid, task.groupid, task.group),
-	if task.goal:
-		print "to meet the goal&nbsp;&nbsp;<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;<a href=\"/sprints/%d/info\">%s</a>" % (task.goal.color, task.sprintid, task.goal.safe.name),
-	print "<br>"
-	print "Assigned to %s<br>" % task.assigned
-	print "Last changed %s ago<br><br>" % timesince(tsToDate(task.timestamp))
-	hours, total, lbl = task.hours, revs[0].hours, "<b>%s</b>" % statuses[task.status].text
-	if task.deleted:
-		print "Deleted<br>"
-	elif task.status == 'complete':
-		print ProgressBar(lbl, total-hours, total, zeroDivZero = True, style = 'progress-current-green')
-	elif task.status in ('blocked', 'canceled', 'deferred', 'split'):
-		hours = filter(lambda rev: rev.hours > 0, revs)[-1].hours
-		print ProgressBar(lbl, total-hours, total, zeroDivZero = True, style = 'progress-current-red')
-	else:
-		print ProgressBar(lbl, total-hours, total, zeroDivZero = True)
+	tasks = {}
+	if isinstance(ids, int): # Single ID
+		tasks[ids] = Task.load(ids)
+		ids = [ids]
 
-	print "<h2>History</h2>"
-	chart = TaskChart('chart', task)
-	chart.js()
+		def header(task, text, level):
+			if level == 1:
+				handler.title(text)
+			else:
+				print "<h%d>%s</h%d>" % (level, text, level)
+	else: # Many IDs
+		ids = map(int, uniq(ids.split(',')))
+		tasks = dict([(id, Task.load(id)) for id in ids])
+		handler.title("Task Information")
 
-	chart.placeholder()
-	showHistory(task, False)
-	print "<br>"
+		if not all(tasks.values()):
+			ids = [str(id) for (id, task) in tasks.iteritems() if not task]
+			ErrorBox.die("No %s with %s %s" % ('task' if len(ids) == 1 else 'tasks', 'ID' if len(ids) == 1 else 'IDs', ', '.join(ids)))
+
+		if len(set(task.sprint for task in tasks.values())) == 1: # All in the same sprint
+			print "<small>(<a href=\"/sprints/%d?highlight=%s\">Show in backlog view</a>)</small><br><br>" % (tasks.values()[0].sprint.id, ','.join(map(str, ids)))
+
+		for id in ids:
+			print "<a href=\"#task%d\">%s</a><br>" % (id, tasks[id].safe.name)
+
+		def header(task, text, level):
+			if level == 1:
+				print "<hr>"
+				print "<a name=\"task%d\"></a>" % task.id
+				print "<a href=\"#task%d\"><h2>%s</h2></a>" % (task.id, text)
+			else:
+				print "<h%d>%s</h%d>" % (level+1, text, level+1)
+
+	for id in ids:
+		task = tasks[id]
+		if not task:
+			ErrorBox.die('Tasks', "No task with ID <b>%d</b>" % id)
+		revs = task.getRevisions()
+
+		header(task, task.safe.name, 1)
+
+		header(task, 'Info', 2)
+		print "Part of <a href=\"/sprints/%d\">%s</a>, <a href=\"/sprints/%d#group%d\">%s</a>" % (task.sprintid, task.sprint, task.sprintid, task.groupid, task.group),
+		if task.goal:
+			print "to meet the goal&nbsp;&nbsp;<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;<a href=\"/sprints/%d/info\">%s</a>" % (task.goal.color, task.sprintid, task.goal.safe.name),
+		print "<br>"
+		print "Assigned to %s<br>" % task.assigned
+		print "Last changed %s ago<br><br>" % timesince(tsToDate(task.timestamp))
+		hours, total, lbl = task.hours, revs[0].hours, "<b>%s</b>" % statuses[task.status].text
+		if task.deleted:
+			print "Deleted<br>"
+		elif task.status == 'complete':
+			print ProgressBar(lbl, total-hours, total, zeroDivZero = True, style = 'progress-current-green')
+		elif task.status in ('blocked', 'canceled', 'deferred', 'split'):
+			hours = filter(lambda rev: rev.hours > 0, revs)
+			hours = hours[-1].hours if len(hours) > 0 else 0
+			print ProgressBar(lbl, total-hours, total, zeroDivZero = True, style = 'progress-current-red')
+		else:
+			print ProgressBar(lbl, total-hours, total, zeroDivZero = True)
+
+		header(task, 'History', 2)
+		chart = TaskChart("chart%d" % id, task)
+		chart.js()
+
+		chart.placeholder()
+		showHistory(task, False)
+		print "<br>"
 
 tabs = Tabs()
 tabs['single'] = '/tasks/new/single?group=%d'
