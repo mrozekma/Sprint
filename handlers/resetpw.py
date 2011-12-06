@@ -8,6 +8,15 @@ from Button import Button
 from Privilege import requirePriv
 from utils import *
 
+def printResetForm(handler, key = None):
+	print "<form method=\"post\" action=\"/resetpw/%s?key=%s\">" % (handler.session['user'].safe.username, key or '')
+	tbl = LRTable()
+	tbl['New password:'] = '<input type=\"password\" name=\"newPassword\" class=\"defaultfocus\">'
+	tbl['Confirm:'] = '<input type=\"password\" name=\"newPassword2\">'
+	tbl[''] = Button('Change Password', type = 'submit').positive()
+	print tbl
+	print "</form>"
+
 @get('resetpw')
 def resetPassword(handler, request):
 	handler.title('Reset password')
@@ -30,13 +39,7 @@ def resetUserPassword(handler, request, username, key = None):
 	print "</style>"
 
 	if user == handler.session['user'] or (user.resetkey and user.resetkey == key):
-		print "<form method=\"post\" action=\"/resetpw/%s?key=%s\">" % (user.safe.username, key if key else '')
-		tbl = LRTable()
-		tbl['New password:'] = '<input type=\"password\" name=\"newPassword\" class=\"defaultfocus\">'
-		tbl['Confirm:'] = '<input type=\"password\" name=\"newPassword2\">'
-		tbl[''] = Button('Change Password', type = 'submit').positive()
-		print tbl
-		print "</form>"
+		printResetForm(handler, user.resetkey)
 	else:
 		ErrorBox.die('Reset Password', 'Invalid reset key')
 
