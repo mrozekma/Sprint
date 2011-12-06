@@ -2,8 +2,10 @@ from utils import *
 
 import os
 from datetime import datetime
+from socket import gethostname
 
 loadTime = datetime.now()
+devBuild = (gethostname() != 'barium')
 
 def getRevisionInfo():
 	# These are recomputed each time because revisionRelative changes
@@ -13,3 +15,6 @@ def getRevisionInfo():
 
 def getLoadtime():
 	return loadTime
+
+def isDevBuild():
+	return devBuild

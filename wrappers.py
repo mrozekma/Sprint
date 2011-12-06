@@ -4,7 +4,7 @@ import os
 import HTTPHandler
 import menu
 from DB import db
-from LoadValues import getRevisionInfo
+from LoadValues import getRevisionInfo, isDevBuild
 from utils import *
 
 # class LeftMenu:
@@ -78,7 +78,15 @@ def header(handler, path):
 	else:
 		print "Not logged in"
 	print "</div>"
+
+	if isDevBuild():
+		print "<div class=\"devwarning\">"
+		print "DEVELOPMENT"
+		print "</div>"
+
+	print "<div class=\"topmenu\">"
 	print menu.render(handler)
+	print "</div>"
 	print "</div>"
 	print "</div>"
 
@@ -108,7 +116,11 @@ def footer(handler, path):
 	revisionHash, revisionDate, revisionRelative = getRevisionInfo()
 	print "<div class=\"footer_timestamp\">"
 	print "Current system time: %s<br>" % getNow()
-	print "Current revision: <a href=\"http://work.mrozekma.com:8080/?p=Sprint;a=commitdiff;h=%s\">%s</a> (<span title=\"%s\">%s</span>)<br>" % (revisionHash, revisionHash, revisionDate, revisionRelative)
+	print "Current revision:",
+	if isDevBuild():
+		print "<span style=\"color: #f00;\">Development build</span><br>"
+	else:
+		print "<a href=\"http://work.mrozekma.com:8080/?p=Sprint;a=commitdiff;h=%s\">%s</a> (<span title=\"%s\">%s</span>)<br>" % (revisionHash, revisionHash, revisionDate, revisionRelative)
 	queries = db().resetCount()
 	if handler.session['user'] and handler.session['user'].hasPrivilege('Dev'):
 		print "Database requests: %d<br>" % queries

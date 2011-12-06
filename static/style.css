@@ -63,8 +63,17 @@ a {
 	color: #FFF;
 }
 
-.navigation .ident {
-	padding-bottom: 30px;
+.navigation .devwarning {
+	font-weight: bold;
+	color: #f00;
+}
+
+.navigation .devwarning~.topmenu {
+	padding-top: 14px;
+}
+
+.navigation .topmenu {
+	padding-top: 30px;
 }
 
 img.avatar {

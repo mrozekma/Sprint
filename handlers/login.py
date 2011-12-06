@@ -3,6 +3,7 @@ from rorn.Session import delay
 
 from User import User
 from Button import Button
+from LoadValues import isDevBuild
 from utils import *
 
 @get('login')
@@ -18,6 +19,10 @@ def loginPost(handler, request, p_username, p_password):
 	handler.title('Login')
 	user = User.load(username = p_username, password = User.crypt(p_username, p_password))
 	if user:
+		if isDevBuild() and not user.hasPrivilege('Dev'):
+			delay(handler, ErrorBox("Login Failed", "This is a development build"))
+			redirect('/')
+
 		if user.resetkey:
 			user.resetkey = None
 			user.save()
