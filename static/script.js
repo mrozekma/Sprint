@@ -49,7 +49,7 @@ $.extend($.fn, {
 					break;
 				}
 
-				box.fadeIn();
+				showbox(box);
 			});
 		});
 	},
@@ -75,11 +75,15 @@ function hltable_click(url) {
 	document.location = url;
 }
 
+function showbox(box) {
+	$(box).show().css('opacity', 100);
+}
+
 function hidebox(box, timeout) {
 	if(timeout == 0) {
 		console.log(box);
 		console.log($(box));
-		$(box).fadeOut();
+		$(box).animate({opacity: 0});
 	} else {
 		setTimeout(function() {hidebox(box, 0);}, timeout * 1000);
 	}

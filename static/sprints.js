@@ -362,7 +362,7 @@ function save_task(task, field, value, counter) {
 			box = $('#post-status');
 			box.attr('class', 'alert-message error');
 			$('span.boxbody', box).html("Timed out trying to set task " + task.attr('taskid') + " " + field + " to " + value);
-			box.fadeIn();
+			showbox(box);
 			$('.saving', task).css('visibility', 'hidden');
 		} else {
 			setTimeout(function() {save_task(task, field, value, (counter == undefined ? 0 : counter) + 1);}, 200);
@@ -395,7 +395,7 @@ function save_task(task, field, value, counter) {
 		}
 
 		if(box) {
-			box.fadeIn();
+			showbox(box);
 		}
 		$('.saving', task).css('visibility', 'hidden');
 		savingMutex = false;
@@ -414,5 +414,5 @@ function unimplemented(what) {
 	box = $('#post-status');
 	box.attr('class', 'alert-message warning');
 	$('span.boxbody', box).html("<b>Unimplemented</b>: " + what);
-	box.fadeIn();
+	showbox(box);
 }
