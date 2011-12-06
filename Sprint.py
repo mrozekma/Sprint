@@ -44,6 +44,9 @@ class Sprint(ActiveRecord):
 		now = dateToTs(getNow())
 		return self.start <= now <= self.end
 
+	def canEdit(self, user):
+		return self.isActive() and user.hasPrivilege('Write')
+
 	def getTasks(self, orderby = 'seq ASC', includeDeleted = False):
 		from Task import Task
 		tasks = Task.loadAll(sprintid = self.id, orderby = orderby)

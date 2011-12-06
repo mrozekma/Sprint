@@ -73,6 +73,7 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 
 	tasks = sprint.getTasks()
 	groups = sprint.getGroups()
+	editable = sprint.canEdit(handler.session['user'])
 
 	undelay(handler)
 
@@ -130,7 +131,10 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 		print "<input type=\"hidden\" name=\"status[%d]\" value=\"%s\">" % (task.id, task.status)
 		print "<input type=\"hidden\" name=\"goal[%d]\" value=\"%s\">" % (task.id, task.goal.id if task.goal else 0)
 
-	print "<table border=0 cellspacing=0 cellpadding=2 id=\"all-tasks\" class=\"tasks\">"
+	tblClasses = ['tasks']
+	if editable:
+		tblClasses.append('editable')
+	print "<table border=0 cellspacing=0 cellpadding=2 id=\"all-tasks\" class=\"%s\">" % ' '.join(tblClasses)
 	print "<thead>"
 	print "<tr class=\"dateline nodrop nodrag\"><td colspan=\"3\">&nbsp;</td>" + ''.join(map(lambda (x,y): "<td class=\"%s\">%s</td>" % (x, x), days)) + "<td>&nbsp;</td></tr>"
 	print "<tr class=\"dateline2 nodrop nodrag\"><td colspan=\"3\">&nbsp;</td>" + ''.join(map(lambda (x,y): "<td class=\"%s\">%s</td>" % (x, formatDate(y)), days)) + "<td>&nbsp;</td></tr>"
@@ -141,24 +145,25 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 		print "<tr class=\"group\" id=\"group%d\" groupid=\"%d\">" % (group.id, group.id)
 		print "<td colspan=\"6\"><img src=\"/static/images/collapse.png\">&nbsp;<span>%s</span></td>" % group.name
 		print "<td class=\"actions\">"
-		print "<a href=\"/groups/new?after=%d\"><img src=\"/static/images/group-new.png\" title=\"New Group\"></a>" % group.id
-		print "<a href=\"/groups/edit/%d\"><img src=\"/static/images/group-edit.png\" title=\"Edit Group\"></a>" % group.id
-		print "<a href=\"/tasks/new?group=%d\"><img src=\"/static/images/task-new.png\" title=\"New Task\"></a>" % group.id
+		if editable:
+			print "<a href=\"/groups/new?after=%d\"><img src=\"/static/images/group-new.png\" title=\"New Group\"></a>" % group.id
+			print "<a href=\"/groups/edit/%d\"><img src=\"/static/images/group-edit.png\" title=\"Edit Group\"></a>" % group.id
+			print "<a href=\"/tasks/new?group=%d\"><img src=\"/static/images/task-new.png\" title=\"New Task\"></a>" % group.id
 		print "</td>"
 		print "</tr>"
 		for task in group.getTasks():
-			printTask(task, days, group = task.group, highlight = (task.id in highlight))
+			printTask(task, days, group = task.group, highlight = (task.id in highlight), editable = editable)
 
 	# print "<tr class=\"group\" groupid=\"0\"><td colspan=\"7\"><img src=\"/static/images/collapse.png\">&nbsp;<span>Other</span></td></tr>"
 	# for task in filter(lambda t: not t.group, tasks):
-		# printTask(task, days)
+		# printTask(handler, task, days)
 
 	print "<tr><td colspan=\"7\">&nbsp;</td></tr>" # Spacer so rows can be dragged to the bottom
 	print "</tbody>"
 	print "</table>"
 	print "</form>"
 
-def printTask(task, days, group = None, highlight = False):
+def printTask(task, days, group = None, highlight = False, editable = True):
 	print "<tr class=\"task%s\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" goalid=\"%d\" status=\"%s\" assigned=\"%s\">" % (' highlight' if highlight else '', task.id, task.id, task.revision, group.id if group else 0, task.goal.id if task.goal else 0, task.stat.name, task.assigned.username)
 
 	print "<td class=\"flags\">"
@@ -179,7 +184,7 @@ def printTask(task, days, group = None, highlight = False):
 
 		if not dayTask:
 			print "<td class=\"%s\">&ndash;</td>" % ' '.join(classes)
-		elif lbl == 'today':
+		elif lbl == 'today' and editable:
 			print "<td class=\"%s\" nowrap>" % ' '.join(classes)
 			print "<table border=0 cellspacing=0 cellpadding=0 style=\"padding: 0px; margin: 0px\">"
 			print "<tr>"
@@ -197,7 +202,8 @@ def printTask(task, days, group = None, highlight = False):
 			print "<td class=\"%s\">%s</td>" % (' '.join(classes), dayTask.hours)
 	print "<td class=\"actions\">"
 	print "<a href=\"/tasks/%d\" target=\"_blank\"><img src=\"/static/images/task-history.png\" title=\"History\"></a>" % task.id
-	print "<a href=\"javascript:delete_task(%d);\"><img src=\"/static/images/task-delete.png\" title=\"Delete Task\"></a>" % task.id
+	if editable:
+		print "<a href=\"javascript:delete_task(%d);\"><img src=\"/static/images/task-delete.png\" title=\"Delete Task\"></a>" % task.id
 	print "<a href=\"#\" class=\"bugzilla\" target=\"_blank\"><img src=\"/static/images/bugzilla.png\" title=\"Link to bug\"></a>"
 	print "<img class=\"saving\" src=\"/static/images/loading.gif\">"
 	print "</td>"
@@ -222,6 +228,8 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 
 	if not sprint.isActive():
 		die("Unable to modify inactive sprint")
+	elif not sprint.canEdit(handler.session['user']):
+		die("You don't have permission to modify this sprint")
 
 	task = Task.load(p_id)
 	if task.sprint != sprint:
@@ -325,7 +333,7 @@ def showInfo(handler, request, id):
 		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
 		done()
 	tasks = sprint.getTasks()
-	editable = sprint.isActive() and sprint.project.owner == handler.session['user']
+	editable = sprint.canEdit(handler.session['user']) and sprint.project.owner == handler.session['user']
 
 	handler.title(sprint.safe.name)
 
@@ -393,6 +401,8 @@ def sprintInfoPost(handler, request, id, p_name, p_goals, p_members = None):
 
 	if not sprint.isActive():
 		die("You cannot modify an inactive sprint")
+	elif not sprint.canEdit(handler.session['user']):
+		die("You don't have permission to modify this sprint")
 
 	goals = map(Goal.load, p_goals)
 	if not all(goals):
@@ -530,6 +540,7 @@ def showAvailability(handler, request, id):
 	avail = Availability(sprint)
 	oneday = timedelta(1)
 	start, end = tsToDate(sprint.start), tsToDate(sprint.end)
+	editable = sprint.canEdit(handler.session['user'])
 
 	print "<form method=\"post\" action=\"/sprints/%d/availability\">" % sprint.id
 	print "<table class=\"availability\">"
@@ -540,7 +551,7 @@ def showAvailability(handler, request, id):
 		if seek.weekday() < 5: # Weekday
 			print "<td>%s<br>%s</td>" % (seek.strftime('%d'), seek.strftime('%a'))
 		seek += oneday
-	if sprint.isActive():
+	if editable:
 		print "<td>%s</td>" % Button('set all 8', type = 'button').info()
 	print "</tr>"
 
@@ -550,17 +561,17 @@ def showAvailability(handler, request, id):
 		seek = start
 		while seek <= end:
 			if seek.weekday() < 5: # Weekday
-				if sprint.isActive():
+				if editable:
 					print "<td><input type=\"text\" name=\"hours[%d,%d]\" value=\"%d\"></td>" % (user.id, dateToTs(seek), avail.get(user, seek))
 				else:
 					print "<td style=\"text-align: center\">%d</td>" % avail.get(user, seek)
 			seek += oneday
-		if sprint.isActive():
+		if editable:
 			print "<td>%s</td>" % Button('copy first', type = 'button').info()
 		print "</tr>"
 
 	print "</table>"
-	if sprint.isActive():
+	if editable:
 		print Button('Save', id = 'save-button', type = 'button').positive()
 	print "</form>"
 
@@ -581,6 +592,8 @@ def sprintAvailabilityPost(handler, request, id, p_hours):
 
 	if not sprint.isActive():
 		die("Unable to modify inactive sprint")
+	elif not sprint.canEdit(handler.session['user']):
+		die("You don't have permission to modify this sprint")
 
 	avail = Availability(sprint)
 	for k, hours in p_hours.items():

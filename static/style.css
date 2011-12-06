@@ -418,11 +418,7 @@ table.tasks tr.task td.flags {
 	white-space: nowrap;
 }
 
-table.tasks tr.task img.status {
-	cursor: pointer;
-}
-
-table.tasks tr.task img.goal {
+table.tasks.editable tr.task img.status, table.tasks.editable tr.task img.goal {
 	cursor: pointer;
 }
 

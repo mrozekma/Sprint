@@ -1,9 +1,8 @@
 $(document).ready(function() {
 	// TODO if grouping stays disabled, this can be pulled back out of a function
-	fancy_cells('#all-tasks');
+	fancy_cells('#all-tasks.editable');
 
 	setup_hours_events();
-	setup_task_buttons();
 	setup_filter_buttons();
 	setup_group_arrows();
 	setup_bugzilla($('tr.task'));
@@ -65,22 +64,6 @@ function setup_hours_events() {
 			save_task(task, 'hours', val);
 			set_status(task, val == 0 ? 'complete' : 'in progress');
 		}
-	});
-}
-
-function setup_task_buttons() {
-	$('.actions img.task-new').click(function() {
-		curRow = $(this).parents('tr.task');
-		newRow = $("<tr class=\"task\" taskid=\"new\" groupid=\"" + curRow.attr('groupid') + "\" status=\"not started\" assigned=\"\">" +
-				   "<td class=\"name\"><img src=\"/static/images/status-not-started.png\">&nbsp;<input type=\"text\" name=\"new_name\"></td>" +
-				   "<td class=\"assigned\"><img src=\"/static/images/member.png\">&nbsp;<input type=\"text\" name=\"new_assigned\"></td>" +
-				   "<td class=\"hours\">&nbsp;</td>" +
-				   "<td class=\"hours\">&nbsp;</td>" +
-				   "<td class=\"hours today\" nowrap><input type=\"text\" name=\"new_hours\"></td>" +
-				   "<td class=\"actions\"><img src=\"/static/images/task-new.png\"></td>" +
-				   "</tr>");
-		curRow.after(newRow);
-		$('input:first', newRow).focus();
 	});
 }
 
@@ -147,10 +130,6 @@ function setup_bugzilla(tasks) {
 	});
 }
 
-// function dirty(cell) {
-	// cell.parents('tr.task').addClass('dirty');
-// }
-
 function apply_filters() {
 	assigned = $('#filter-assigned a.selected');
 	statuses = $('#filter-status a.selected');
@@ -174,68 +153,6 @@ function apply_filters() {
 		groupid=$(this).parents('tr').attr('groupid');
 		$('tr.task[groupid=' + groupid + ']').hide();
 	});
-}
-
-function resort_tasks(sort) {
-	var tasks, dateline, dateline2;
-
-	// Find the existing task rows, and delete the tables holding them
-	all = $('table#all-tasks');
-	if(all.length > 0) { // first sort; pull every row from the master table
-		tasks = $('tr.task', all);
-		prnt = all.parent();
-		dateline = $('tr.dateline', prnt);
-		dateline2 = $('tr.dateline2', prnt);
-		all.remove();
-	} else { // resort; pull rows from existing sorted tables
-		sorted = $('table.sorted-tasks');
-		tasks = $('tr.task', sorted);
-		prnt = sorted.parent();
-		dateline = $('tr.dateline', prnt);
-		dateline2 = $('tr.dateline2', prnt);
-		sorted.remove();
-	}
-
-	// Create new tables and populate based on the sort type
-	switch(sort) {
-	case 'status':
-		// statuses = ['blocked', 'canceled', 'complete', 'deferred', 'in progress', 'not started', 'split']; //TODO Dynamic
-		statuses = ['complete', 'deferred'];
-		for(i in statuses) {
-			status = statuses[i];
-			prnt.append($('<h1>' + status + '</h1>'));
-			prnt.append($('<table>').addClass('tasks sorted-tasks').append(dateline).append(dateline2).append(tasks.filter('[status="' + status + '"]')));
-		}
-		fancy_cells('table.tasks.sorted-tasks');
-		break;
-	case 'owner':
-		my_username = 'mmrozek'; //TODO Dynamic
-		// There's probably an easier way to do this
-		usernames = []
-		tasks.each(function() {usernames.push($(this).attr('assigned'));});
-		usernames.sort(function(a, b) {
-			if(a == my_username) return -1;
-			if(b == my_username) return 1;
-			if(a < b) return -1;
-			if(a > b) return 1;
-			return 0;
-		});
-
-		last = '';
-		for(i in usernames) {
-			username = usernames[i];
-			if(username == last) continue;
-			last = username;
-
-			prnt.append($('<h1>' + username + '</h1>'));
-			prnt.append($('<table>').addClass('tasks sorted-tasks').append(dateline.clone()).append(dateline2.clone()).append(tasks.filter('[assigned="' + username + '"]')));
-		}
-		fancy_cells('table.tasks.sorted-tasks');
-		break;
-	default: //TODO
-		alert('Invalid sort type: ' + sort);
-		break;
-	}
 }
 
 function fancy_cells(table_selector) {
@@ -297,7 +214,7 @@ function fancy_cells(table_selector) {
 		}
 	});
 
-	$('td.assigned > span').click(function() {
+	$('td.assigned > span', $(table_selector)).click(function() {
 		task = $(this).parents('tr.task');
 		sel = $('<select/>');
 		for(i in usernames) {
@@ -312,14 +229,14 @@ function fancy_cells(table_selector) {
 		});
 	});
 
-	$('tr.task img.status').contextMenu({
+	$('tr.task img.status', $(table_selector)).contextMenu({
 		menu: 'status-menu'
 	}, function(action, el, pos) {
 		task = $(el).parents('tr.task');
 		set_status(task, action);
 	});
 
-	$('tr.task img.goal').contextMenu({
+	$('tr.task img.goal', $(table_selector)).contextMenu({
 		menu: 'goal-menu'
 	}, function(action, el, pos) {
 		task = $(el).parents('tr.task');
