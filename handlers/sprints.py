@@ -114,7 +114,7 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 	print "<div id=\"filter-assigned\">"
 	print Button('None').simple().negative()
 	for member in sorted(sprint.members):
-		print "<a class=\"fancy\" assigned=\"%s\" href=\"/sprints/%d?assigned=%s\">%s</a>" % (member.username, id, member.username, member.username)
+		print "<a class=\"fancy\" assigned=\"%s\" href=\"/sprints/%d?assigned=%s\"><img src=\"%s\">&nbsp;%s</a>" % (member.username, id, member.username, member.getAvatar(16), member.username)
 	print "</div><br>"
 
 	print "<div id=\"filter-status\">"
