@@ -1,11 +1,11 @@
 from utils import *
 
+import sys
 import os
 from datetime import datetime
-from socket import gethostname
 
 loadTime = datetime.now()
-devBuild = (gethostname() != 'barium')
+devMode = ('--dev' in sys.argv)
 
 def getRevisionInfo():
 	# These are recomputed each time because revisionRelative changes
@@ -16,5 +16,9 @@ def getRevisionInfo():
 def getLoadtime():
 	return loadTime
 
-def isDevBuild():
-	return devBuild
+def isDevMode(handler = None):
+	return devMode and ((handler.session['user'] and handler.session['user'].hasPrivilege('Dev')) if handler else True)
+
+def setDevMode(dev):
+	global devMode
+	devMode = dev

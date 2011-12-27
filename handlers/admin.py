@@ -18,7 +18,7 @@ from User import User
 from Button import Button
 from Table import LRTable
 from Cron import Cron
-from LoadValues import getLoadtime
+from LoadValues import getLoadtime, setDevMode
 from relativeDates import timesince
 from utils import *
 
@@ -329,3 +329,10 @@ def adminCronPost(handler, request):
 
 	Cron.runAll()
 	redirect('/admin/cron')
+
+@post('admin/build')
+def adminModeMode(handler, request, p_mode):
+	if p_mode == 'development':
+		setDevMode(True)
+	elif p_mode == 'production':
+		setDevMode(False)

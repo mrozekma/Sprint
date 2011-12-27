@@ -88,3 +88,9 @@ function hidebox(box, timeout) {
 		setTimeout(function() {hidebox(box, 0);}, timeout * 1000);
 	}
 }
+
+function buildmode(mode) {
+	$.post('/admin/build', {'mode': mode}, function(data, text, request) {
+		window.location.reload(true);
+	});
+}

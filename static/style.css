@@ -63,12 +63,21 @@ a {
 	color: #FFF;
 }
 
-.navigation .devwarning {
+.navigation .devwarning, .navigation .prodwarning {
 	font-weight: bold;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.navigation .devwarning {
 	color: #f00;
 }
 
-.navigation .devwarning~.topmenu {
+.navigation .prodwarning {
+	color: #0c0;
+}
+
+.navigation .devwarning~.topmenu, .navigation .prodwarning~.topmenu {
 	padding-top: 14px;
 }
 
