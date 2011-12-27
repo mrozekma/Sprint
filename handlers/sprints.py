@@ -22,6 +22,7 @@ from SprintCharts import *
 from ProgressBar import ProgressBar
 from History import showHistory
 from Export import exports
+from LoadValues import isDevMode
 from utils import *
 
 # groupings = ['status', 'owner', 'hours']
@@ -122,6 +123,9 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 	for status in sorted(statuses.values()):
 		print "<a class=\"fancy\" status=\"%s\" href=\"#\"><img src=\"%s\">%s</a>" % (status.name, status.getIcon(), status.text)
 	print "</div><br>"
+
+	if isDevMode(handler):
+		print Button('#all-tasks borders', "javascript:$('#all-tasks, #all-tasks tr td').css('border', '1px solid #f00').css('border-collapse', 'collapse');", type = 'button').negative()
 
 	#TODO I think this form (and possibly the hidden inputs right after) can be removed
 	print "<form method=\"post\" action=\"/sprints/%d\">" % id

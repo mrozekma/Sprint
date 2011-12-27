@@ -20,6 +20,8 @@ class Button:
 		if self.type == 'button':
 			if self.url == '#':
 				return "<button %sclass=\"%s\">%s</button>" % (id, self.clazz, body)
+			elif self.url.startswith('javascript:'):
+				return "<button %sclass=\"%s\" onClick=\"%s\">%s</button>" % (id, self.clazz, self.url, body)
 			else:
 				return "<button %sclass=\"%s\" onClick=\"document.location='%s'; return false;\">%s</button>" % (id, self.clazz, self.url, body)
 		if self.type == 'submit':
