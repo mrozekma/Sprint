@@ -83,7 +83,11 @@ function hidebox(box, timeout) {
 	if(timeout == 0) {
 		console.log(box);
 		console.log($(box));
-		$(box).animate({opacity: 0});
+		if($(box).hasClass('fixed')) {
+			$(box).animate({opacity: 0});
+		} else {
+			$(box).fadeOut();
+		}
 	} else {
 		setTimeout(function() {hidebox(box, 0);}, timeout * 1000);
 	}

@@ -30,7 +30,7 @@ class Box:
 
 getID = id
 class AlertBox:
-	def __init__(self, title, text = None, id = None, close = None):
+	def __init__(self, title, text = None, id = None, close = None, fixed = False):
 		if text:
 			self.title = title
 			self.text = text
@@ -40,9 +40,10 @@ class AlertBox:
 
 		self.id = id or "alertbox-%x-%x" % (getID(self), randint(268435456, 4294967295))
 		self.close = 0 if close == True else close
+		self.fixed = fixed
 
 	def getClasses(self):
-		return ['alert-message']
+		return ['alert-message'] + (['fixed'] if self.fixed else [])
 
 	def __str__(self):
 		writer = ResponseWriter()

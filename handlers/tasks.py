@@ -206,7 +206,7 @@ $(document).ready(function() {
 	$('#task%d').effect('highlight', {}, 3000);
 });
 </script>""" % task.id)
-	delay(handler, SuccessBox("Added task <b>%s</b>" % task.safe.name, close = 3))
+	delay(handler, SuccessBox("Added task <b>%s</b>" % task.safe.name, close = 3, fixed = True))
 
 @get('tasks/new/many')
 def newTaskMany(handler, request, group):
