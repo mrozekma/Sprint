@@ -1,6 +1,7 @@
 from rorn.Box import LoginBox, ErrorBox, WarningBox
 
 from DB import ActiveRecord
+from LoadValues import isDevMode
 from utils import *
 
 class Privilege(ActiveRecord):
@@ -34,7 +35,7 @@ def admin(handler):
 	handler.replace('$headerbg$', '#AA0000', 1)
 
 def dev(handler):
-	if handler.session['user'].hasPrivilege('Dev'):
+	if isDevMode(handler):
 		print WarningBox('Under development', close = True)
 	else:
 		print WarningBox('This feature is still under development and is disabled')
