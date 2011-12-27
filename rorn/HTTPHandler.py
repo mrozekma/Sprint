@@ -110,7 +110,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 					break
 
 			if not fn:
-				self.error("Invalid request", "Unknown action <b>%s</b>" % path if path != '' else "No empty action handler")
+				self.error("Invalid request", "Unknown %s action <b>%s</b>" % (method.upper(), path if path != '' else "No empty action handler"))
 
 			given = query.keys()
 			expected, _, _, defaults = getargspec(fn)
