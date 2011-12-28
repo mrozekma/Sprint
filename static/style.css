@@ -369,14 +369,16 @@ table.tasks td {
 	vertical-align: top;
 }
 
-table.tasks tr.dateline {
+table.tasks tr.dateline td {
 	font-weight: bold;
 	text-align: center;
+	vertical-align: bottom;
 }
 
-table.tasks tr.dateline2 {
+table.tasks tr.dateline2 td {
 	font-size: 70%;
 	text-align: center;
+	white-space: nowrap;
 }
 
 table.tasks tr.group td {
@@ -406,6 +408,10 @@ table.tasks tr.task.dragging {
 
 table.tasks tr.dirty {
 	background-color: rgba(255, 0, 0, .3);
+}
+
+table.tasks tr td {
+	vertical-align: middle;
 }
 
 table.tasks tr.task input {
@@ -447,12 +453,18 @@ table.tasks tr.task td.hours {
 	text-align: center;
 }
 
+table.tasks tr.task td.hours > * {
+	float: left;
+}
+
 table.tasks tr.task td.hours img {
 	cursor: pointer;
+	display: block;
 }
 
 table.tasks tr.task td.hours input {
 	width: 32px;
+	margin-top: 6px;
 }
 
 table.tasks tr td.ereyesterday {

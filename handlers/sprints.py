@@ -190,17 +190,16 @@ def printTask(task, days, group = None, highlight = False, editable = True):
 			print "<td class=\"%s\">&ndash;</td>" % ' '.join(classes)
 		elif lbl == 'today' and editable:
 			print "<td class=\"%s\" nowrap>" % ' '.join(classes)
-			print "<table border=0 cellspacing=0 cellpadding=0 style=\"padding: 0px; margin: 0px\">"
-			print "<tr>"
-			print "<td><img amt=\"4\" src=\"/static/images/arrow-up.png\"></td>"
-			print "<td rowspan=2><input type=\"text\" name=\"hours[%d]\" value=\"%d\"></td>" % (task.id, task.hours)
-			print "<td><img amt=\"8\" src=\"/static/images/arrow-top.png\"></td>"
-			print "</tr>"
-			print "<tr>"
-			print "<td><img amt=\"-4\" src=\"/static/images/arrow-down.png\"></td>"
-			print "<td><img amt=\"-8\" src=\"/static/images/arrow-bottom.png\"></td>"
-			print "</tr>"
-			print "</table>"
+			print "<div>"
+			print "<img amt=\"4\" src=\"/static/images/arrow-up.png\">"
+			print "<img amt=\"-4\" src=\"/static/images/arrow-down.png\">"
+			print "</div>"
+			print "<input type=\"text\" name=\"hours[%d]\" value=\"%d\">" % (task.id, task.hours)
+			print "<div>"
+			print "<img amt=\"8\" src=\"/static/images/arrow-top.png\">"
+			print "<img amt=\"-8\" src=\"/static/images/arrow-bottom.png\">"
+			print "</div>"
+			print "</td>"
 			print "</td>"
 		else:
 			print "<td class=\"%s\">%s</td>" % (' '.join(classes), dayTask.hours)
