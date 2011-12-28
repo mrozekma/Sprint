@@ -1,5 +1,6 @@
 from datetime import datetime
 from random import randint
+import sys
 import os
 import HTTPHandler
 import menu
@@ -79,14 +80,15 @@ def header(handler, path):
 		print "Not logged in"
 	print "</div>"
 
-	if isDevMode(handler):
-		print "<div class=\"devwarning\" onClick=\"buildmode('production')\">"
-		print "Development"
-		print "</div>"
-	elif handler.session['user'] and handler.session['user'].hasPrivilege('Dev'):
-		print "<div class=\"prodwarning\" onClick=\"buildmode('development')\">"
-		print "Production"
-		print "</div>"
+	if '--dev' in sys.argv:
+		if isDevMode(handler):
+			print "<div class=\"devwarning\" onClick=\"buildmode('production')\">"
+			print "Development"
+			print "</div>"
+		else:
+			print "<div class=\"prodwarning\" onClick=\"buildmode('development')\">"
+			print "Production"
+			print "</div>"
 
 	print "<div class=\"topmenu\">"
 	print menu.render(handler)

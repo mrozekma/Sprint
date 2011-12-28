@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 
 loadTime = datetime.now()
-devMode = ('--dev' in sys.argv)
+devMode = ('--dev' in sys.argv) # Also checked in wrappers
 
 def getRevisionInfo():
 	# These are recomputed each time because revisionRelative changes
