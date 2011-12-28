@@ -408,8 +408,9 @@ def newTaskImport(handler, request, group, source = None):
 				print "<option value=\"%d\"%s>%s</option>" % (g.id, ' selected' if g == task.group else '', g.name + ('' if g.name in existingNames else ' (NEW)'))
 			print "</select></td>"
 			print "<td><select name=\"assigned[%d]\">" % task.id
+			assigned = task.assigned if task.assigned in sprint.members else sprint.project.owner
 			for member in sprint.members:
-				print "<option value=\"%s\">%s</option>" % (member.id, member.username)
+				print "<option value=\"%s\"%s>%s</option>" % (member.id, ' selected' if member == assigned else '', member.username)
 			print "</select></td>"
 			print "<td class=\"hours\"><input type=\"text\" name=\"hours[%d]\" value=\"%d\"></td>" % (task.id, task.hours)
 			print "</tr>"
