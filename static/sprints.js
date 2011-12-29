@@ -11,6 +11,8 @@ $(document).ready(function() {
 	$('.saving').css('visibility', 'hidden');
 });
 
+hours_cache = -1;
+hours_timer = null;
 function setup_hours_events() {
 	$('td.hours img').css('opacity', 0);
 
@@ -51,20 +53,31 @@ function setup_hours_events() {
 		set_status(task, val == 0 ? 'complete' : 'in progress');
 	});
 
-	hours_cache = -1;
 	$("td.hours input").focus(function(event) {
 		hours_cache = parseInt($('input', $(this).parents('.hours')).val(), 10);
 	}).blur(function(event) {
-		task = $(this).parents('tr.task');
-        field = $('input', $(this).parents('.hours'));
-		val = parseInt(field.val(), 10);
-		if(hours_cache < 0) {
-			console.log("Problem blurring hours field; hours cache is unset");
-		} else if(val != hours_cache) {
-			save_task(task, 'hours', val);
-			set_status(task, val == 0 ? 'complete' : 'in progress');
-		}
+		hours_blur($(this));
+	}).keypress(function(event) {
+		field = $(this);
+		clearTimeout(hours_timer);
+		hours_timer = setTimeout(function() {
+			hours_timer = null;
+			hours_blur(field);
+		}, 750);
 	});
+}
+
+function hours_blur(field) {
+	clearTimeout(hours_timer);
+	task = field.parents('tr.task');
+    field = $('input', field.parents('.hours'));
+	val = parseInt(field.val(), 10);
+	if(hours_cache < 0) {
+		console.log("Problem blurring hours field; hours cache is unset");
+	} else if(val != hours_cache) {
+		save_task(task, 'hours', val);
+		set_status(task, val == 0 ? 'complete' : 'in progress');
+	}
 }
 
 function setup_filter_buttons() {
