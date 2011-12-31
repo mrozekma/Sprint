@@ -398,7 +398,7 @@ def newTaskImport(handler, request, group, source = None):
 		print "<table class=\"task-import\" border=0>"
 		print "<tr><th>&nbsp;</th><th>Task</th><th>Group</th><th>Assigned</th><th>Hours</th></tr>"
 		for task in source.getTasks():
-			if task.hours == 0 or task.status == 'complete':
+			if task.status in ('complete', 'canceled', 'split'):
 				continue
 			print "<tr>"
 			print "<td><input type=\"checkbox\" name=\"include[%d]\" checked=\"true\"></td>" % task.id
