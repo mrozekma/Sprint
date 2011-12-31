@@ -12,6 +12,12 @@ from resetpw import printResetForm
 from sprints import tabs as sprintTabs
 from utils import *
 
+backlogStyles = [
+	('show', 'Show', ''),
+	('dim', 'Dim', 'opacity: .4;'),
+	('hide', 'Hide', 'display: none;')
+]
+
 @get('prefs')
 def prefs(handler, request):
 	handler.title('Preferences')
@@ -33,9 +39,8 @@ def prefs(handler, request):
 	print "<h3>Backlog Style</h3>"
 	select = ResponseWriter()
 	print "<select name=\"backlog_style[%s]\">"
-	print "<option value=\"show\">Show</option>"
-	print "<option value=\"dim\">Dim</option>"
-	print "<option value=\"hide\">Hide</option>"
+	for (name, displayName, css) in backlogStyles:
+		print "<option value=\"%s\">%s</option>" % (name, displayName)
 	print "</select>"
 	select = select.done()
 
@@ -72,3 +77,16 @@ def prefsPost(handler, request, p_default_tab, p_backlog_style):
 
 	request['code'] = 299
 	print "Saved changes"
+
+@get('prefs/backlog.css')
+def prefsCSS(handler, request):
+	request['wrappers'] = False
+	handler.contentType = 'text/css'
+	if not handler.session['user']: return
+	prefs = handler.session['user'].getPrefs()
+
+	for (name, displayName, css) in backlogStyles:
+		print ', '.join("table.tasks tr[status='%s']" % status for (status, style) in prefs.backlogStyles.iteritems() if style == name) + ' {'
+		print ' '*4 + css
+		print '}'
+		print

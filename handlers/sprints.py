@@ -50,6 +50,7 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 	# handler.title(sprint.project.safe.name)
 	handler.title(sprint.safe.name)
 
+	print "<link href=\"/prefs/backlog.css\" rel=\"stylesheet\" type=\"text/css\" />"
 	print "<script src=\"/static/jquery.editable-1.3.3.js\" type=\"text/javascript\"></script>"
 	# print "<script src=\"/static/jquery.uitablefilter.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/jquery.tablednd_0_5.js\" type=\"text/javascript\"></script>"
