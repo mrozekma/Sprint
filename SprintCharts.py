@@ -324,7 +324,7 @@ class TaskChart(Chart):
 			seriesList.append(series)
 
 			hoursByDay = dict((utcToLocal(tsStripHours(rev.timestamp)) * 1000, rev.hours) for rev in revs)
-			if task.status != 'complete':
+			if task.status not in ('complete', 'canceled', 'deferred', 'split'):
 				hoursByDay[utcToLocal(tsStripHours(min(dateToTs(getNow()), sprint.end))) * 1000] = task.hours
 			for pair in hoursByDay.items():
 				series['data'].append(pair)

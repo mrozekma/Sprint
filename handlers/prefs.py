@@ -65,7 +65,7 @@ def prefsPost(handler, request, p_default_tab, p_backlog_style):
 
 	if not handler.session['user']:
 		die("You must be logged in to modify preferences")
-	if not p_default_tab in sprintTabs:
+	if p_default_tab not in sprintTabs:
 		die("Unrecognized default tab <b>%s</b>" % stripTags(p_default_tab))
 	if set(p_backlog_style.keys()) != set(name for block in statusMenu for name in block):
 		die("Backlog style key mismatch")
