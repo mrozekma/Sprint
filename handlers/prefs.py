@@ -81,7 +81,7 @@ def prefsPost(handler, request, p_default_tab, p_backlog_style):
 @get('prefs/backlog.css')
 def prefsCSS(handler, request):
 	request['wrappers'] = False
-	handler.contentType = 'text/css'
+	request['contentType'] = 'text/css'
 	if not handler.session['user']: return
 	prefs = handler.session['user'].getPrefs()
 

@@ -66,7 +66,7 @@ if plottingLib:
 	@get('graph1')
 	def test(handler, request):
 		request['wrappers'] = False
-		handler.contentType = 'image/png'
+		request['contentType'] = 'image/png'
 
 		plt.clf()
 		plt.cla()
@@ -85,7 +85,7 @@ if plottingLib:
 	@get('graph2')
 	def graph2(handler, request):
 		request['wrappers'] = False
-		handler.contentType = 'image/png'
+		request['contentType'] = 'image/png'
 
 		plt.clf()
 		plt.cla()
@@ -113,7 +113,7 @@ if plottingLib:
 		w.clear()
 		plt.savefig(w)
 		request['wrappers'] = False
-		handler.contentType = 'image/png'
+		request['contentType'] = 'image/png'
 		print w.data
 
 	@get('graph4')
@@ -291,7 +291,7 @@ def iconsShow(handler, request, path):
 
 	ext = filename[filename.rfind('.')+1:]
 	if ext in types:
-		handler.contentType = types[ext]
+		request['contentType'] = types[ext]
 
 	with open("/home/mrozekma/icons/" + filename) as f:
 		print f.read()

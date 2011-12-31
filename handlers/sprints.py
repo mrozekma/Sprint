@@ -715,7 +715,6 @@ def exportSprints(handler, request, project):
 	project = Project.load(id)
 	if not project:
 		ErrorBox.die('Invalid project', "No project with ID <b>%d</b>" % id)
-	# handler.forceDownload = 'wef.wef'
 
 	print "<link href=\"/static/jquery.multiselect.css\" rel=\"stylesheet\" type=\"text/css\" />"
 	print "<script src=\"/static/jquery.multiselect.js\" type=\"text/javascript\"></script>"
@@ -758,4 +757,4 @@ def exportRender(handler, request, sprints, format):
 		export.process(sprint)
 
 	request['wrappers'] = False
-	handler.forceDownload = "%s.%s" % (sprints[0].name if len(sprints) == 1 else 'sprints', export.getExtension())
+	request['forceDownload'] = "%s.%s" % (sprints[0].name if len(sprints) == 1 else 'sprints', export.getExtension())

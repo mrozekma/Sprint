@@ -41,8 +41,6 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 	def buildResponse(self, method, data):
 		# log("Building response")
-		self.contentType = 'text/html'
-		self.forceDownload = False
 
 		path = self.path
 		query = {}
@@ -50,7 +48,13 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 		writer = ResponseWriter()
 
-		request = {'path': [], 'wrappers': True, 'code': 200}
+		request = {
+			'path': [],
+			'wrappers': True,
+			'contentType': 'text/html',
+			'forceDownload': False,
+			'code': 200
+		}
 		try: # raise DoneRendering; starts here to catch self.error calls
 			self.title(None)
 
@@ -185,16 +189,16 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		self.replace('$title$', "%s - Sprint" % title if title else "Sprint", 1)
 		self.replace('$bodytitle$', title if title else "Sprint", 1)
 
-	def sendHead(self, code = 200, additionalHeaders = {}, includeCookie = True):
+	def sendHead(self, code, contentType = 'application/octet-stream', forceDownload = False, additionalHeaders = {}, includeCookie = True):
 		headers = {
-			'Content-type': self.contentType,
+			'Content-type': contentType,
 			'Content-Length': str(len(self.response)),
 			'Last-Modified': self.date_time_string(),
 		}
 		if self.session:
 			headers['Set-Cookie'] = 'session=%s; expires=%s; path=/' % (self.session.key, timestamp())
-		if self.forceDownload:
-			headers['Content-disposition'] = "attachment; filename=%s" % self.forceDownload
+		if forceDownload:
+			headers['Content-disposition'] = "attachment; filename=%s" % forceDownload
 
 		headers.update(additionalHeaders)
 
@@ -207,10 +211,8 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		try:
 			BaseHTTPRequestHandler.handle_one_request(self)
 		except:
-			self.contentType = 'text/html'
-			self.forceDownload = False
 			self.response = str(FrameworkException(sys.exc_info()))
-			self.sendHead(200)
+			self.sendHead(200, 'text/html', False)
 			self.wfile.write(self.response)
 			raise
 
@@ -220,10 +222,10 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 		try:
 			request = self.buildResponse(method, data)
-			self.sendHead(request['code'])
+			self.sendHead(request['code'], request['contentType'], request['forceDownload'])
 		except Redirect as r:
 			self.response = ''
-			self.sendHead(302, {'Location': r.target})
+			self.sendHead(302, additionalHeaders = {'Location': r.target})
 
 	def do_GET(self):
 		self.do_HEAD('get')
@@ -239,9 +241,8 @@ class HTTPHandler(BaseHTTPRequestHandler):
 				elif type(form[k]) is list:
 					self.session = Session.load(Session.determineKey(self))
 					self.processingRequest() #TODO Remove
-					self.contentType = 'text/html'
 					self.response = "Multiple values for POST key: %s" % k
-					self.sendHead(200)
+					self.sendHead(200, 'text/html')
 					self.wfile.write(self.response)
 					return
 				else:
