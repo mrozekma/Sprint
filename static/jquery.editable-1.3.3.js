@@ -102,8 +102,9 @@ $.editableFactory = {
 		toEditable: function($this,options){
 			$('<input/>').appendTo($this)
 				.css('width', '90%')
-						 .val($this.data('editable.current'))
-						 .select();
+				// http://stackoverflow.com/questions/6444668/jeditable-encoding-turns-into-amp-when-editing/6446045#6446045
+				.val($('<textarea/>').html($this.data('editable.current')).val())
+				.select();
 		},
 		getValue: function($this,options){
 			return $this.children().val();
