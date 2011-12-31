@@ -264,18 +264,17 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 			elif case('hours'):
 				parsedValue = int(p_value)
 
-		if task.__getattribute__(p_field) == parsedValue: # No change
-			return
-		task.__setattr__(p_field, parsedValue)
+		if task.__getattribute__(p_field) != parsedValue: # Only save if the field has changed
+			task.__setattr__(p_field, parsedValue)
 
-		# Is this within the 5-minute window, by the same user?
-		ts = dateToTs(getNow())
-		if task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60:
-			task.save()
-		else:
-			task.creator = handler.session['user']
-			task.timestamp = ts
-			task.revise()
+			# Is this within the 5-minute window, by the same user?
+			ts = dateToTs(getNow())
+			if task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60:
+				task.save()
+			else:
+				task.creator = handler.session['user']
+				task.timestamp = ts
+				task.revise()
 
 	elif p_field == 'taskmove':
 		if p_value[0] == ':': # Beginning of the group
