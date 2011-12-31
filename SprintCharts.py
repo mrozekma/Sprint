@@ -18,7 +18,8 @@ function() {
 }
 """ % ('false' if skippedSeries == [] else ' || '.join("point.series.name == '%s'" % series for series in skippedSeries))
 	chart.xAxis.categories = [day.strftime('%a') for day in sprint.getDays()]
-	chart.series[0].data = [[a, b] for (a, b) in zip([day.strftime('%A, %b %d, %Y') for day in sprint.getDays()], chart.series[0].data.get())]
+	for series in chart.series.get():
+		series['data'] = [[a, b] for (a, b) in zip([day.strftime('%A, %b %d, %Y') for day in sprint.getDays()], series['data'])]
 
 class HoursChart(Chart):
 	def __init__(self, placeholder, sprint):
