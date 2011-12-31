@@ -156,21 +156,19 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 		print "</td>"
 		print "</tr>"
 		for task in group.getTasks():
-			printTask(task, days, group = task.group, highlight = (task.id in highlight), editable = editable)
-
-	# print "<tr class=\"group\" groupid=\"0\"><td colspan=\"7\"><img src=\"/static/images/collapse.png\">&nbsp;<span>Other</span></td></tr>"
-	# for task in filter(lambda t: not t.group, tasks):
-		# printTask(handler, task, days)
+			printTask(handler, task, days, group = task.group, highlight = (task.id in highlight), editable = editable)
 
 	print "<tr><td colspan=\"7\">&nbsp;</td></tr>" # Spacer so rows can be dragged to the bottom
 	print "</tbody>"
 	print "</table>"
 	print "</form>"
 
-def printTask(task, days, group = None, highlight = False, editable = True):
+def printTask(handler, task, days, group = None, highlight = False, editable = True):
 	print "<tr class=\"task%s\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" goalid=\"%d\" status=\"%s\" assigned=\"%s\">" % (' highlight' if highlight else '', task.id, task.id, task.revision, group.id if group else 0, task.goal.id if task.goal else 0, task.stat.name, task.assigned.username)
 
 	print "<td class=\"flags\">"
+	if isDevMode(handler):
+		print "<small class=\"debugtext\">(%d, %d, %d)</small>&nbsp;" % (task.id, task.seq, task.revision)
 	# print "<img src=\"/static/images/star.png\">&nbsp;"
 	print "<img id=\"goal_%d\" class=\"goal\" src=\"/static/images/tag-%s.png\" title=\"%s\">&nbsp;" % ((task.goal.id, task.goal.color, task.goal.safe.name) if task.goal else (0, 'none', 'None'))
 	print "<img id=\"status_%d\" class=\"status\" src=\"%s\" title=\"%s\">" % (task.id, task.stat.icon, task.stat.text)

@@ -875,3 +875,16 @@ input#input {
 	border: 1px solid #000;
 	width: 99%;
 }
+
+.debugtext {
+	-webkit-animation-name: pulse-red;
+	-webkit-animation-duration: 2s;
+	-webkit-animation-timing-function: ease-in-out;
+	-webkit-animation-iteration-count: infinite;
+}
+
+@-webkit-keyframes pulse-red {
+	0% {color: #000;}
+	50% {color: #f00;}
+	100% {color: #000;}
+}
