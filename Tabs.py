@@ -9,6 +9,15 @@ class Tabs:
 		self.tabs = []
 		self.currentTab = None
 
+	def __getitem__(self, name):
+		return filter(lambda tab: tab['name'] == name, self.tabs)[0]
+
+	def __iter__(self):
+		return self.tabs.__iter__()
+
+	def __contains__(self, item):
+		return item in [tab['name'] for tab in self.tabs]
+
 	def __setitem__(self, name, value):
 		if isinstance(value, tuple):
 			displayName, path = value

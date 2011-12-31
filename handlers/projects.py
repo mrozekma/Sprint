@@ -48,7 +48,7 @@ def showProjects(handler):
 		if sprints:
 			print "<div class=\"sprint-summaries\">"
 			for sprint in sprints:
-				print "<div class=\"sprint-summary\">%s <span class=\"sprint-time\">(%s - %s)</span></div>" % (sprint.link(), sprint.getStartStr(), sprint.getEndStr())
+				print "<div class=\"sprint-summary\">%s <span class=\"sprint-time\">(%s - %s)</span></div>" % (sprint.link(handler.session['user']), sprint.getStartStr(), sprint.getEndStr())
 			print "</div>"
 		else:
 			print "&nbsp;"

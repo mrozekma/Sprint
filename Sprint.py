@@ -67,8 +67,12 @@ class Sprint(ActiveRecord):
 		cls = 'sprint-name active' if self.isActive() else 'sprint-name'
 		return "<span class=\"%s\">%s</span>" % (cls, self.safe.name)
 
-	def link(self):
-		return "<img src=\"/static/images/sprint.png\" class=\"sprint\"><a href=\"/sprints/%d\">%s</a>" % (self.id, self.getFormattedName())
+	def link(self, currentUser):
+		from handlers.sprints import tabs as sprintTabs
+		from Prefs import Prefs
+		page = currentUser.getPrefs().defaultSprintTab if currentUser else 'backlog'
+
+		return "<img src=\"/static/images/sprint.png\" class=\"sprint\"><a href=\"%s\">%s</a>" % (sprintTabs[page]['path'] % self.id, self.getFormattedName())
 
 	def __str__(self):
 		return self.getFormattedName()

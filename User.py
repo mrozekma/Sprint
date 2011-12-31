@@ -58,6 +58,10 @@ class User(ActiveRecord):
 			return False
 		return db().matches("SELECT g.* FROM grants AS g, privileges AS p WHERE g.userid=? AND g.privid=p.id AND p.name=?", self.id, name)
 
+	def getPrefs(self):
+		from Prefs import Prefs
+		return Prefs.loadIf(userid = self.id) or Prefs.getDefaults(self)
+
 	def getAvatar(self, size = 64):
 		email = "%s@microsemi-wl.com" % self.username
 		email = md5(email.strip().lower())
