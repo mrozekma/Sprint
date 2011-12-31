@@ -25,6 +25,7 @@ $.extend($.fn, {
 				case 200:
 					box.attr('class', 'alert-message error');
 					$('span.boxbody', box).html(data);
+					break;
 				case 298:
 					box.attr('class', 'alert-message warning');
 					$('span.boxbody', box).html(data);
