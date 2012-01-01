@@ -126,7 +126,11 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 	print "</div><br>"
 
 	if sprint.isPlanning():
-		print InfoBox("Today is <b>sprint planning</b> &mdash; all changes will be collapsed into one revision")
+		if sprint.isActive():
+			print InfoBox("Today is <b>sprint planning</b> &mdash; all changes will be collapsed into one revision")
+		else:
+			daysTillPlanning = (tsToDate(sprint.start) - getNow()).days + 1
+			print InfoBox("The sprint has <b>not begun</b> &mdash; planning is %s. Until planning is over all changes will be collapsed into one revision made midnight of plan day" % ('tomorrow' if daysTillPlanning == 1 else "in %d days" % daysTillPlanning))
 	elif sprint.isReview():
 		print InfoBox("Today is <b>sprint review</b> &mdash; this is the last day to make changes to the backlog")
 
@@ -237,7 +241,7 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 	if not sprint:
 		die("There is no sprint with ID %d" % sprintid)
 
-	if not sprint.isActive():
+	if not (sprint.isActive() or sprint.isPlanning()):
 		die("Unable to modify inactive sprint")
 	elif not sprint.canEdit(handler.session['user']):
 		die("You don't have permission to modify this sprint")
@@ -409,7 +413,7 @@ def sprintInfoPost(handler, request, id, p_name, p_goals, p_members = None):
 	if sprint.project.owner != handler.session['user']:
 		die("You must be the scrummaster to modify sprint information")
 
-	if not sprint.isActive():
+	if not (sprint.isActive() or sprint.isPlanning()):
 		die("You cannot modify an inactive sprint")
 	elif not sprint.canEdit(handler.session['user']):
 		die("You don't have permission to modify this sprint")
@@ -600,7 +604,7 @@ def sprintAvailabilityPost(handler, request, id, p_hours):
 	if not sprint:
 		die("There is no sprint with ID %d" % id)
 
-	if not sprint.isActive():
+	if not (sprint.isActive() or sprint.isPlanning()):
 		die("Unable to modify inactive sprint")
 	elif not sprint.canEdit(handler.session['user']):
 		die("You don't have permission to modify this sprint")

@@ -41,7 +41,7 @@ class Sprint(ActiveRecord):
 			seek += oneday
 
 	def isPlanning(self):
-		return tsToDate(self.start).date() == getNow().date()
+		return tsToDate(self.start).date() >= getNow().date()
 
 	def isReview(self):
 		return tsToDate(self.end).date() == getNow().date()
@@ -51,7 +51,7 @@ class Sprint(ActiveRecord):
 		return self.start <= now <= self.end
 
 	def canEdit(self, user):
-		return self.isActive() and user.hasPrivilege('Write')
+		return (self.isActive() or self.isPlanning()) and user.hasPrivilege('Write')
 
 	def getTasks(self, orderby = 'seq ASC', includeDeleted = False):
 		from Task import Task
