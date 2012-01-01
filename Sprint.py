@@ -40,6 +40,12 @@ class Sprint(ActiveRecord):
 				yield seek
 			seek += oneday
 
+	def isPlanning(self):
+		return tsToDate(self.start).date() == getNow().date()
+
+	def isReview(self):
+		return tsToDate(self.end).date() == getNow().date()
+
 	def isActive(self):
 		now = dateToTs(getNow())
 		return self.start <= now <= self.end

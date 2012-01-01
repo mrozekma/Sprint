@@ -125,8 +125,17 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 		print "<a class=\"fancy\" status=\"%s\" href=\"#\"><img src=\"%s\">%s</a>" % (status.name, status.getIcon(), status.text)
 	print "</div><br>"
 
+	if sprint.isPlanning():
+		print InfoBox("Today is <b>sprint planning</b> &mdash; all changes will be collapsed into one revision")
+	elif sprint.isReview():
+		print InfoBox("Today is <b>sprint review</b> &mdash; this is the last day to make changes to the backlog")
+
 	if isDevMode(handler):
 		print Button('#all-tasks borders', "javascript:$('#all-tasks, #all-tasks tr td').css('border', '1px solid #f00').css('border-collapse', 'collapse');", type = 'button').negative()
+		print "<div class=\"debugtext\">"
+		print "start: %d (%s)<br>" % (sprint.start, tsToDate(sprint.start))
+		print "end: %d (%s)<br>" % (sprint.end, tsToDate(sprint.end))
+		print "</div>"
 
 	#TODO I think this form (and possibly the hidden inputs right after) can be removed
 	print "<form method=\"post\" action=\"/sprints/%d\">" % id
@@ -269,7 +278,7 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 
 			# Is this within the 5-minute window, by the same user?
 			ts = dateToTs(getNow())
-			if task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60:
+			if (task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60) or sprint.isPlanning():
 				task.save()
 			else:
 				task.creator = handler.session['user']
@@ -640,8 +649,8 @@ def newSprint(handler, request, project):
 	print "</select>"
 	print "</td></tr>"
 	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\" class=\"defaultfocus\"></td></tr>"
-	print "<tr><td class=\"left\">Start:</td><td class=\"right\"><input type=\"text\" name=\"start\" class=\"date\" value=\"%s\"></td></tr>" % date.today().strftime('%m/%d/%Y')
-	print "<tr><td class=\"left\">End:</td><td class=\"right\"><input type=\"text\" name=\"end\" class=\"date\"></td></tr>"
+	print "<tr><td class=\"left\">Planning:</td><td class=\"right\"><input type=\"text\" name=\"start\" class=\"date\" value=\"%s\"></td></tr>" % date.today().strftime('%m/%d/%Y')
+	print "<tr><td class=\"left\">Wrapup:</td><td class=\"right\"><input type=\"text\" name=\"end\" class=\"date\"></td></tr>"
 	print "<tr><td class=\"left\">Members:</td><td class=\"right\">"
 	print "<select name=\"members[]\" id=\"select-members\" multiple>"
 	for user in sorted(User.loadAll()):
@@ -688,6 +697,11 @@ def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members
 		end += timedelta(days = 1, seconds = -1)
 	except ValueError:
 		die("Malformed end date: %s" % stripTags(p_end))
+
+	if start.weekday() >= 5:
+		die("Sprints cannot start on a weekend")
+	if end.weekday() >= 5:
+		die("Sprints cannot start on a weekend")
 
 	members = map(User.load, p_members) if p_members else []
 	if None in members:
