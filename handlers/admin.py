@@ -14,6 +14,7 @@ from rorn.ResponseWriter import ResponseWriter
 from rorn.code import highlightCode
 
 from Privilege import admin as requireAdmin
+from Project import Project
 from User import User
 from Button import Button
 from Table import LRTable
@@ -131,12 +132,56 @@ def adminUsersPost(handler, request, p_action, p_username):
 			redirect("/admin/sessions?username=%s" % p_username)
 			break
 		if case('new'):
-			if User.loadIf(username = p_username):
+			if User.load(username = p_username):
 				ErrorBox.die('Add User', "There is already a user named <b>%s</b>" % stripTags(p_username))
 			User(p_username, '').save()
 			delay(handler, SuccessBox("Added user <b>%s</b>" % stripTags(p_username), close = True))
 			redirect('/admin/users')
 			break
+
+@admin('admin/projects', 'Projects', 'projects')
+def adminProjects(handler, request):
+	handler.title('Project Management')
+	requireAdmin(handler)
+
+	print "<style type=\"text/css\">"
+	print "table.list td.left {position: relative; top: 4px;}"
+	print "table.list td.right > * {width: 400px;}"
+	print "table.list td.right button {width: 200px;}" # Half of the above value
+	print "</style>"
+	print "<script src=\"/static/admin-projects.js\" type=\"text/javascript\"></script>"
+
+	print "<h3>New Project</h3>"
+	print "<form method=\"post\" action=\"/admin/projects\">"
+	print "<table class=\"list\">"
+	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\"></td></tr>"
+	print "<tr><td class=\"left\">Scrummaster:</td><td class=\"right\">"
+	print "<select name=\"owner\">"
+	for user in User.loadAll(orderby = 'username'):
+		print "<option value=\"%s\"%s>%s</option>" % (user.username, ' selected' if user == handler.session['user'] else '', user.username)
+	print "</select>"
+	print "</td></tr>"
+	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
+	print Button('Save', id = 'save-button', type = 'submit').positive()
+	print Button('Cancel', type = 'button', url = '/admin').negative()
+	print "</td></tr>"
+	print "</table>"
+	print "</form>"
+
+@post('admin/projects')
+def adminProjectsPost(handler, request, p_owner, p_name):
+	handler.title('Project Management')
+	requireAdmin(handler)
+
+	owner = User.load(username = p_owner)
+	if not owner:
+		ErrorBox.die('Add Project', "No user named <b>%s</b>" % stripTags(p_owner))
+	if Project.load(name = p_name):
+		ErrorBox.die('Add Project', "There is already a project named <b>%s</b>" % stripTags(p_name))
+
+	Project(owner.id, p_name).save()
+	delay(handler, SuccessBox("Added project <b>%s</b>" % stripTags(p_name), close = True))
+	redirect('/')
 
 @admin('admin/sessions', 'Sessions', 'sessions')
 def adminSessions(handler, request, username = None):

@@ -59,7 +59,7 @@ class User(ActiveRecord):
 
 	def getPrefs(self):
 		from Prefs import Prefs
-		return Prefs.loadIf(userid = self.id) or Prefs.getDefaults(self)
+		return Prefs.load(userid = self.id) or Prefs.getDefaults(self)
 
 	def getAvatar(self, size = 64):
 		email = "%s@microsemi-wl.com" % self.username
