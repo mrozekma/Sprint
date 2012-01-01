@@ -67,11 +67,28 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 	print (tabs << 'backlog') % id
 	print "<br>"
 
-	days = [
-		('ereyesterday', Weekday.shift(-2)),
-		('yesterday', Weekday.shift(-1)),
-		('today', Weekday.today())
-	]
+	if sprint.isActive():
+		days = [
+			('ereyesterday', Weekday.shift(-2)),
+			('yesterday', Weekday.shift(-1)),
+			('today', Weekday.today())
+		]
+	elif sprint.isPlanning():
+		start = tsToDate(sprint.start)
+		ereyesterday, yesterday, today = Weekday.shift(-2, start), Weekday.shift(-1, start), start
+		days = [
+			('pre-plan', ereyesterday),
+			('pre-plan', yesterday),
+			('planning', today)
+		]
+	else:
+		end = tsToDate(sprint.end)
+		ereyesterday, yesterday, today = Weekday.shift(-2, end), Weekday.shift(-1, end), end
+		days = [
+			(ereyesterday.strftime('%A').lower(), ereyesterday),
+			(yesterday.strftime('%A').lower(), yesterday),
+			(today.strftime('%A').lower(), today)
+		]
 
 	tasks = sprint.getTasks()
 	groups = sprint.getGroups()
@@ -200,7 +217,7 @@ def printTask(handler, task, days, group = None, highlight = False, editable = T
 
 		if not dayTask:
 			print "<td class=\"%s\">&ndash;</td>" % ' '.join(classes)
-		elif lbl == 'today' and editable:
+		elif editable and (lbl == 'today' or lbl == 'planning'):
 			print "<td class=\"%s\" nowrap>" % ' '.join(classes)
 			print "<div>"
 			print "<img amt=\"4\" src=\"/static/images/arrow-up.png\">"
