@@ -72,13 +72,22 @@ def adminUsers(handler, request):
 	handler.title('User Management')
 	requireAdmin(handler)
 
+	print "<style type=\"text/css\">"
+	print "table.list td.right > * {width: 400px;}"
+	print "table.list td.right button {width: 200px;}" # Half of the above value
+	print "</style>"
 	undelay(handler)
 
 	print "<h3>New User</h3>"
 	print "<form method=\"post\" action=\"/admin/users\">"
 	print "<input type=\"hidden\" name=\"action\" value=\"new\">"
-	print "<b>Username</b>: <input type=\"text\" name=\"username\"><br><br>"
-	print Button('Add', type = 'submit').positive()
+	print "<table class=\"list\">"
+	print "<tr><td class=\"left\">Username:</td><td class=\"right\"><input type=\"text\" name=\"username\"></td></tr>"
+	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
+	print Button('Save', id = 'save-button', type = 'submit').positive()
+	print Button('Cancel', type = 'button', url = '/admin').negative()
+	print "</td></tr>"
+	print "</table>"
 	print "</form><br>"
 
 	print "<h3>Current Users</h3>"
@@ -145,7 +154,6 @@ def adminProjects(handler, request):
 	requireAdmin(handler)
 
 	print "<style type=\"text/css\">"
-	print "table.list td.left {position: relative; top: 4px;}"
 	print "table.list td.right > * {width: 400px;}"
 	print "table.list td.right button {width: 200px;}" # Half of the above value
 	print "</style>"

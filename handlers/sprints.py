@@ -653,7 +653,6 @@ def newSprint(handler, request, project):
 		ErrorBox.die('Invalid project', "No project with ID <b>%d</b>" % id)
 
 	print "<style type=\"text/css\">"
-	print "table.list td.left {position: relative; top: 4px;}"
 	print "table.list td.right > * {width: 400px;}"
 	print "table.list td.right button {width: 200px;}" # Half of the above value
 	print "</style>"

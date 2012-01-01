@@ -20,7 +20,6 @@ def newGroup(handler, request, after):
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % afterID)
 
 	print "<style type=\"text/css\">"
-	print "table.list td.left {position: relative; top: 4px;}"
 	print "table.list td.right * {width: 400px;}"
 	print "table.list td.right button {width: 200px;}" # Half of the above value
 	print "</style>"

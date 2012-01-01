@@ -117,7 +117,6 @@ def newTaskSingle(handler, request, group):
 	# name, assigned, hours, status, sprint, group
 
 	print "<style type=\"text/css\">"
-	print "table.list td.left {position: relative; top: 4px;}"
 	print "table.list td.right * {width: 400px;}"
 	print "table.list td.right button {width: 200px;}" # Half of the above value
 	print "</style>"

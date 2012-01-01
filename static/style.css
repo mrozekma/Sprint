@@ -292,9 +292,9 @@ table.list td.right input.password {
 	padding-left: 24px;
 }
 
-table.list td.right input, table.list td.right select {
+table.list td.left {
 	position: relative;
-	top: -2px;
+	top: 2px;
 }
 
 table tr.hl_on {
