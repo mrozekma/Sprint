@@ -346,13 +346,13 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 		numGroups = len(newGroups)
 		numTasks = sum(map(lambda g: len(g), tasks.values()))
 		if numGroups > 0 and numGroups > 0:
-			delay(handler, SuccessBox("Added %d %s, %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups', numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3))
+			delay(handler, SuccessBox("Added %d %s, %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups', numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3, fixed = True))
 		elif numGroups > 0:
-			delay(handler, SuccessBox("Added %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups'), close = 3))
+			delay(handler, SuccessBox("Added %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups'), close = 3, fixed = True))
 		elif numTasks > 0:
-			delay(handler, SuccessBox("Added %d %s" % (numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3))
+			delay(handler, SuccessBox("Added %d %s" % (numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3, fixed = True))
 		else:
-			delay(handler, WarningBox("No changes", close = 3))
+			delay(handler, WarningBox("No changes", close = 3, fixed = True))
 		request['code'] = 299
 
 @get('tasks/new/import')
@@ -464,11 +464,11 @@ def newTaskImportPost(handler, request, group, source, p_include, p_group, p_nam
 
 	numTasks = len(ids)
 	if numGroups > 0 and numGroups > 0:
-		delay(handler, SuccessBox("Added %d %s, %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups', numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3))
+		delay(handler, SuccessBox("Added %d %s, %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups', numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3, fixed = True))
 	elif numGroups > 0:
-		delay(handler, SuccessBox("Added %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups'), close = 3))
+		delay(handler, SuccessBox("Added %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups'), close = 3, fixed = True))
 	elif numTasks > 0:
-		delay(handler, SuccessBox("Added %d %s" % (numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3))
+		delay(handler, SuccessBox("Added %d %s" % (numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3, fixed = True))
 	else:
-		delay(handler, WarningBox("No changes", close = 3))
+		delay(handler, WarningBox("No changes", close = 3, fixed = True))
 	redirect("/sprints/%d" % sprint.id)
