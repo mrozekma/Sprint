@@ -24,7 +24,6 @@ class User(ActiveRecord):
 		}
 
 		image = roles[role if role in roles else None]
-		clazz = 'user'
 
 		s = "<img src=\"/static/images/%s.png\" class=\"user\">" % image
 

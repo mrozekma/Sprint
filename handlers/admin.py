@@ -66,61 +66,81 @@ def adminTest(handler, request):
 				print "<a href=\"/%s\">%s</a><br>" % (tokString, stripTags(tokString))
 				found = 0
 
-@admin('admin/resetpw', 'Reset password', 'reset-password')
-def adminResetPassword(handler, request):
-	handler.title('Reset password')
+@admin('admin/users', 'Users', 'users')
+def adminUsers(handler, request):
+	handler.title('User Management')
 	requireAdmin(handler)
 
+	undelay(handler)
+
+	print "<h3>New User</h3>"
+	print "<form method=\"post\" action=\"/admin/users\">"
+	print "<input type=\"hidden\" name=\"action\" value=\"new\">"
+	print "<b>Username</b>: <input type=\"text\" name=\"username\"><br><br>"
+	print Button('Add', type = 'submit').positive()
+	print "</form><br>"
+
+	print "<h3>Current Users</h3>"
 	users = User.loadAll(orderby = 'username')
+	print "<table border=0 cellspacing=4 style=\"vertical-align: middle\">"
 	for user in users:
-		print "<form method=\"post\" action=\"/admin/resetpw/%s\">" % user.safe.username
-		print "<div class=\"user-list-entry\"><input type=\"image\" src=\"%s\"><br>%s</div>" % (user.getAvatar(64), user.safe.username)
+		print "<tr>"
+		print "<td><img src=\"%s\"></td>" % user.getAvatar(32)
+		print "<td>%s</td>" % user.safe.username
+		print "<td>"
+		print "<form method=\"post\" action=\"/admin/users\">"
+		print "<input type=\"hidden\" name=\"username\" value=\"%s\">" % user.username
+		print "<button type=\"submit\" class=\"fancy\" name=\"action\" value=\"resetpw\">reset password</button>"
+		print "<button type=\"submit\" class=\"fancy\" name=\"action\" value=\"impersonate\">impersonate</button>"
+		print "<button type=\"submit\" class=\"fancy\" name=\"action\" value=\"sessions\">manage sessions</button>"
 		print "</form>"
+		print "</td>"
+		print "</tr>"
+	print "</table>"
 
-@post('admin/resetpw/(?P<username>[^/]+)')
-def adminResetPasswordUser(handler, request, username, p_x = None, p_y = None):
-	handler.title('Reset password')
+@post('admin/users')
+def adminUsersPost(handler, request, p_action, p_username):
+	handler.title('User Management')
 	requireAdmin(handler)
 
-	user = User.load(username = username)
-	if not user:
-		ErrorBox.die('User', "No user named <b>%s</b>" % stripTags(username))
+	for case in switch(p_action):
+		if case('resetpw'):
+			handler.title('Reset password')
+			user = User.load(username = p_username)
+			if not user:
+				ErrorBox.die('Reset Password', "No user named <b>%s</b>" % stripTags(p_username))
 
-	random.seed()
-	hadPreviousKey = (user.resetkey != None)
-	user.resetkey = "%x" % random.randint(268435456, 4294967295)
-	user.save()
+			random.seed()
+			hadPreviousKey = (user.resetkey != None and user.resetkey != '0')
+			user.resetkey = "%x" % random.randint(268435456, 4294967295)
+			user.save()
 
-	print "Reset key for %s: <a href=\"/resetpw/%s?key=%s\">%s</a><br>" % (user, user.safe.username, user.resetkey, user.resetkey)
-	if hadPreviousKey:
-		print "<b>Warning</b>: This invalides the previous reset key for this user<br>"
+			print "Reset key for %s: <a href=\"/resetpw/%s?key=%s\">%s</a><br>" % (user, user.safe.username, user.resetkey, user.resetkey)
+			if hadPreviousKey:
+				print "<b>Warning</b>: This invalides the previous reset key for this user<br>"
+			break
+		if case('impersonate'):
+			user = User.load(username = p_username)
+			if not user:
+				ErrorBox.die('Impersonate User', "No user named <b>%s</b>" % stripTags(p_username))
 
-@admin('admin/impersonate-user', 'Impersonate user', 'impersonate')
-def impersonateUser(handler, request):
-	handler.title('Impersonate User')
-	requireAdmin(handler)
-
-	users = User.loadAll(orderby = 'username')
-	for user in users:
-		print "<form method=\"post\" action=\"/admin/impersonate-user/%s\">" % user.safe.username
-		print "<div class=\"user-list-entry\"><input type=\"image\" src=\"%s\"><br>%s</div>" % (user.getAvatar(64), user.safe.username)
-		print "</form>"
-
-@post('admin/impersonate-user/(?P<username>[^/]+)')
-def adminImpersonateUserPost(handler, request, username, p_x = None, p_y = None):
-	handler.title('Reset password')
-	requireAdmin(handler)
-
-	user = User.load(username = username)
-	if not user:
-		ErrorBox.die('User', "No user named <b>%s</b>" % stripTags(username))
-
-	handler.session['user'] = user
-	redirect('/')
+			handler.session['user'] = user
+			redirect('/')
+			break
+		if case('sessions'):
+			redirect("/admin/sessions?username=%s" % p_username)
+			break
+		if case('new'):
+			if User.loadIf(username = p_username):
+				ErrorBox.die('Add User', "There is already a user named <b>%s</b>" % stripTags(p_username))
+			User(p_username, '').save()
+			delay(handler, SuccessBox("Added user <b>%s</b>" % stripTags(p_username), close = True))
+			redirect('/admin/users')
+			break
 
 @admin('admin/sessions', 'Sessions', 'sessions')
-def adminSessions(handler, request):
-	handler.title('Sessions')
+def adminSessions(handler, request, username = None):
+	handler.title("Sessions for %s" % stripTags(username) if username else "Sessions")
 	requireAdmin(handler)
 
 	undelay(handler)
@@ -138,6 +158,8 @@ def adminSessions(handler, request):
 	print "<table border=0 cellspacing=4>"
 	print "<tr><th>Key</th><th>User</th><th>Last address</th><th>Last seen</th><th>&nbsp;</th></tr>"
 	for key, session in sorted(sessions.iteritems(), lambda (k1, s1), (k2, s2): cmpSessionTimes(s1, s2), reverse = True):
+		if username and (('user' not in session) or session['user'].username != username):
+			continue
 		print "<tr>"
 		print "<td>%s</td>" % key
 		print "<td>%s</td>" % (session['user'] if 'user' in session else 'None')
