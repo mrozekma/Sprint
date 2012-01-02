@@ -3,10 +3,12 @@ from datetime import datetime
 from itertools import groupby
 
 from rorn.Box import ErrorBox
+from rorn.Session import undelay
 
 from User import User
 from Sprint import Sprint
 from Availability import Availability
+from Button import Button
 from Chart import Chart
 from relativeDates import timesince
 from utils import *
@@ -16,8 +18,10 @@ def users(handler, request):
 	handler.title('Users')
 
 	users = User.loadAll(orderby = 'username')
+	print "<div class=\"user-list\">"
 	for user in users:
 		print "<div class=\"user-list-entry\"><a href=\"/users/%s\"><img src=\"%s\"></a><br>%s</div>" % (user.username, user.getAvatar(64), user.safe.username)
+	print "</div>"
 
 @get('users/(?P<username>[^/]+)')
 def user(handler, request, username):
@@ -26,12 +30,23 @@ def user(handler, request, username):
 		ErrorBox.die('User', "No user named <b>%s</b>" % stripTags(username))
 
 	Chart.include()
+	undelay(handler)
 
 	handler.title(user.safe.username)
 	handler.replace('$bodytitle$', '', 1)
 	print "<img src=\"%s\" class=\"gravatar\">" % user.getAvatar(64)
 	print "<h1>%s</h1>" % user.safe.username
 	print "<div class=\"clear\"></div>"
+
+	if handler.session['user'].hasPrivilege('Dev'):
+		print "<h3>Admin</h3>"
+		print "<form method=\"post\" action=\"/admin/users\">"
+		print "<input type=\"hidden\" name=\"username\" value=\"%s\">" % user.username
+		print "<button type=\"submit\" class=\"btn\" name=\"action\" value=\"resetpw\">Reset password</button>"
+		print "<button type=\"submit\" class=\"btn\" name=\"action\" value=\"impersonate\">Impersonate</button>"
+		print "<button type=\"submit\" class=\"btn\" name=\"action\" value=\"sessions\">Manage sessions</button>"
+		print "<button type=\"submit\" class=\"btn\" name=\"action\" value=\"privileges\">Manage privileges</button>"
+		print "</form>"
 
 	if user == handler.session['user']:
 		print "<h3>Avatar</h3>"

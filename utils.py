@@ -18,7 +18,6 @@ def tsStart(timestamp): return dateToTs(tsToDate(timestamp).replace(hour = 0, mi
 def tsEnd(timestamp): return dateToTs(tsToDate(timestamp).replace(hour = 23, minute = 59, second = 59))
 def formatDate(d): return d.strftime(DATE_FMT)
 
-import sys
 def andmap(f, l):
 	for i in l:
 		if not f(i):
@@ -41,7 +40,7 @@ class switch(object):
         """Return the match method once, then stop"""
         yield self.match
         raise StopIteration
-    
+
     def match(self, *args):
         """Indicate whether or not to enter a case suite"""
         if self.fall or not args:

@@ -13,7 +13,8 @@ from rorn.Session import sessions, delay, undelay
 from rorn.ResponseWriter import ResponseWriter
 from rorn.code import highlightCode
 
-from Privilege import admin as requireAdmin
+from DB import db
+from Privilege import Privilege, admin as requireAdmin, defaults as privDefaults
 from Project import Project
 from User import User
 from Button import Button
@@ -83,6 +84,10 @@ def adminUsers(handler, request):
 	print "<input type=\"hidden\" name=\"action\" value=\"new\">"
 	print "<table class=\"list\">"
 	print "<tr><td class=\"left\">Username:</td><td class=\"right\"><input type=\"text\" name=\"username\"></td></tr>"
+	print "<tr><td class=\"left\">Privileges:</td><td class=\"right\"><div>"
+	for priv in Privilege.loadAll():
+		print "<input type=\"checkbox\" name=\"privileges[]\" id=\"priv%d\" value=\"%s\"%s><label for=\"priv%d\">%s &mdash; %s</label><br>" % (priv.id, priv.name, ' checked' if priv.name in privDefaults else '', priv.id, priv.name, priv.description)
+	print "</div></td></tr>"
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
 	print Button('Save', id = 'save-button', type = 'submit').positive()
 	print Button('Cancel', type = 'button', url = '/admin').negative()
@@ -92,24 +97,14 @@ def adminUsers(handler, request):
 
 	print "<h3>Current Users</h3>"
 	users = User.loadAll(orderby = 'username')
-	print "<table border=0 cellspacing=4 style=\"vertical-align: middle\">"
+	print "<div class=\"user-list\">"
 	for user in users:
-		print "<tr>"
-		print "<td><img src=\"%s\"></td>" % user.getAvatar(32)
-		print "<td>%s</td>" % user.safe.username
-		print "<td>"
-		print "<form method=\"post\" action=\"/admin/users\">"
-		print "<input type=\"hidden\" name=\"username\" value=\"%s\">" % user.username
-		print "<button type=\"submit\" class=\"fancy\" name=\"action\" value=\"resetpw\">reset password</button>"
-		print "<button type=\"submit\" class=\"fancy\" name=\"action\" value=\"impersonate\">impersonate</button>"
-		print "<button type=\"submit\" class=\"fancy\" name=\"action\" value=\"sessions\">manage sessions</button>"
-		print "</form>"
-		print "</td>"
-		print "</tr>"
-	print "</table>"
+		print "<div class=\"user-list-entry\"><a href=\"/users/%s\"><img src=\"%s\"></a><br>%s</div>" % (user.username, user.getAvatar(64), user.safe.username)
+	print "</div>"
+	print "<div class=\"clear\"></div>"
 
 @post('admin/users')
-def adminUsersPost(handler, request, p_action, p_username):
+def adminUsersPost(handler, request, p_action, p_username, p_privileges = []):
 	handler.title('User Management')
 	requireAdmin(handler)
 
@@ -140,12 +135,23 @@ def adminUsersPost(handler, request, p_action, p_username):
 		if case('sessions'):
 			redirect("/admin/sessions?username=%s" % p_username)
 			break
+		if case('privileges'):
+			redirect("/admin/privileges?username=%s" % p_username)
+			break
 		if case('new'):
 			if User.load(username = p_username):
 				ErrorBox.die('Add User', "There is already a user named <b>%s</b>" % stripTags(p_username))
-			User(p_username, '').save()
+			privileges = [Privilege.load(name = name) for name in p_privileges]
+			if not all(privileges):
+				ErrorBox.die('Add User', "Unrecognized privilege name")
+
+			user = User(p_username, '')
+			user.save()
+			for priv in privileges:
+				db().update("INSERT INTO grants(userid, privid) VALUES(?, ?)", user.id, priv.id)
+
 			delay(handler, SuccessBox("Added user <b>%s</b>" % stripTags(p_username), close = True))
-			redirect('/admin/users')
+			redirect("/users/%s" % user.username)
 			break
 
 @admin('admin/projects', 'Projects', 'projects')
@@ -263,6 +269,70 @@ def adminSessionsPost(handler, request, p_key, p_action, p_value = None):
 			redirect('/admin/sessions')
 			break
 		break
+
+@admin('admin/privileges', 'Privileges', 'privileges')
+def adminPrivileges(handler, request, username = None):
+	handler.title("Privileges")
+	requireAdmin(handler)
+	undelay(handler)
+
+	users = User.loadAll(orderby = 'username')
+	privs = Privilege.loadAll()
+	counts = dict((row['privid'], row['count']) for row in db().select("SELECT privid, COUNT(*) AS count FROM grants GROUP BY privid"))
+
+	if username:
+		print "<style type=\"text/css\">"
+		print "table.granttable tr[username=%s] {" % username
+		print "    background-color: #faa;"
+		print "}"
+		print "</style>"
+
+	print "<h3>List</h3>"
+	print "<table border=\"0\" cellspacing=\"4\">"
+	print "<tr><th>Name</th><th>Grants</th><th>Description</th></tr>"
+	for priv in privs:
+		print "<tr><td>%s</td><td>%d</td><td>%s</td></tr>" % (priv.name, counts[priv.id], priv.description)
+	print "</table>"
+
+	print "<h3>Grants</h3>"
+	print "<form method=\"post\" action=\"/admin/privileges\">"
+	print "<table border=\"0\" cellspacing=\"0\" cellpadding=\"2\" class=\"granttable\">"
+	print "<tr><td>&nbsp;</td>%s</tr>" % ''.join("<td>%s</td>" % priv.name for priv in privs)
+	for user in users:
+		print "<tr username=\"%s\">" % user.username
+		print "<td>%s</td>" % user.username
+		for priv in privs:
+			print "<td><input type=\"checkbox\" name=\"grant[%s][%s]\"%s></td>" % (user.username, priv.name, ' checked' if user.hasPrivilege(priv.name) else '')
+		print "</tr>"
+	print "<tr><td>&nbsp;</td><td colspan=\"3\">%s</td></tr>" % Button('Save', type = 'submit').positive()
+	print "</table>"
+	print "</form>"
+
+@post('admin/privileges')
+def adminPrivilegesPost(handler, request, p_grant):
+	handler.title("Privileges")
+	requireAdmin(handler)
+	p_grant = dict((name, privs.keys()) for name, privs in p_grant.iteritems())
+
+	allPrivs = dict((priv.name, priv) for priv in Privilege.loadAll())
+
+	privNames = set()
+	for privs in p_grant.values():
+		privNames |= set(privs)
+	if not all(map(lambda name: name in allPrivs, privNames)):
+		ErrorBox.die("Update privileges", "Unrecognized privilege name")
+
+	for username, privs in p_grant.iteritems():
+		user = User.load(username = username)
+		for name, priv in allPrivs.iteritems():
+			has = user.hasPrivilege(name)
+			if has and name not in privs:
+				print "Revoking %s from %s<br>" % (name, username)
+				db().update("DELETE FROM grants WHERE userid = ? AND privid = ?", user.id, priv.id)
+			elif not has and name in privs:
+				print "Granting %s to %s<br>" % (name, username)
+				db().update("INSERT INTO grants(userid, privid) VALUES(?, ?)", user.id, priv.id)
+	print "Done"
 
 shells = {}
 

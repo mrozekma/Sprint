@@ -50,7 +50,7 @@ class User(ActiveRecord):
 		self.__init__(**dict([(field, vals[field]) for field in fields]))
 
 	def getPrivileges(self):
-		return Privilege.load(id = self.id)
+		return Privilege.load(userid = self.id)
 
 	def hasPrivilege(self, name):
 		if not self.id:

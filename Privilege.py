@@ -4,6 +4,9 @@ from DB import ActiveRecord
 from LoadValues import isDevMode
 from utils import *
 
+# Privileges to give to new users
+defaults = ['User', 'Write']
+
 class Privilege(ActiveRecord):
 	def __init__(self, name, description, arguments, id = None):
 		ActiveRecord.__init__(self)

@@ -587,6 +587,12 @@ a h2 {
 	color: #000;
 }
 
+.user-list {
+	position: relative;
+	top: -30px;
+	left: -20px;
+}
+
 .user-list-entry, .admin-list-entry {
 	float: left;
 	font-weight: bold;
@@ -879,6 +885,19 @@ input#input {
 	margin-top: 10px;
 	border: 1px solid #000;
 	width: 99%;
+}
+
+table.granttable td {
+	padding-right: 20px;
+	text-align: center;
+}
+
+table.granttable td:first-child {
+	text-align: right;
+}
+
+table.granttable button {
+	width: 100%;
 }
 
 .debugtext {
