@@ -377,6 +377,14 @@ def showInfo(handler, request, id):
 	print "input.name, #select-members, #save-button {width: 424px}"
 	print "</style>"
 	print "<script src=\"/static/sprint-info.js\" type=\"text/javascript\"></script>"
+	print "<script type=\"text/javascript\">"
+	print "$(document).ready(function() {"
+	print "    $('input.date').datepicker({"
+	print "        minDate: '%s'," % tsToDate(sprint.end).strftime('%m/%d/%Y')
+	print "        beforeShowDay: $.datepicker.noWeekends"
+	print "    });"
+	print "});"
+	print "</script>"
 
 	print InfoBox('Loading...', id = 'post-status', close = True)
 
@@ -389,7 +397,10 @@ def showInfo(handler, request, id):
 	else:
 		print "%s<br><br>" % sprint.safe.name
 	print "<b>Duration</b><br>"
-	print "%s - %s<br><br>" % (tsToDate(sprint.start).strftime('%d %b %Y'), tsToDate(sprint.end).strftime('%d %b %Y'))
+	if editable:
+		print "%s - <input type=\"text\" name=\"end\" class=\"date\" value=\"%s\"><br><br>" % (tsToDate(sprint.start).strftime('%m/%d/%Y'), tsToDate(sprint.end).strftime('%m/%d/%Y'))
+	else:
+		print "%s - %s<br><br>" % (tsToDate(sprint.start).strftime('%m/%d/%Y'), tsToDate(sprint.end).strftime('%m/%d/%Y'))
 	print "<b>Sprint goals</b><br>"
 	for goal in sprint.getGoals():
 		if editable:
@@ -413,7 +424,7 @@ def showInfo(handler, request, id):
 	print "</form>"
 
 @post('sprints/info')
-def sprintInfoPost(handler, request, id, p_name, p_goals, p_members = None):
+def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_members = None):
 	def die(msg):
 		print msg
 		done()
@@ -434,6 +445,17 @@ def sprintInfoPost(handler, request, id, p_name, p_goals, p_members = None):
 		die("You cannot modify an inactive sprint")
 	elif not sprint.canEdit(handler.session['user']):
 		die("You don't have permission to modify this sprint")
+
+	try:
+		end = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_end)
+		if not end:
+			raise ValueError
+		month, day, year = map(int, end.groups())
+		end = datetime(year, month, day, 23, 59, 59)
+	except ValueError:
+		die("Malformed end date: %s" % stripTags(p_end))
+	if end < tsToDate(sprint.end):
+		die("You cannot shorten the length of the sprint")
 
 	goals = map(Goal.load, p_goals)
 	if not all(goals):
@@ -459,6 +481,7 @@ def sprintInfoPost(handler, request, id, p_name, p_goals, p_members = None):
 
 	sprint.members += addMembers
 	sprint.name = p_name
+	sprint.end = dateToTs(end)
 	sprint.save()
 
 	for id in p_goals:
