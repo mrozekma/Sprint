@@ -76,24 +76,28 @@ class HTTPHandler(BaseHTTPRequestHandler):
 				query.update(dict([('p_' + k, v) for (k, v) in data.iteritems()]))
 
 			# Convert foo[bar] keys to maps (epic nesting!)
-			oldQuery = query
-			query = {}
-			for key in oldQuery:
-				match = re.match('(.*)\\[(.*)\\]', key)
-				if match:
-					name, realKey = match.groups()
-					if re.match('^\\d+$', realKey):
-						realKey = int(realKey)
-					if name in query:
-						if not isinstance(query[name], dict):
-							self.error("Invalid request", "Name/map collision on query key: %s" % key)
+			changed = True
+			while changed:
+				changed = False
+				oldQuery = query
+				query = {}
+				for key in oldQuery:
+					match = re.match('(.*)\\[(.*)\\]', key)
+					if match:
+						changed = True
+						name, realKey = match.groups()
+						if re.match('^\\d+$', realKey):
+							realKey = int(realKey)
+						if name in query:
+							if not isinstance(query[name], dict):
+								self.error("Invalid request", "Name/map collision on query key: %s" % key)
+						else:
+							query[name] = {}
+						query[name][realKey] = oldQuery[key]
+					elif key in query:
+						self.error("Invalid request", "Duplicate key in request: %s" % key)
 					else:
-						query[name] = {}
-					query[name][realKey] = oldQuery[key]
-				elif key in query:
-					self.error("Invalid request", "Duplicate key in request: %s" % key)
-				else:
-					query[key] = oldQuery[key]
+						query[key] = oldQuery[key]
 
 			# log("Stripped path: %s" % path)
 
