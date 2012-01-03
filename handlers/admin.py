@@ -291,7 +291,7 @@ def adminPrivileges(handler, request, username = None):
 	print "<table border=\"0\" cellspacing=\"4\">"
 	print "<tr><th>Name</th><th>Grants</th><th>Description</th></tr>"
 	for priv in privs:
-		print "<tr><td>%s</td><td>%d</td><td>%s</td></tr>" % (priv.name, counts[priv.id], priv.description)
+		print "<tr><td>%s</td><td>%d</td><td>%s</td></tr>" % (priv.name, counts[priv.id] if priv.id in counts else 0, priv.description)
 	print "</table>"
 
 	print "<h3>Grants</h3>"
