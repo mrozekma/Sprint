@@ -454,7 +454,7 @@ table.tasks tr.task td.assigned > img {
 }
 
 table.tasks tr.task td.hours {
-	/* width: 7%; */
+	min-width: 80px;
 	text-align: center;
 }
 
