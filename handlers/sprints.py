@@ -540,6 +540,8 @@ def showMetrics(handler, request, id):
 			continue
 		start = sum(t.hours for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
 		now = sum(t.hours for t in tasks if t.goalid == (goal.id if goal else 0))
+		if not goal and start == now == 0:
+			continue
 		print ProgressBar("<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;%s" % (goal.color if goal else 'none', goal.safe.name if goal else 'Other'), start - now, start, zeroDivZero = False, style = {100: 'progress-current-green'})
 
 	print "<a name=\"averages\">"
