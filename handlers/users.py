@@ -38,7 +38,7 @@ def user(handler, request, username):
 	print "<h1>%s</h1>" % user.safe.username
 	print "<div class=\"clear\"></div>"
 
-	if handler.session['user'].hasPrivilege('Dev'):
+	if handler.session['user'] and handler.session['user'].hasPrivilege('Dev'):
 		print "<h3>Admin</h3>"
 		print "<form method=\"post\" action=\"/admin/users\">"
 		print "<input type=\"hidden\" name=\"username\" value=\"%s\">" % user.username
