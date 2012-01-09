@@ -2,7 +2,7 @@ from sqlite3 import connect, Row
 from inspect import getargspec, getmembers
 import sys
 
-from utils import stripTags, log
+from utils import stripTags
 
 class DB:
 	def __init__(self):
@@ -11,7 +11,6 @@ class DB:
 		self.count = 0
 
 	def cursor(self, expr = None, *args):
-		# log("DB: %s with bound args %s" % (expr, args))
 		cur = self.conn.cursor()
 		if expr:
 			cur.execute(expr, args)

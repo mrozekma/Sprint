@@ -29,9 +29,6 @@ def post(index):
 		return f
 	return wrap
 
-def log(str, target = sys.stdout):
-	print >> target, str
-
 class HTTPHandler(BaseHTTPRequestHandler):
 	def __init__(self, request, address, server):
 		self.session = None
@@ -40,21 +37,13 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		BaseHTTPRequestHandler.__init__(self, request, address, server)
 
 	def buildResponse(self, method, data):
-		# log("Building response")
-
 		path = self.path
 		query = {}
-		# log("Original path: %s" % path)
 
 		writer = ResponseWriter()
+		request = self.makeRequest()
+		request['method'] = method
 
-		request = {
-			'path': [],
-			'wrappers': True,
-			'contentType': 'text/html',
-			'forceDownload': False,
-			'code': 200
-		}
 		try: # raise DoneRendering; starts here to catch self.error calls
 			self.title(None)
 
@@ -99,8 +88,6 @@ class HTTPHandler(BaseHTTPRequestHandler):
 					else:
 						query[key] = oldQuery[key]
 
-			# log("Stripped path: %s" % path)
-
 			assert path[0] == '/'
 			path = path[1:]
 			if len(path) and path[-1] == '/': path = path[:-1]
@@ -125,28 +112,23 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			defaults = defaults or []
 
 			givenS, expectedS = set(given), set(expected)
-			# log("expected = %s, defaults = %s" % (expected, defaults))
 			requiredS = set(expected[:-len(defaults)] if defaults else expected)
-			# log("requiredS = %s" % requiredS)
 
 			expectedS -= set(['self', 'handler', 'request'])
 			requiredS -= set(['self', 'handler', 'request'])
 
 			over = givenS - expectedS
-			# log("givenS (%s) - expectedS (%s) = %s" % (givenS, expectedS, over))
 			if len(over):
 				self.error("Invalid request", "Unexpected request argument%s: %s" % ('s' if len(over) > 1 else '', ', '.join(over)))
 
 			under = requiredS - givenS
-			# log("requiredS (%s) - givenS (%s) = %s" % (requiredS, givenS, under))
 			if len(under):
 				self.error("Invalid request", "Missing expected request argument%s: %s" % ('s' if len(under) > 1 else '', ', '.join(under)))
 
-			path = path[1:]
-			request['path'] = path
+			request['path'] = '/' + path
 			self.replace('{{path}}', path)
 
-			fn(handler = self, request = request, **query)
+			self.invokeHandler(fn, request, query)
 		except DoneRendering: pass
 		except OperationalError, e:
 			writer.clear()
@@ -175,10 +157,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			showCode(filename, line, 5)
 
 		self.response = writer.done()
-
-		if request['wrappers']:
-			self.wrapContent(request)
-
+		self.requestDone(request)
 		# self.leftMenu.clear()
 
 		for (fromStr, toStr, count) in self.replacements.values():
@@ -261,3 +240,16 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			done()
 
 	def processingRequest(self): pass
+
+	def makeRequest(self):
+		return {
+			'path': [],
+			'contentType': 'text/html',
+			'forceDownload': False,
+			'code': 200
+		}
+
+	def invokeHandler(self, fn, request, query):
+		fn(handler = self, request = request, **query)
+
+	def requestDone(self, request): pass

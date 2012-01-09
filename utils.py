@@ -105,9 +105,6 @@ def uniq(l):
 			rtn.append(n)
 	return rtn
 
-def log(str):
-	sys.__stdout__.write("%s\n" % str)
-
 nowDelta = timedelta()
 def getNow():
 	return datetime.now() + nowDelta

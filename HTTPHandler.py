@@ -5,6 +5,7 @@ from rorn.ResponseWriter import ResponseWriter
 
 from wrappers import header, footer
 from User import User
+from Log import LogEntry
 from utils import *
 
 class HTTPHandler(ParentHandler):
@@ -13,14 +14,33 @@ class HTTPHandler(ParentHandler):
 
 	def log_message(self, format, *args):
 		user = self.session['user'].username if self.session and self.session['user'] else self.address_string()
-		log("[%s] %s(%s) %s" % (self.log_date_time_string(), user or 'logged out', self.address_string(), format % args))
+		sys.__stdout__.write("[%s] %s(%s) %s\n" % (self.log_date_time_string(), user or 'logged out', self.address_string(), format % args))
 
-	def wrapContent(self, request):
-		writer = ResponseWriter()
-		header(self, request['path'])
-		print self.response
-		footer(self, request['path'])
-		self.response = writer.done()
+	def makeRequest(self):
+		return dict(ParentHandler.makeRequest(self).items() + {
+			'wrappers': True,
+			'log': True
+		}.items())
+
+	def invokeHandler(self, fn, request, query):
+		if request['log']:
+			filename = fn.func_code.co_filename
+			if filename.startswith(basePath()):
+				filename = filename[len(basePath())+1:]
+			request['log'] = LogEntry('handle', "%s %s" % (request['method'].upper(), request['path']), userid = self.session['user'].id if self.session['user'] else None, ip = self.client_address[0], location = "%s(%s:%d)" % (fn.func_code.co_name, filename, fn.func_code.co_firstlineno))
+
+		fn(handler = self, request = request, **query)
+
+	def requestDone(self, request):
+		if request['log']:
+			request['log'].save()
+
+		if request['wrappers']:
+			writer = ResponseWriter()
+			header(self, request['path'])
+			print self.response
+			footer(self, request['path'])
+			self.response = writer.done()
 
 	def processingRequest(self):
 		self.replace('$headerbg$', '#0152A1', 1)

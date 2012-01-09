@@ -5,6 +5,7 @@ from utils import *
 @get('static/(?P<path>.+)')
 def static(handler, request, path, v = None):
 	request['wrappers'] = False
+	request['log'] = False
 
 	filename = stripTags(path)
 	types = {

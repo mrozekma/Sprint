@@ -21,6 +21,7 @@ from Button import Button
 from Table import LRTable
 from Cron import Cron
 from LoadValues import getLoadtime, setDevMode
+from Log import LogEntry, log
 from relativeDates import timesince
 from utils import *
 
@@ -476,8 +477,29 @@ def adminCronPost(handler, request):
 	redirect('/admin/cron')
 
 @post('admin/build')
-def adminModeMode(handler, request, p_mode):
+def adminBuildModePost(handler, request, p_mode):
 	if p_mode == 'development':
 		setDevMode(True)
 	elif p_mode == 'production':
 		setDevMode(False)
+
+@admin('admin/log', 'Log', 'log')
+def adminLog(handler, request):
+	handler.title('Log')
+	requireAdmin(handler)
+
+	from Privilege import dev
+	dev(handler)
+
+	fields = ['id', 'timestamp', 'user', 'ip', 'location', 'type', 'text']
+	print "<table border=\"0\" cellpadding=\"5\">"
+	print "<tr>"
+	print ''.join("<th>%s</th>" % field for field in fields)
+	print "<th>time</th>"
+	print "</tr>"
+	for entry in LogEntry.loadAll(orderby = 'timestamp DESC'):
+		print "<tr>"
+		print ''.join("<td>%s</td>" % entry.__getattribute__(field) for field in fields)
+		print "<td>%s</td>" % tsToDate(entry.timestamp)
+		print "</tr>"
+	print "</table>"
