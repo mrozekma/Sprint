@@ -32,7 +32,7 @@ class HTTPHandler(ParentHandler):
 		fn(handler = self, request = request, **query)
 
 	def requestDone(self, request):
-		if request['log']:
+		if isinstance(request['log'], LogEntry):
 			request['log'].save()
 
 		if request['wrappers']:
