@@ -36,9 +36,14 @@ def apiSprintInfo(handler, request, id):
 	if not sprint:
 		die("No sprint with ID %d" % id)
 
+	abbrName = sprint.name.strip()
+	if abbrName.startswith(sprint.project.name):
+		abbrName = abbrName[len(sprint.project.name):].strip()
+
 	print toJS({
 			'id': sprint.id,
 			'name': sprint.name,
+			'abbreviated name': abbrName,
 			'start': sprint.start,
 			'end': sprint.end
 			})
