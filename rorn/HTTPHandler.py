@@ -75,7 +75,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 					if match:
 						changed = True
 						name, realKey = match.groups()
-						if re.match('^\\d+$', realKey):
+						if re.match('^-?\\d+$', realKey):
 							realKey = int(realKey)
 						if name in query:
 							if not isinstance(query[name], dict):
@@ -99,7 +99,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 					for k, v in match.groupdict().items():
 						if k in query:
 							self.error("Invalid request", "Duplicate key in request: %s" % k)
-						if re.match('^\\d+$', v):
+						if re.match('^-?\\d+$', v):
 							v = int(v)
 						query[k] = v
 					break
