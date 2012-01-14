@@ -88,10 +88,13 @@ class Task(ActiveRecord):
 		return tOrig.hours if tOrig else 0
 
 	def historyEndsOn(self):
-		return self.timestamp if self.status in ('complete', 'canceled', 'deferred', 'split') else self.sprint.end
+		return self.sprint.end if self.stillOpen() else self.timestamp
 
 	def shouldImport(self):
 		return self.status not in ('complete', 'canceled', 'split')
+
+	def stillOpen(self):
+		return self.status not in ('complete', 'canceled', 'deferred', 'split')
 
 	### ActiveRecord methods
 

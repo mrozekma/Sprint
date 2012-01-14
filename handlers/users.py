@@ -7,6 +7,7 @@ from rorn.Session import undelay
 
 from User import User
 from Sprint import Sprint
+from Task import Task
 from Availability import Availability
 from Button import Button
 from Chart import Chart
@@ -96,3 +97,16 @@ def user(handler, request, username):
 		chart.placeholder()
 	else:
 		print "Not a member of any active sprints"
+
+@get('users/(?P<username>[^/]+)/tasks')
+def userTasks(handler, request, username):
+	handler.title('User tasks')
+	user = User.load(username = username)
+	if not user:
+		ErrorBox.die("User tasks", "No user named <b>%s</b>" % stripTags(username))
+
+	tasks = [task.id for task in Task.loadAll(assignedid = user.id) if task.stillOpen() and task.sprint.isActive()]
+	if len(tasks) == 0:
+		ErrorBox.die("User tasks", "%s has no open tasks in active sprints" % user)
+
+	redirect("/tasks/%s" % ','.join(map(str, tasks)))

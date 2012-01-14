@@ -471,3 +471,9 @@ def newTaskImportPost(handler, request, group, source, p_include, p_group, p_nam
 	else:
 		delay(handler, WarningBox("No changes", close = 3, fixed = True))
 	redirect("/sprints/%d" % sprint.id)
+
+@get('tasks/mine')
+def tasksMine(handler, request):
+	handler.title('My tasks')
+	requirePriv(handler, 'User')
+	redirect("/users/%s/tasks" % handler.session['user'].username)
