@@ -32,6 +32,9 @@ statuses = dict([(s.name, s) for s in statuses])
 statusMenu = [('not started', 'in progress', 'complete'), ('blocked',), ('deferred', 'canceled', 'split')]
 assert sum(map(len, statusMenu)) == len(statuses)
 
+def getStatuses(tag = None):
+	return [name for (name, status) in statuses.iteritems() if tag in status.tags] if tag else [name for block in statusMenu for name in block]
+
 class Task(ActiveRecord):
 	sprint = ActiveRecord.idObjLink(Sprint, 'sprintid')
 	creator = ActiveRecord.idObjLink(User, 'creatorid')
@@ -76,6 +79,21 @@ class Task(ActiveRecord):
 		rows = db().select("SELECT * FROM %s WHERE id = ? AND timestamp <= ? ORDER BY revision DESC LIMIT 1" % Task.table(), self.id, tsEnd(timestamp))
 		rows = [x for x in rows]
 		return Task(**rows[0]) if len(rows) > 0 else None
+
+	### Data that depends on task status/history
+
+	def earnedValueHours(self):
+		if self.status != 'complete': return 0
+		tOrig = self.getRevisionAt(tsToDate(self.sprint.start))
+		return tOrig.hours if tOrig else 0
+
+	def historyEndsOn(self):
+		return self.timestamp if self.status in ('complete', 'canceled', 'deferred', 'split') else self.sprint.end
+
+	def shouldImport(self):
+		return self.status not in ('complete', 'canceled', 'split')
+
+	### ActiveRecord methods
 
 	@classmethod
 	def load(cls, *id, **attrs):

@@ -132,7 +132,8 @@ class EarnedValueChart(Chart):
 		seriesList.append(series)
 
 		for day in days:
-			series['data'].append(sum(tOrig.hours for (tOrig, tNow) in [(t.getRevisionAt(tsToDate(sprint.start)), t.getRevisionAt(day)) for t in tasks] if tOrig and tNow and tNow.status == 'complete'))
+			dayTasks = [t.getRevisionAt(day) for t in tasks]
+			series['data'].append(sum(t.earnedValueHours() for t in dayTasks if t))
 
 		series = {
 			'name': 'Deferred tasks',
@@ -326,7 +327,5 @@ class TaskChart(Chart):
 			seriesList.append(series)
 
 			hoursByDay = dict((utcToLocal(tsStripHours(rev.timestamp)) * 1000, rev.hours) for rev in revs)
-			if task.status not in ('complete', 'canceled', 'deferred', 'split'):
-				hoursByDay[utcToLocal(tsStripHours(min(dateToTs(getNow()), sprint.end))) * 1000] = task.hours
-			for pair in hoursByDay.items():
-				series['data'].append(pair)
+			hoursByDay[utcToLocal(tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))) * 1000] = task.hours
+			series['data'] += hoursByDay.items()
