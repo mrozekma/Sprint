@@ -50,7 +50,9 @@ function setup_hours_events() {
 		}
 		field.val('' + val)
 		save_task(task, 'hours', val);
-		set_status(task, val == 0 ? 'complete' : 'in progress');
+		if(!isPlanning) {
+			set_status(task, val == 0 ? 'complete' : 'in progress');
+		}
 	});
 
 	$("td.hours input").focus(function(event) {

@@ -58,6 +58,7 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
+	print "var isPlanning = %s;" % ('true' if sprint.isPlanning() else 'false')
 	if assigned:
 		print "$('document').ready(function() {"
 		print "    $('#filter-assigned a[assigned=\"%s\"]').click();" % assigned
