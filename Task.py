@@ -94,7 +94,7 @@ class Task(ActiveRecord):
 		return self.status not in ('complete', 'canceled', 'split')
 
 	def stillOpen(self):
-		return self.status not in ('complete', 'canceled', 'deferred', 'split')
+		return self.status not in ('complete', 'canceled', 'deferred', 'split') and not self.deleted
 
 	### ActiveRecord methods
 
