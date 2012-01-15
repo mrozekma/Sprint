@@ -43,8 +43,7 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
 	if not sprint:
-		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
-		done()
+		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
 	highlight = map(int, highlight.split(',')) if highlight else []
 
 	# handler.title(sprint.project.safe.name)
@@ -363,8 +362,7 @@ def showInfo(handler, request, id):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
 	if not sprint:
-		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
-		done()
+		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
 	tasks = sprint.getTasks()
 	editable = sprint.canEdit(handler.session['user']) and sprint.project.owner == handler.session['user']
 
@@ -499,8 +497,7 @@ def showMetrics(handler, request, id):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
 	if not sprint:
-		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
-		done()
+		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
 	tasks = sprint.getTasks()
 
 	handler.title(sprint.safe.name)
@@ -563,8 +560,7 @@ def showSprintHistory(handler, request, id):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
 	if not sprint:
-		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
-		done()
+		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
 
 	handler.title(sprint.safe.name)
 	Chart.include()
@@ -581,8 +577,7 @@ def showAvailability(handler, request, id):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
 	if not sprint:
-		print ErrorBox('Sprints', "No sprint with ID <b>%d</b>" % id)
-		done()
+		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
 	tasks = sprint.getTasks()
 
 	handler.title(sprint.safe.name)
