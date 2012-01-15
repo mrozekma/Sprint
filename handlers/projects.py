@@ -8,6 +8,7 @@ from Privilege import requirePriv
 from Project import Project
 from Sprint import Sprint
 from Button import Button
+from LoadValues import isDevMode
 from utils import *
 
 @get('projects')
@@ -20,15 +21,18 @@ def showProjects(handler):
 	undelay(handler)
 
 	boxes = {} # project -> {'str': box HTML, 'weight': ascending sort weight}
-	for project in Project.loadAll():
+	for project in Project.loadAll() + (Project.loadAllTest() if isDevMode(handler) else []):
 		writer = ResponseWriter()
 		sprints = project.getSprints()
 		isActive = any(map(lambda sprint: sprint.isActive(), sprints))
 		isMember = False
+		isTest = project.id < 0
 
 		classes = ['project-summary']
 		if isActive:
 			classes.append('active')
+		if isTest:
+			classes.append('test')
 		print "<div id=\"project-summary-%d\" class=\"%s\">" % (project.id, ' '.join(classes))
 		print "<div class=\"project-name\">%s</div>" % project.name
 		print "<div class=\"buttons\">"
@@ -55,7 +59,7 @@ def showProjects(handler):
 
 		print "<div class=\"clear\"></div>"
 		print "</div>"
-		boxes[project] = {'str': writer.done(), 'weight': 0 if isActive and isMember else 1}
+		boxes[project] = {'str': writer.done(), 'weight': (2 if isTest else 0) + (0 if isActive and isMember else 1)}
 
 	print "<div class=\"indented\">"
 	# Show projects with active sprints this user is a member of first

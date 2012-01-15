@@ -325,6 +325,22 @@ img.user, img.project, img.sprint {
 	border-left-color: #A00 !important;
 }
 
+.project-summary.test {
+	background-color: #333;
+}
+
+.project-summary.test > * {
+	color: #fff;
+}
+
+.project-summary.test a {
+	color: #ff0;
+}
+
+.project-summary.test .buttons a {
+	color: #000;
+}
+
 .project-summary .project-name {
 	float: left;
 	font-weight: bold;
