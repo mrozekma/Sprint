@@ -9,12 +9,14 @@ class DB:
 		self.conn = connect('db')
 		self.conn.row_factory = Row
 		self.count = 0
+		self.totalCount = 0
 
 	def cursor(self, expr = None, *args):
 		cur = self.conn.cursor()
 		if expr:
 			cur.execute(expr, args)
 		self.count += 1
+		self.totalCount += 1
 		return cur
 
 	def selectRow(self, expr, *args):

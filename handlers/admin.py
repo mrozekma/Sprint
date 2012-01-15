@@ -49,6 +49,7 @@ def adminStats(handler, request):
 	loadTime = getLoadtime()
 	print "Started %s<br>" % loadTime
 	print "Up for %s<br>" % timesince(loadTime)
+	print "%d total database requests" % db().totalCount
 
 @admin('admin/test', 'Test pages', 'test-pages')
 def adminTest(handler, request):
