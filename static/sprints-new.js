@@ -5,5 +5,5 @@ $(document).ready(function() {
 	});
 
 	$('#save-button').savebutton($('#post-status'), '');
-	$('#cancel-button').cancelbutton();
+	$('#cancel-button').cancelbutton('/');
 });
