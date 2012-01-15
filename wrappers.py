@@ -80,7 +80,7 @@ def header(handler, path):
 		print "Not logged in"
 	print "</div>"
 
-	if '--dev' in sys.argv:
+	if '--dev' in sys.argv and handler.session['user'] and handler.session['user'].hasPrivilege('Dev'):
 		if isDevMode(handler):
 			print "<div class=\"devwarning\" onClick=\"buildmode('production')\">"
 			print "Development"
