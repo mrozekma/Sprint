@@ -1,4 +1,5 @@
 from __future__ import with_statement
+from json import dumps as toJS
 
 from rorn.Session import delay
 from rorn.Box import ErrorBox, CollapsibleBox, InfoBox, SuccessBox
@@ -17,6 +18,7 @@ from History import showHistory
 from Chart import Chart
 from SprintCharts import TaskChart
 from ProgressBar import ProgressBar
+from Availability import Availability
 from relativeDates import timesince
 from utils import *
 
@@ -472,8 +474,90 @@ def newTaskImportPost(handler, request, group, source, p_include, p_group, p_nam
 		delay(handler, WarningBox("No changes", close = 3, fixed = True))
 	redirect("/sprints/%d" % sprint.id)
 
+@get('tasks/distribute')
+def distribute(handler, request, sprint):
+	handler.title("Distribute Tasks")
+	requirePriv(handler, 'Write')
+
+	sprintid = int(sprint)
+	sprint = Sprint.load(sprintid)
+	if not sprint:
+		ErrorBox.die('Invalid Sprint', "No sprint with ID <b>%d</b>" % id)
+	if not sprint.canEdit(handler.session['user']):
+		ErrorBox.die('Closed', "Unable to edit sprint")
+
+	print "<script src=\"/static/tasks-distribute.js\" type=\"text/javascript\"></script>"
+	print "<script type=\"text/javascript\">"
+	print "var sprintid = %d;" % sprint.id
+	print "</script>"
+
+	print InfoBox('Loading...', id = 'post-status', close = True)
+
+	print "<div id=\"distribution-range\">"
+	print "Acceptable commitment: <span></span>"
+	print "</div>"
+	print "<div id=\"distribution-range-slider\"></div>"
+	print "<div class=\"clear\"></div>"
+
+	for user in sprint.members:
+		print "<div class=\"task-distribution\" userid=\"%d\">" % user.id
+		print "<img class=\"user-gravatar\" src=\"%s\">" % user.getAvatar(64)
+		print "<div class=\"info\">"
+		print "<div class=\"username\">%s</div>" % user.safe.username
+		print "<div class=\"hours\">Loading...</div>"
+		print "<div class=\"task-progress-total\"><div class=\"progress-current\" style=\"visibility: hidden;\"></div></div>"
+		print "</div>"
+		print "<select class=\"tasks\" size=\"5\" multiple><option>Loading...</option></select>"
+		print "</div>"
+		print "<div class=\"clear\"></div>"
+
+@post('tasks/distribute/update')
+def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_tasks = None):
+	def die(msg):
+		print toJS({'error': msg})
+		done()
+
+	handler.title("Distribute Tasks")
+	requirePriv(handler, 'Write')
+	request['wrappers'] = False
+	request['contentType'] = 'application/json'
+
+	sprintid = int(p_sprint)
+	sprint = Sprint.load(sprintid)
+	if not sprint:
+		die("No sprint with ID %d" % sprintid)
+	if not sprint.canEdit(handler.session['user']):
+		die("Unable to edit sprint")
+
+	# Make changes
+	if p_targetUser != None and p_tasks != None:
+		userid = int(p_targetUser)
+		user = User.load(userid)
+		if not user:
+			die("No user with ID %d" % userid)
+		tasks = [Task.load(int(id)) for id in p_tasks.split(',')]
+		if not all(tasks):
+			die("Invalid task ID")
+
+		for task in tasks:
+			task.assigned = user
+			task.save()
+
+	# Return current info
+	tasks = sprint.getTasks()
+	avail = Availability(sprint)
+	m = {}
+	for user in sprint.members:
+		userTasks = filter(lambda task: task.assigned == user, tasks)
+		m[user.id] = {
+			'hours': sum(task.hours for task in userTasks),
+			'availability': avail.getAllForward(getNow().date(), user),
+			'tasks': [{'id': task.id, 'text': "(%d) %s" % (task.hours, task.name)} for task in userTasks]
+		}
+	print toJS(m)
+
 @get('tasks/mine')
 def tasksMine(handler, request):
-	handler.title('My tasks')
+	handler.title("My tasks")
 	requirePriv(handler, 'User')
 	redirect("/users/%s/tasks" % handler.session['user'].username)

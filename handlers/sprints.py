@@ -523,7 +523,13 @@ def showMetrics(handler, request, id):
 		chart.placeholder()
 
 	print "<a name=\"commitment-by-user\">"
+	print "<div style=\"position: relative\">"
 	print "<h2><a href=\"#commitment-by-user\">Commitment (by user)</a></h2>"
+	print "<div style=\"position: absolute; top: 0px; right: 16px;\">"
+	if sprint.canEdit(handler.session['user']):
+		print Button('Redistribute', "/tasks/distribute?sprint=%d" % sprint.id)
+	print "</div>"
+	print "</div>"
 	avail = Availability(sprint)
 	for user in sorted(sprint.members):
 		hours = sum(t.hours for t in tasks if t.assigned == user)

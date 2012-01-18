@@ -795,6 +795,62 @@ div.clear {
 	width: 135px;
 }
 
+#distribution-range {
+	float: left;
+}
+
+#distribution-range-slider {
+	float: left;
+	position: relative;
+	top: 1px;
+	width: 300px;
+	margin: 0 0 30px 50px;
+}
+
+#distribution-range-slider .ui-slider-range {
+	background: #3468B2;
+}
+
+#distribution-range-slider .ui-slider-handle {
+	border-color: #174F2E;
+}
+
+#distribution-range-slider .ui-state-hover {
+	background: #4a95ff;
+}
+
+.task-distribution+.clear {
+	padding-bottom: 10px;
+}
+
+.task-distribution > * {
+	float: left;
+	padding: 0 5px 10px 0;
+}
+
+.task-distribution img.user-gravatar {
+	cursor: pointer;
+}
+
+.task-distribution .info {
+	margin-top: 5px;
+}
+
+.task-distribution .username {
+	font-weight: bold;
+}
+
+.task-distribution .task-progress-total {
+	width: 250px;
+	margin-left: 0px;
+	margin-top: 5px;
+}
+
+.task-distribution .tasks {
+	margin-left: 30px;
+	width: 50%;
+}
+
 img.admin-icon {
 	width: 64px;
 	border: 0px;
