@@ -544,7 +544,7 @@ def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_tasks = 
 			task.save()
 
 	# Return current info
-	tasks = sprint.getTasks()
+	tasks = filter(lambda task: task.stillOpen(), sprint.getTasks())
 	avail = Availability(sprint)
 	m = {}
 	for user in sprint.members:
