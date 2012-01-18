@@ -71,7 +71,7 @@ function process() {
 		sel = $('select.tasks', box);
 
 		$('.hours', box).html(user.hours + ' / ' + user.availability + ' hours (' + user.tasks.length + (user.tasks.length == 1 ? ' task' : ' tasks') + ', ' + (user.availability == 0 && user.hours > 0 ? '&#8734;' : pcnt) + '%)');
-		$('.task-progress-total .progress-current', box).css('width', pcnt + '%').css('visibility', pcnt > 0 ? 'visible' : 'hidden').toggleClass('progress-current-red', pcnt < distMin || pcnt > distMax);
+		$('.task-progress-total .progress-current', box).css('width', Math.min(100, pcnt) + '%').css('visibility', pcnt > 0 ? 'visible' : 'hidden').toggleClass('progress-current-red', pcnt < distMin || pcnt > distMax);
 
 		sel.html('');
 		for(i in user.tasks) {
