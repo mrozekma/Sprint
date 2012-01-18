@@ -94,6 +94,10 @@ def header(handler, path):
 	print menu.render(handler)
 	print "</div>"
 	print "</div>"
+
+	print "<div class=\"sopa\" onClick=\"document.location='http://blog.reddit.com/2012/01/technical-examination-of-sopa-and.html'\">"
+	print "BOO SOPA!"
+	print "</div>"
 	print "</div>"
 
 	print "<div id=\"main_b\"></div>"
