@@ -512,6 +512,7 @@ table.tasks tr.task td.yesterday.changed {
 
 table.tasks td.actions {
 	width: 10%;
+	text-align: left !important;
 	white-space: nowrap;
 	cursor: pointer;
 }

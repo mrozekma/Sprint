@@ -104,8 +104,8 @@ def newTaskGeneric(handler, request, group):
 
 @get('tasks/new/single')
 def newTaskSingle(handler, request, group):
-	requirePriv(handler, 'User')
 	handler.title("New Task")
+	requirePriv(handler, 'User')
 	id = int(group)
 
 	print (tabs << 'single') % id
@@ -356,8 +356,8 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 
 @get('tasks/new/import')
 def newTaskImport(handler, request, group, source = None):
+	handler.title("New Tasks")
 	requirePriv(handler, 'User')
-	handler.title("Import Tasks")
 	id = int(group)
 	print "<script src=\"/static/sprints-import.js\" type=\"text/javascript\"></script>"
 
@@ -419,8 +419,8 @@ def newTaskImport(handler, request, group, source = None):
 
 @post('tasks/new/import')
 def newTaskImportPost(handler, request, group, source, p_include, p_group, p_name, p_hours, p_assigned):
-	requirePriv(handler, 'User')
 	handler.title("Import Tasks")
+	requirePriv(handler, 'User')
 
 	id = int(group)
 	group = Group.load(group)
