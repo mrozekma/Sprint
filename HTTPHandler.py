@@ -4,6 +4,7 @@ from rorn.HTTPHandler import HTTPHandler as ParentHandler
 from rorn.ResponseWriter import ResponseWriter
 
 from wrappers import header, footer
+from DB import db
 from User import User
 from Log import LogEntry
 from utils import *
@@ -43,6 +44,7 @@ class HTTPHandler(ParentHandler):
 			self.response = writer.done()
 
 	def processingRequest(self):
+		db().resetCount()
 		self.replace('$headerbg$', '#0152A1', 1)
 
 		#HACK
