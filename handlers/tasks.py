@@ -116,6 +116,12 @@ def newTaskSingle(handler, request, group):
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
 
+	sprint = group.sprint
+	if not (sprint.isActive() or sprint.isPlanning()):
+		ErrorBox.die("Sprint closed", "Unable to modify inactive sprint")
+	elif not sprint.canEdit(handler.session['user']):
+		ErrorBox.die("Permission denied", "You don't have permission to modify this sprint")
+
 	# name, assigned, hours, status, sprint, group
 
 	print "<style type=\"text/css\">"
@@ -182,6 +188,12 @@ def newTaskPost(handler, request, p_group, p_name, p_goal, p_status, p_assigned,
 	if not group:
 		die("No group with ID <b>%d</b>" % groupid)
 
+	sprint = group.sprint
+	if not (sprint.isActive() or sprint.isPlanning()):
+		die("Unable to modify inactive sprint")
+	elif not sprint.canEdit(handler.session['user']):
+		die("You don't have permission to modify this sprint")
+
 	assignedid = to_int(p_assigned, 'assigned', die)
 	assigned = User.load(assignedid)
 	if not assigned:
@@ -228,6 +240,11 @@ def newTaskMany(handler, request, group):
 
 	print (tabs << 'many') % id
 
+	if not (sprint.isActive() or sprint.isPlanning()):
+		ErrorBox.die("Sprint Closed", "Unable to modify inactive sprint")
+	elif not sprint.canEdit(handler.session['user']):
+		ErrorBox.die("Permission Denied", "You don't have permission to modify this sprint")
+
 	help = ResponseWriter()
 	print "Each line needs to match the following syntax. Unparseable lines generate an error message but are otherwise ignored"
 	print "<ul>"
@@ -263,7 +280,12 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 	defaultGroup = Group.load(group)
 	if not defaultGroup:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+
 	sprint = defaultGroup.sprint
+	if not (sprint.isActive() or sprint.isPlanning()):
+		ErrorBox.die("Sprint Closed", "Unable to modify inactive sprint")
+	elif not sprint.canEdit(handler.session['user']):
+		ErrorBox.die("Permission Denied", "You don't have permission to modify this sprint")
 
 	group = defaultGroup
 	groups = [group]
@@ -368,7 +390,12 @@ def newTaskImport(handler, request, group, source = None):
 	group = Group.load(group)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+
 	sprint = group.sprint
+	if not (sprint.isActive() or sprint.isPlanning()):
+		ErrorBox.die("Sprint Closed", "Unable to modify inactive sprint")
+	elif not sprint.canEdit(handler.session['user']):
+		ErrorBox.die("Permission Denied", "You don't have permission to modify this sprint")
 
 	if not source:
 		print "Select a sprint to import from:"
@@ -428,7 +455,12 @@ def newTaskImportPost(handler, request, group, source, p_include, p_group, p_nam
 	group = Group.load(group)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+
 	sprint = group.sprint
+	if not (sprint.isActive() or sprint.isPlanning()):
+		ErrorBox.die("Sprint Closed", "Unable to modify inactive sprint")
+	elif not sprint.canEdit(handler.session['user']):
+		ErrorBox.die("Permission Denied", "You don't have permission to modify this sprint")
 
 	id = int(source)
 	source = Sprint.load(id)
@@ -483,8 +515,10 @@ def distribute(handler, request, sprint):
 	sprint = Sprint.load(sprintid)
 	if not sprint:
 		ErrorBox.die('Invalid Sprint', "No sprint with ID <b>%d</b>" % id)
+	if not (sprint.isActive() or sprint.isPlanning()):
+		ErrorBox.die("Sprint Closed", "Unable to modify inactive sprint")
 	if not sprint.canEdit(handler.session['user']):
-		ErrorBox.die('Closed', "Unable to edit sprint")
+		ErrorBox.die("Permission Denied", "You don't have permission to modify this sprint")
 
 	print "<script src=\"/static/tasks-distribute.js\" type=\"text/javascript\"></script>"
 	print "<script type=\"text/javascript\">"
