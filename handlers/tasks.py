@@ -533,7 +533,7 @@ def distribute(handler, request, sprint):
 	print "<div id=\"distribution-range-slider\"></div>"
 	print "<div class=\"clear\"></div>"
 
-	for user in sprint.members:
+	for user in sorted(sprint.members):
 		print "<div class=\"task-distribution\" userid=\"%d\">" % user.id
 		print "<img class=\"user-gravatar\" src=\"%s\">" % user.getAvatar(64)
 		print "<div class=\"info\">"
