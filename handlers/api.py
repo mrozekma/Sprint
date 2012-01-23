@@ -47,3 +47,20 @@ def apiSprintInfo(handler, request, id):
 			'start': sprint.start,
 			'end': sprint.end
 			})
+
+@get('api/sprints/list')
+def apiSprintsList(handler, request, start = None, end = None, _ = None):
+	def die(msg):
+		print toJS({'error': msg})
+		done()
+
+	request['wrappers'] = False
+	start = int(start) if start else None
+	end = int(end) if end else None
+
+	sprints = Sprint.loadAll()
+	if start and end:
+		sprints = filter(lambda sprint: (start <= sprint.start <= end) or (start <= sprint.end <= end), sprints)
+
+	print toJS([{'id': sprint.id, 'title': sprint.name, 'start': tsToDate(sprint.start).strftime('%Y-%m-%d'), 'end': tsToDate(sprint.end).strftime('%Y-%m-%d')} for sprint in sprints])
+

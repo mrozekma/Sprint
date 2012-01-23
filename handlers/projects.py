@@ -11,13 +11,10 @@ from Button import Button
 from LoadValues import isDevMode
 from utils import *
 
+@get('')
 @get('projects')
-def projects(handler, request):
-	requirePriv(handler, 'User')
-	handler.title("Projects")
-	showProjects(handler)
-
-def showProjects(handler):
+@get('projects/list')
+def projectsList(handler, request):
 	undelay(handler)
 
 	boxes = {} # project -> {'str': box HTML, 'weight': ascending sort weight}
@@ -61,8 +58,20 @@ def showProjects(handler):
 		print "</div>"
 		boxes[project] = {'str': writer.done(), 'weight': (2 if isTest else 0) + (0 if isActive and isMember else 1)}
 
-	print "<div class=\"indented\">"
+	print "<div class=\"project-list\">"
+	print "<div class=\"buttons\">"
+	print Button('Calendar', '/projects/calendar')
+	print "</div>"
 	# Show projects with active sprints this user is a member of first
 	for project in sorted(boxes.keys(), key = lambda p: boxes[p]['weight']):
 		print boxes[project]['str']
 	print "</div>"
+
+@get('projects/calendar')
+def projectsCalendar(handler, request):
+	undelay(handler)
+
+	print "<link href=\"/static/fullcalendar.css\" rel=\"stylesheet\" type=\"text/css\" />"
+	print "<script src=\"/static/fullcalendar.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/projects.js\" type=\"text/javascript\"></script>"
+	print "<div id=\"calendar\"></div>"

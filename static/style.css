@@ -309,8 +309,15 @@ img.user, img.project, img.sprint {
 	padding-right: 3px;
 }
 
-.indented {
+.project-list {
+	position: relative;
 	margin-left: 30px;
+}
+
+.project-list > .buttons {
+	position: absolute;
+	top: -48px;
+	right: 16px;
 }
 
 .project-summary {
