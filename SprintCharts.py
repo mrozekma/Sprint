@@ -183,9 +183,8 @@ class HoursByUserChart(Chart):
 			}
 			seriesList.append(series)
 
-			userTasks = filter(lambda t: t.assigned == user, tasks)
 			for day in days:
-				series['data'].append(sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in userTasks]))
+				series['data'].append(sum(t.hours if t and t.assigned == user else 0 for t in [t.getRevisionAt(day) for t in tasks]))
 
 		setupTimeline(self, sprint)
 
