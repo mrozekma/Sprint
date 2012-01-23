@@ -364,7 +364,7 @@ def showInfo(handler, request, id):
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
 	tasks = sprint.getTasks()
-	editable = sprint.canEdit(handler.session['user']) and sprint.project.owner == handler.session['user']
+	editable = sprint.project.owner == handler.session['user'] # Info can be edited even after the sprint closes
 
 	handler.title(sprint.safe.name)
 
@@ -440,11 +440,6 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_members = Non
 
 	if sprint.project.owner != handler.session['user']:
 		die("You must be the scrummaster to modify sprint information")
-
-	if not (sprint.isActive() or sprint.isPlanning()):
-		die("You cannot modify an inactive sprint")
-	elif not sprint.canEdit(handler.session['user']):
-		die("You don't have permission to modify this sprint")
 
 	try:
 		end = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_end)
