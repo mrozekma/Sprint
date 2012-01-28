@@ -1,4 +1,4 @@
 $(document).ready(function() {
 	$('select').chosen();
-	$('#save-button').savebutton($('#post-status'));
+	$('#save-button').savebutton($('#post-status'), '/sprints/' + sprintid);
 });

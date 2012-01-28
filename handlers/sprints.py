@@ -4,7 +4,7 @@ from json import dumps as toJS
 
 from rorn.Session import delay, undelay
 from rorn.ResponseWriter import ResponseWriter
-from rorn.Box import CollapsibleBox, ErrorBox, InfoBox
+from rorn.Box import CollapsibleBox, ErrorBox, InfoBox, SuccessBox
 
 from Privilege import requirePriv
 from Project import Project
@@ -378,6 +378,7 @@ def showInfo(handler, request, id):
 	print "</style>"
 	print "<script src=\"/static/sprint-info.js\" type=\"text/javascript\"></script>"
 	print "<script type=\"text/javascript\">"
+	print "var sprintid = %d;" % id
 	print "$(document).ready(function() {"
 	print "    $('input.date').datepicker({"
 	print "        minDate: '%s'," % tsToDate(sprint.end).strftime('%m/%d/%Y')
@@ -485,7 +486,8 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_members = Non
 		goal.save()
 
 	request['code'] = 299
-	print "Saved changes"
+	delay(handler, SuccessBox("Updated info", close = 3, fixed = True))
+
 
 @get('sprints/(?P<id>[0-9]+)/metrics')
 def showMetrics(handler, request, id):
@@ -600,28 +602,27 @@ def showAvailability(handler, request, id):
 	print "<table class=\"availability\">"
 	print "<tr class=\"dateline\">"
 	print "<td>&nbsp;</td>"
-	seek = start
-	while seek <= end:
-		if seek.weekday() < 5: # Weekday
-			print "<td>%s<br>%s</td>" % (seek.strftime('%d'), seek.strftime('%a'))
-		seek += oneday
+	for day in sprint.getDays():
+		print "<td>%s<br>%s</td>" % (day.strftime('%d'), day.strftime('%a'))
+		if day.weekday() == 4:
+			print "<td class=\"spacer\">&nbsp;</td>"
 	if editable:
-		print "<td>%s</td>" % Button('set all 8', type = 'button').info()
+		print "<td class=\"buttons\">%s</td>" % Button('set all 8', id = 'set-all-8', type = 'button').info()
 	print "</tr>"
 
 	for user in sorted(sprint.members):
 		print "<tr class=\"userline\">"
 		print "<td class=\"username\">%s</td>" % user.safe.username
-		seek = start
-		while seek <= end:
-			if seek.weekday() < 5: # Weekday
-				if editable:
-					print "<td><input type=\"text\" name=\"hours[%d,%d]\" value=\"%d\"></td>" % (user.id, dateToTs(seek), avail.get(user, seek))
-				else:
-					print "<td style=\"text-align: center\">%d</td>" % avail.get(user, seek)
-			seek += oneday
+		for day in sprint.getDays():
+			if editable:
+				print "<td><input type=\"text\" name=\"hours[%d,%d]\" value=\"%d\"></td>" % (user.id, dateToTs(day), avail.get(user, day))
+			else:
+				print "<td style=\"text-align: center\">%d</td>" % avail.get(user, day)
+
+			if day.weekday() == 4:
+				print "<td class=\"spacer\">&nbsp;</td>"
 		if editable:
-			print "<td>%s</td>" % Button('copy first', type = 'button').info()
+			print "<td class=\"buttons\">%s</td>" % Button('copy first', id = 'copy-first', type = 'button').info()
 		print "</tr>"
 
 	print "</table>"
@@ -664,7 +665,7 @@ def sprintAvailabilityPost(handler, request, id, p_hours):
 		avail.set(user, time, hours)
 
 	request['code'] = 299
-	print "Saved changes"
+	delay(handler, SuccessBox("Updated availability", close = 3, fixed = True))
 
 @get('sprints/new')
 def newSprint(handler, request, project):

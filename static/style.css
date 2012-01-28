@@ -561,8 +561,20 @@ table.availability tr.userline td input {
 	width: 20px;
 }
 
+table.availability tr td {
+	text-align: center;
+	width: 35px;
+}
+
+table.availability tr td.spacer:nth-last-of-type(2) { /* If the sprint ends on a friday, this matches the last spacer so we can hide it */
+	display: none;
+}
+
+table.availability tr td.buttons {
+	width: 120px;
+}
+
 table.availability tr td button {
-	margin-left: 30px;
 	width: 80%;
 }
 
@@ -653,7 +665,7 @@ table.task-import td.hours input {
 	display: none;
 }
 
-.buttons {
+.project-summary .buttons {
 	float: left;
 }
 
