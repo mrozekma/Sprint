@@ -72,7 +72,7 @@ $(document).ready(function() {
 	$('#group%d').effect('highlight', {}, 3000);
 });
 </script>""" % group.id)
-	print "/sprints/%d" % group.sprint.id
+	print "/sprints/%d#group%d" % (group.sprint.id, group.id)
 
 @get('groups/edit/(?P<id>[0-9]+)')
 def editGroup(handler, request, id):
