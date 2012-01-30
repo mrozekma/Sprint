@@ -29,7 +29,7 @@ class HoursChart(Chart):
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
 		futureIndex = days.index(futureStarts) if futureStarts else None
 
-		tasks = sprint.getTasks()
+		tasks = sprint.getTasks(includeDeleted = True)
 
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
@@ -60,7 +60,7 @@ class HoursChart(Chart):
 		seriesList.append(series)
 
 		for day in days:
-			series['data'].append(sum(t.hours if t else 0 for t in [t.getRevisionAt(day) for t in tasks]))
+			series['data'].append(sum(t.hours if t and not t.deleted else 0 for t in [t.getRevisionAt(day) for t in tasks]))
 
 		series = {
 			'name': 'Availability',
@@ -154,7 +154,7 @@ class HoursByUserChart(Chart):
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
 		futureIndex = days.index(futureStarts) if futureStarts else None
 
-		tasks = sprint.getTasks()
+		tasks = sprint.getTasks(includeDeleted = True)
 
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
@@ -184,7 +184,7 @@ class HoursByUserChart(Chart):
 			seriesList.append(series)
 
 			for day in days:
-				series['data'].append(sum(t.hours if t and t.assigned == user else 0 for t in [t.getRevisionAt(day) for t in tasks]))
+				series['data'].append(sum(t.hours if t and t.assigned == user and not t.deleted else 0 for t in [t.getRevisionAt(day) for t in tasks]))
 
 		setupTimeline(self, sprint)
 
