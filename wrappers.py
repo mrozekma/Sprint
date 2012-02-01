@@ -77,7 +77,7 @@ def header(handler, path):
 	if handler.session['user']:
 		print "Logged in as %s" % handler.session['user']
 	else:
-		print "Not logged in"
+		print "<a href=\"/login\">Not logged in</a>"
 	print "</div>"
 
 	if ('--dev' in sys.argv or isDevMode(handler)) and handler.session['user'] and handler.session['user'].hasPrivilege('Dev'):

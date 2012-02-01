@@ -18,18 +18,6 @@ def tsStart(timestamp): return dateToTs(tsToDate(timestamp).replace(hour = 0, mi
 def tsEnd(timestamp): return dateToTs(tsToDate(timestamp).replace(hour = 23, minute = 59, second = 59))
 def formatDate(d): return d.strftime(DATE_FMT)
 
-def andmap(f, l):
-	for i in l:
-		if not f(i):
-			return False
-	return True
-
-def ormap(f, l):
-	for i in l:
-		if f(i):
-			return True
-	return False
-
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/410692
 class switch(object):
     def __init__(self, value):
