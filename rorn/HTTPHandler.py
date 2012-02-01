@@ -3,6 +3,7 @@ from inspect import getargspec
 import re
 import cgi
 import sys
+import urllib
 from sqlite3 import OperationalError
 import traceback
 
@@ -59,6 +60,10 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			for key in query:
 				if key[:2] == 'p_':
 					self.error("Invalid request", "Illegal query key: %s" % key)
+
+			# URL unquote
+			for key in query:
+				query[key] = urllib.unquote(query[key])
 
 			# Add p_ prefix to post variables
 			if data:
