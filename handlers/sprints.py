@@ -4,7 +4,7 @@ from json import dumps as toJS
 
 from rorn.Session import delay, undelay
 from rorn.ResponseWriter import ResponseWriter
-from rorn.Box import CollapsibleBox, ErrorBox, InfoBox, SuccessBox
+from rorn.Box import CollapsibleBox, ErrorBox, InfoBox, SuccessBox, WarningBox
 
 from Privilege import requirePriv
 from Project import Project
@@ -23,6 +23,7 @@ from ProgressBar import ProgressBar
 from History import showHistory
 from Export import exports
 from LoadValues import isDevMode
+from Search import Search
 from utils import *
 
 # groupings = ['status', 'owner', 'hours']
@@ -39,12 +40,12 @@ def sprint(handler, request):
 	redirect('/projects')
 
 @get('sprints/(?P<id>[0-9]+)')
-def showBacklog(handler, request, id, assigned = None, highlight = None):
+def showBacklog(handler, request, id, search = None):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
-	highlight = map(int, highlight.split(',')) if highlight else []
+	search = Search(search)
 
 	# handler.title(sprint.project.safe.name)
 	handler.title(sprint.safe.name)
@@ -58,14 +59,20 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
 	print "var isPlanning = %s;" % ('true' if sprint.isPlanning() else 'false')
-	if assigned:
+	if search.has('assigned'):
 		print "$('document').ready(function() {"
-		print "    $('#filter-assigned a[assigned=\"%s\"]').click();" % assigned
+		print "    $('%s').addClass('selected');" % ', '.join("#filter-assigned a[assigned=\"%s\"]" % user.username for user in search.get('assigned'))
+		print "    apply_filters();"
 		print "});"
 	print "</script>"
 
+	if search.getBaseString() != '':
+		print WarningBox('Unimplemented', "Free-form search '%s' currently ignored" % stripTags(search.getBaseString()))
+
+	print "<div class=\"backlog-tabs\">"
 	print (tabs << 'backlog') % id
-	print "<br>"
+	print "<input type=\"text\" id=\"search\" value=\"%s\">" % search.getFullString()
+	print "</div>"
 
 	if sprint.isActive():
 		days = [
@@ -133,7 +140,7 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 	print "<div id=\"filter-assigned\">"
 	print Button('None').simple().negative()
 	for member in sorted(sprint.members):
-		print "<a class=\"fancy\" assigned=\"%s\" href=\"/sprints/%d?assigned=%s\"><img src=\"%s\">&nbsp;%s</a>" % (member.username, id, member.username, member.getAvatar(16), member.username)
+		print "<a class=\"fancy\" assigned=\"%s\" href=\"/sprints/%d?search=assigned:%s\"><img src=\"%s\">&nbsp;%s</a>" % (member.username, id, member.username, member.getAvatar(16), member.username)
 	print "</div><br>"
 
 	print "<div id=\"filter-status\">"
@@ -188,7 +195,7 @@ def showBacklog(handler, request, id, assigned = None, highlight = None):
 		print "</td>"
 		print "</tr>"
 		for task in group.getTasks():
-			printTask(handler, task, days, group = task.group, highlight = (task.id in highlight), editable = editable)
+			printTask(handler, task, days, group = task.group, highlight = (task in search.get('highlight')), editable = editable)
 
 	print "<tr><td colspan=\"7\">&nbsp;</td></tr>" # Spacer so rows can be dragged to the bottom
 	print "</tbody>"

@@ -393,6 +393,20 @@ img.user, img.project, img.sprint {
 	padding-right: 5px;
 }
 
+.backlog-tabs {
+	position: relative;
+	margin-bottom: 16px;
+}
+
+input#search {
+	position: absolute;
+	top: 8px;
+	right: 0px;
+	width: 200px;
+	background: url(/static/images/search.png) no-repeat 2px;
+	padding-left: 24px;
+}
+
 table.tasks td {
 	vertical-align: top;
 }

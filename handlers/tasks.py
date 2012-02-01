@@ -47,7 +47,7 @@ def task(handler, request, ids):
 			ErrorBox.die("No %s with %s %s" % ('task' if len(ids) == 1 else 'tasks', 'ID' if len(ids) == 1 else 'IDs', ', '.join(ids)))
 
 		if len(set(task.sprint for task in tasks.values())) == 1: # All in the same sprint
-			print "<small>(<a href=\"/sprints/%d?highlight=%s\">Show in backlog view</a>)</small><br><br>" % (tasks.values()[0].sprint.id, ','.join(map(str, ids)))
+			print "<small>(<a href=\"/sprints/%d?search=highlight:%s\">Show in backlog view</a>)</small><br><br>" % (tasks.values()[0].sprint.id, ','.join(map(str, ids)))
 
 		for id in ids:
 			print "<a href=\"#task%d\">%s</a><br>" % (id, tasks[id].safe.name)

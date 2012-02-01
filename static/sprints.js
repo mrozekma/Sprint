@@ -3,6 +3,7 @@ $(document).ready(function() {
 	fancy_cells('#all-tasks.editable');
 
 	setup_hours_events();
+	setup_search();
 	setup_filter_buttons();
 	setup_group_arrows();
 	setup_bugzilla($('tr.task'));
@@ -80,6 +81,14 @@ function hours_blur(field) {
 		save_task(task, 'hours', val);
 		set_status(task, val == 0 ? 'complete' : 'in progress');
 	}
+}
+
+function setup_search() {
+	$('input#search').keydown(function(e) {
+		if(e.keyCode == 13) {
+			document.location = '/sprints/' + sprintid + '?search=' + encodeURIComponent($(this).val());
+		}
+	});
 }
 
 function setup_filter_buttons() {
