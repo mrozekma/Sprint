@@ -401,3 +401,8 @@ button.btn::-moz-focus-inner, input[type=submit].btn::-moz-focus-inner {
 .tab-content > .active, .pill-content > .active {
 	display: block;
 }
+
+/* My changes */
+.alert-message a {
+	text-shadow: none !important;
+}
