@@ -398,13 +398,20 @@ img.user, img.project, img.sprint {
 	margin-bottom: 16px;
 }
 
-input#search {
+.backlog-tabs input#search {
 	position: absolute;
 	top: 8px;
 	right: 0px;
 	width: 200px;
-	background: url(/static/images/search.png) no-repeat 2px;
+	/* background: url(/static/images/search.png) no-repeat 2px; */
 	padding-left: 24px;
+}
+
+/* There's no way abusing position: absolute this much could cause any problems... right? */
+.backlog-tabs img.search-icon {
+	position: absolute;
+	top: 13px;
+	right: 208px;
 }
 
 table.tasks td {

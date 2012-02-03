@@ -66,12 +66,14 @@ def showBacklog(handler, request, id, search = None):
 		print "});"
 	print "</script>"
 
-	if search.getBaseString() != '':
-		print WarningBox('Unimplemented', "Free-form search '%s' currently ignored" % stripTags(search.getBaseString()))
-
 	print "<div class=\"backlog-tabs\">"
 	print (tabs << 'backlog') % id
-	print "<input type=\"text\" id=\"search\" value=\"%s\">" % search.getFullString()
+	if search.hasFullString():
+		print "<input type=\"text\" id=\"search\" value=\"%s\">" % search.getFullString()
+		print "<a href=\"/sprints/%d\"><img class=\"search-icon\" src=\"/static/images/search.png\"></a>" % id
+	else:
+		print "<input type=\"text\" id=\"search\">"
+		print "<img class=\"search-icon\" src=\"/static/images/search.png\">"
 	print "</div>"
 
 	if sprint.isActive():
@@ -149,6 +151,12 @@ def showBacklog(handler, request, id, search = None):
 		print "<a class=\"fancy\" status=\"%s\" href=\"#\"><img src=\"%s\">%s</a>" % (status.name, status.getIcon(), status.text)
 	print "</div><br>"
 
+	if search.hasBaseString():
+		totalTasks = len(tasks)
+		tasks = search.filter(tasks)
+
+		print InfoBox("Showing %d of %s matching &quot;<b>%s</b>&quot; <small>(<a href=\"/sprints/%d\">clear search</a>)</small>" % (len(tasks), pluralize(totalTasks, 'task', 'tasks'), stripTags(search.getBaseString()), id))
+
 	if sprint.isPlanning():
 		if sprint.isActive():
 			print InfoBox("Today is <b>sprint planning</b> &mdash; all changes will be collapsed into one revision")
@@ -194,7 +202,9 @@ def showBacklog(handler, request, id, search = None):
 			print "<a href=\"/tasks/new?group=%d\"><img src=\"/static/images/task-new.png\" title=\"New Task\"></a>" % group.id
 		print "</td>"
 		print "</tr>"
-		for task in group.getTasks():
+
+		groupTasks = filter(lambda task: task.group == group, tasks)
+		for task in groupTasks:
 			printTask(handler, task, days, group = task.group, highlight = (task in search.get('highlight')), editable = editable)
 
 	print "<tr><td colspan=\"7\">&nbsp;</td></tr>" # Spacer so rows can be dragged to the bottom
