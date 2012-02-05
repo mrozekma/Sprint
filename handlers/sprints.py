@@ -40,7 +40,7 @@ def sprint(handler, request):
 	redirect('/projects')
 
 @get('sprints/(?P<id>[0-9]+)')
-def showBacklog(handler, request, id, search = None):
+def showBacklog(handler, request, id, search = None, devEdit = False):
 	requirePriv(handler, 'User')
 	sprint = Sprint.load(id)
 	if not sprint:
@@ -76,7 +76,7 @@ def showBacklog(handler, request, id, search = None):
 		print "<img class=\"search-icon\" src=\"/static/images/search.png\">"
 	print "</div>"
 
-	if sprint.isActive():
+	if sprint.isActive() or devEdit:
 		days = [
 			('ereyesterday', Weekday.shift(-2)),
 			('yesterday', Weekday.shift(-1)),
@@ -101,7 +101,7 @@ def showBacklog(handler, request, id, search = None):
 
 	tasks = sprint.getTasks()
 	groups = sprint.getGroups()
-	editable = sprint.canEdit(handler.session['user'])
+	editable = sprint.canEdit(handler.session['user']) or (devEdit and isDevMode(handler))
 
 	undelay(handler)
 
@@ -167,7 +167,12 @@ def showBacklog(handler, request, id, search = None):
 		print InfoBox("Today is <b>sprint review</b> &mdash; this is the last day to make changes to the backlog")
 
 	if isDevMode(handler):
-		print Button('#all-tasks borders', "javascript:$('#all-tasks, #all-tasks tr td').css('border', '1px solid #f00').css('border-collapse', 'collapse');", type = 'button').negative()
+		print Button('#all-tasks borders', "javascript:$('#all-tasks, #all-tasks tr td').css('border', '1px solid #f00').css('border-collapse', 'collapse');").negative()
+		if not editable:
+			print Button('make editable', "/sprints/%d?devEdit" % id).negative()
+		elif devEdit:
+			print Button('make uneditable', "/sprints/%d" % id).negative()
+
 		print "<div class=\"debugtext\">"
 		print "start: %d (%s)<br>" % (sprint.start, tsToDate(sprint.start))
 		print "end: %d (%s)<br>" % (sprint.end, tsToDate(sprint.end))
