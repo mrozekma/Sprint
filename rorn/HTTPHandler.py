@@ -63,7 +63,8 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 			# URL unquote
 			for key in query:
-				query[key] = urllib.unquote(query[key])
+				if isinstance(query[key], str):
+					query[key] = urllib.unquote(query[key])
 
 			# Add p_ prefix to post variables
 			if data:
