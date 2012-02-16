@@ -39,7 +39,7 @@ function setup_hours_events() {
 
 	$('td.hours img').click(function() {
 		task = $(this).parents('tr.task');
-        field = $('input', $(this).parents('.hours'));
+		field = $('input', $(this).parents('.hours'));
 		old_val = val = parseInt(field.val(), 10);
 		val += parseInt($(this).attr('amt'), 10);
 		if(val < 0) {
@@ -73,13 +73,15 @@ function setup_hours_events() {
 function hours_blur(field) {
 	clearTimeout(hours_timer);
 	task = field.parents('tr.task');
-    field = $('input', field.parents('.hours'));
+	field = $('input', field.parents('.hours'));
 	val = parseInt(field.val(), 10);
 	if(hours_cache < 0) {
 		console.log("Problem blurring hours field; hours cache is unset");
 	} else if(val != hours_cache) {
 		save_task(task, 'hours', val);
-		set_status(task, val == 0 ? 'complete' : 'in progress');
+		if(!isPlanning) {
+			set_status(task, val == 0 ? 'complete' : 'in progress');
+		}
 	}
 }
 
