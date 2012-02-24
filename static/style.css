@@ -360,7 +360,11 @@ img.user, img.project, img.sprint {
 }
 
 .project-summary .project-members .member.scrummaster a {
-	color: #F00;
+	color: #f00;
+}
+
+.project-summary .project-members .member.inactive a {
+	color: #aaa;
 }
 
 .project-summary .sprint-summaries {

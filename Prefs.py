@@ -1,5 +1,6 @@
 from utils import *
 from DB import ActiveRecord, db
+from Project import Project
 from Sprint import Sprint
 from Task import statuses, statusMenu
 from User import User

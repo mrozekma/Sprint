@@ -21,12 +21,12 @@ def projectsList(handler, request):
 	for project in Project.loadAll() + (Project.loadAllTest() if isDevMode(handler) else []):
 		writer = ResponseWriter()
 		sprints = project.getSprints()
-		isActive = any(map(lambda sprint: sprint.isActive(), sprints))
-		isMember = False
+		activeSprints = filter(lambda sprint: sprint.isActive(), sprints)
+		activeMembers = set(sum((sprint.members for sprint in activeSprints), []))
 		isTest = project.id < 0
 
 		classes = ['project-summary']
-		if isActive:
+		if len(activeSprints) > 0:
 			classes.append('active')
 		if isTest:
 			classes.append('test')
@@ -41,9 +41,8 @@ def projectsList(handler, request):
 		print "<div class=\"project-members\">"
 		print "<div class=\"member scrummaster\">%s</div>" % project.owner.str('scrummaster')
 		for member in sorted(project.getMembers()):
-			if member == handler.session['user']: isMember = True
 			if member == project.owner: continue
-			print "<div class=\"member\">%s</div>" % member.str('member')
+			print "<div class=\"member %s\">%s</div>" % ('active' if member in activeMembers or len(activeSprints) == 0 else 'inactive', member.str('member'))
 		print "</div>"
 
 		if sprints:
@@ -56,7 +55,7 @@ def projectsList(handler, request):
 
 		print "<div class=\"clear\"></div>"
 		print "</div>"
-		boxes[project] = {'str': writer.done(), 'weight': (2 if isTest else 0) + (0 if isActive and isMember else 1)}
+		boxes[project] = {'str': writer.done(), 'weight': (2 if isTest else 0) + (0 if handler.session['user'] in activeMembers else 1)}
 
 	print "<div class=\"project-list\">"
 	print "<div class=\"buttons\">"
