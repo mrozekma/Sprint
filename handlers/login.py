@@ -19,7 +19,10 @@ def loginPost(handler, request, p_username, p_password):
 	handler.title('Login')
 	user = User.load(username = p_username, password = User.crypt(p_username, p_password))
 	if user:
-		if isDevMode() and not user.hasPrivilege('Dev'):
+		if not user.hasPrivilege('User'):
+			delay(handler, ErrorBox("Login Failed", "Your account has been disabled"))
+			redirect('/')
+		elif isDevMode() and not user.hasPrivilege('Dev'):
 			delay(handler, ErrorBox("Login Failed", "This is a development build"))
 			redirect('/')
 
