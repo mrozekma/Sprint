@@ -1,5 +1,6 @@
 from __future__ import division
 from itertools import cycle
+from math import ceil
 
 from Chart import Chart
 from Task import Task
@@ -82,7 +83,7 @@ class HoursChart(Chart):
 			startPoint = [futureIndex - TREND_DAYS, data[futureIndex - TREND_DAYS][1]]
 			midPoint = [futureIndex - 1, data[futureIndex - 1][1]]
 			slope = (midPoint[1] - startPoint[1]) / (TREND_DAYS - 1)
-			endPoint = [len(days) - 1, startPoint[1] + (slope * ((len(days) - 1) - (startPoint[0])))]
+			endPoint = [len(days) - 1, int(ceil(startPoint[1] + (slope * ((len(days) - 1) - (startPoint[0])))))]
 			self.series.get().append({
 				'name': 'Projected hours',
 				'data': [midPoint, endPoint],
