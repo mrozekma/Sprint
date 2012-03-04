@@ -594,7 +594,7 @@ def showMetrics(handler, request, id):
 		now = sum(t.hours for t in tasks if t.goalid == (goal.id if goal else 0))
 		if not goal and start == now == 0:
 			continue
-		print ProgressBar("<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;%s" % (goal.color if goal else 'none', goal.safe.name if goal else 'Other'), start - now, start, zeroDivZero = False, style = {100: 'progress-current-green'})
+		print ProgressBar("<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;<a style=\"color: #000\" href=\"/sprints/%d?search=goal:%s\">%s</a>" % (goal.color if goal else 'none', sprint.id, goal.color if goal else 'none', goal.safe.name if goal else 'Other'), start - now, start, zeroDivZero = False, style = {100: 'progress-current-green'})
 
 	print "<a name=\"averages\">"
 	print "<h2><a href=\"#averages\">Averages</a></h2>"
