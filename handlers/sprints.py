@@ -45,10 +45,17 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
-	search = Search(search)
 
-	# handler.title(sprint.project.safe.name)
+	# Redirect to search help page if searched for empty string
+	if search == '':
+		redirect('/search')
+
 	handler.title(sprint.safe.name)
+
+	tasks = sprint.getTasks()
+	groups = sprint.getGroups()
+	editable = sprint.canEdit(handler.session['user']) or (devEdit and isDevMode(handler))
+	search = Search(sprint, search)
 
 	print "<link href=\"/prefs/backlog.css\" rel=\"stylesheet\" type=\"text/css\" />"
 	print "<script src=\"/static/jquery.editable-1.3.3.js\" type=\"text/javascript\"></script>"
@@ -59,21 +66,37 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
 	print "var isPlanning = %s;" % ('true' if sprint.isPlanning() else 'false')
+	print "function update_task_count() {"
+	print "    var total = %d;" % len(tasks)
+	print "    var vis = $('#all-tasks .task').filter(function() {return $(this).css('display') != 'none'});"
+	print "    var assigned = $.makeArray($('#filter-assigned .selected').map(function() {return $(this).attr('assigned');}));"
+	print "    var status = $.makeArray($('#filter-status .selected').map(function() {return $(this).attr('status');}));";
+	print "    txt = 'Showing ' + vis.length + ' of ' + total + (total == 1 ? ' task' : ' tasks');"
+	print
+	print "    search = Array();"
+	if search.hasBaseString(): print "    search.push('matching \"%s\"');" % search.getBaseString().replace("'", "\\'").replace('"', '\\"')
+	print "    if(status.length > 0) {search.push(status.join(' or '));}"
+	print "    if(assigned.length > 0) {search.push('assigned to ' + assigned.join(' or '));}"
+	for filt in search.getAll():
+		if filt.description():
+			print "    search.push('%s');" % filt.description().replace("'", "\\'").replace('"', '\\"')
+	print
+	print "    $('.cancel-search').css('display', search.length > 0 ? 'inline' : 'none');"
+	print "    if(search.length > 0) {txt += ' ' + search.join(', ');}"
+	print "    $('#task-count').text(txt);"
+	print "}"
+	print "$('document').ready(function() {"
 	if search.has('assigned'):
-		print "$('document').ready(function() {"
-		print "    $('%s').addClass('selected');" % ', '.join("#filter-assigned a[assigned=\"%s\"]" % user.username for user in search.get('assigned'))
-		print "    apply_filters();"
-		print "});"
+		print "    $('%s').addClass('selected');" % ', '.join("#filter-assigned a[assigned=\"%s\"]" % user.username for user in search.get('assigned').users)
+	if search.has('status'):
+		print "    $('%s').addClass('selected');" % ', '.join("#filter-status a[status=\"%s\"]" % status.name for status in search.get('status').statuses)
+	print "    apply_filters();"
+	print "});"
 	print "</script>"
 
 	print "<div class=\"backlog-tabs\">"
 	print (tabs << 'backlog') % id
-	if search.hasFullString():
-		print "<input type=\"text\" id=\"search\" value=\"%s\">" % search.getFullString()
-		print "<a href=\"/sprints/%d\"><img class=\"search-icon\" src=\"/static/images/search.png\"></a>" % id
-	else:
-		print "<input type=\"text\" id=\"search\">"
-		print "<img class=\"search-icon\" src=\"/static/images/search.png\">"
+	print "<input type=\"text\" id=\"search\" value=\"%s\">" % search.getFullString().replace('"', '&quot;')
 	print "</div>"
 
 	if sprint.isActive() or devEdit:
@@ -98,10 +121,6 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 			(yesterday.strftime('%A').lower(), yesterday),
 			(today.strftime('%A').lower(), today)
 		]
-
-	tasks = sprint.getTasks()
-	groups = sprint.getGroups()
-	editable = sprint.canEdit(handler.session['user']) or (devEdit and isDevMode(handler))
 
 	undelay(handler)
 
@@ -151,11 +170,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 		print "<a class=\"fancy\" status=\"%s\" href=\"#\"><img src=\"%s\">%s</a>" % (status.name, status.getIcon(), status.text)
 	print "</div><br>"
 
-	if search.hasBaseString():
-		totalTasks = len(tasks)
-		tasks = search.filter(tasks)
-
-		print InfoBox("Showing %d of %s matching &quot;<b>%s</b>&quot; <small>(<a href=\"/sprints/%d\">clear search</a>)</small>" % (len(tasks), pluralize(totalTasks, 'task', 'tasks'), stripTags(search.getBaseString()), id))
+	tasks = search.filter(tasks)
 
 	if sprint.isPlanning():
 		if sprint.isActive():
@@ -192,11 +207,24 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	sprintDays = [day.date() for day in sprint.getDays()]
 	print "<table border=0 cellspacing=0 cellpadding=2 id=\"all-tasks\" class=\"%s\">" % ' '.join(tblClasses)
 	print "<thead>"
-	print "<tr class=\"dateline nodrop nodrag\"><td colspan=\"3\">&nbsp;</td>" + ''.join(map(lambda (x,y): "<td class=\"%s\">%s</td>" % (x, x), days)) + "<td>&nbsp;</td></tr>"
-	print "<tr class=\"dateline2 nodrop nodrag\"><td colspan=\"3\">&nbsp;</td>" + ''.join(map(lambda (x,y): "<td class=\"%s\">%s<br>Day %s of %s</td>" % (x, formatDate(y), sprintDays.index(y.date())+1 if y.date() in sprintDays else 0, len(sprintDays)), days)) + "<td>&nbsp;</td></tr>"
+	print "<tr class=\"dateline nodrop nodrag\">"
+	print "<td colspan=\"3\">&nbsp;</td>"
+	for (x, y) in days:
+		print "<td class=\"%s\">%s</td>" % (x, x)
+	print "<td>&nbsp;</td>"
+	print "</tr>"
+	print "<tr class=\"dateline2 nodrop nodrag\">"
+	print "<td colspan=\"3\">"
+	print "<span id=\"task-count\"></span>"
+	print "<a href=\"/sprints/%d\"><img class=\"cancel-search\" src=\"/static/images/cross.png\"></a>" % id
+	print "</td>"
+	for (x, y) in days:
+		print "<td class=\"%s\">%s<br>Day %s of %s</td>" % (x, formatDate(y), sprintDays.index(y.date())+1 if y.date() in sprintDays else 0, len(sprintDays))
+	print "<td>&nbsp;</td>"
+	print "</tr>"
 	print "</thead>"
-	print "<tbody>"
 
+	print "<tbody>"
 	for group in groups:
 		print "<tr class=\"group\" id=\"group%d\" groupid=\"%d\">" % (group.id, group.id)
 		print "<td colspan=\"6\"><img src=\"/static/images/collapse.png\">&nbsp;<span>%s</span></td>" % group.name
@@ -210,7 +238,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 
 		groupTasks = filter(lambda task: task.group == group, tasks)
 		for task in groupTasks:
-			printTask(handler, task, days, group = task.group, highlight = (task in search.get('highlight')), editable = editable)
+			printTask(handler, task, days, group = task.group, highlight = (search.has('highlight') and task in search.get('highlight').tasks), editable = editable)
 
 	print "<tr><td colspan=\"7\">&nbsp;</td></tr>" # Spacer so rows can be dragged to the bottom
 	print "</tbody>"

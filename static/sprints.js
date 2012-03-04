@@ -179,6 +179,8 @@ function apply_filters() {
 		groupid=$(this).parents('tr').attr('groupid');
 		$('tr.task[groupid=' + groupid + ']').hide();
 	});
+
+	update_task_count();
 }
 
 function fancy_cells(table_selector) {

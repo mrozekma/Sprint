@@ -248,13 +248,13 @@ def newTaskMany(handler, request, group):
 	help = ResponseWriter()
 	print "Each line needs to match the following syntax. Unparseable lines generate an error message but are otherwise ignored"
 	print "<ul>"
-	print "<li><b>X</b> -- A single character changes the field separator to that character. The default field separator is |, so that's used in the examples here</li>"
-	print "<li><b>X...X:</b> -- A line ending in a colon is a group name. All tasks after that line will be added to that group. If no group of that name exists, it will be created (the preview will label that group as \"(NEW)\"). A blank line switches back to the default group, which is the group you clicked the new task button on, %s" % defaultGroup.safe.name
-	print "<li><b>X...X|X...X|X...X[|X...X]</b> -- 3 or 4 fields are a new task. The fields can appear in any order:<ul>"
-	print "<li><b>assignee</b> -- The person assigned to this task</li>"
-	print "<li><b>hours</b> -- The number of hours this task will take</li>"
-	print "<li><b>status</b> -- The initial status of the task. This field is optional; it defaults to \"not started\"</li>"
-	print "<li><b>name</b> -- The name of the task</li>"
+	print "<li><b>X</b> &mdash; A single character changes the field separator to that character. The default field separator is |, so that's used in the examples here</li>"
+	print "<li><b>X...X:</b> &mdash; A line ending in a colon is a group name. All tasks after that line will be added to that group. If no group of that name exists, it will be created (the preview will label that group as \"(NEW)\"). A blank line switches back to the default group, which is the group you clicked the new task button on, %s" % defaultGroup.safe.name
+	print "<li><b>X...X|X...X|X...X[|X...X]</b> &mdash; 3 or 4 fields are a new task. The fields can appear in any order:<ul>"
+	print "<li><b>assignee</b> &mdash; The person assigned to this task</li>"
+	print "<li><b>hours</b> &mdash; The number of hours this task will take</li>"
+	print "<li><b>status</b> &mdash; The initial status of the task. This field is optional; it defaults to \"not started\"</li>"
+	print "<li><b>name</b> &mdash; The name of the task</li>"
 	print "</ul></li>"
 	print "</ul>"
 	print CollapsibleBox('Help', help.done())
