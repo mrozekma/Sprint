@@ -74,9 +74,10 @@ class Task(ActiveRecord):
 		rows = db().select("SELECT * FROM %s WHERE id = ? ORDER BY revision" % Task.table(), self.id)
 		return map(lambda x: Task(**x), rows)
 
+	# This returns the revision at the end of the specified day
 	def getRevisionAt(self, date):
-		timestamp = dateToTs(date)
-		rows = db().select("SELECT * FROM %s WHERE id = ? AND timestamp <= ? ORDER BY revision DESC LIMIT 1" % Task.table(), self.id, tsEnd(timestamp))
+		timestamp = tsEnd(dateToTs(date))
+		rows = db().select("SELECT * FROM %s WHERE id = ? AND timestamp <= ? ORDER BY revision DESC LIMIT 1" % Task.table(), self.id, timestamp)
 		rows = [x for x in rows]
 		return Task(**rows[0]) if len(rows) > 0 else None
 
