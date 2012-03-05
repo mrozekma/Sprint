@@ -352,6 +352,9 @@ function delete_task(task_id) {
 	if(row) {
 		save_task(row, 'deleted', 1);
 		row.fadeOut();
+		row.hide();
+		totalTasks--;
+		update_task_count();
 	}
 }
 
