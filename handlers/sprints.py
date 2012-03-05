@@ -165,7 +165,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print "<div id=\"filter-status\">"
 	print Button('None').simple().negative()
 	for status in sorted(statuses.values()):
-		print "<a class=\"fancy\" status=\"%s\" href=\"#\"><img src=\"%s\">%s</a>" % (status.name, status.getIcon(), status.text)
+		print "<a class=\"fancy\" status=\"%s\" href=\"/sprints/%d?search=status:%s\"><img src=\"%s\">%s</a>" % (status.name, id, status.name.replace(' ', '-'), status.getIcon(), status.text)
 	print "</div><br>"
 
 	tasks = search.filter(tasks)
