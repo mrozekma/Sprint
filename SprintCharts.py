@@ -326,6 +326,6 @@ class TaskChart(Chart):
 				series['events'] = {'click': "function() {window.location = '/tasks/%d';}" % task.id}
 			seriesList.append(series)
 
-			hoursByDay = dict((utcToLocal(tsStripHours(rev.timestamp)) * 1000, rev.hours) for rev in revs)
-			hoursByDay[utcToLocal(tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))) * 1000] = task.hours
-			series['data'] += hoursByDay.items()
+			hoursByDay = dict((tsStripHours(rev.timestamp), rev.hours) for rev in revs)
+			hoursByDay[tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))] = task.hours
+			series['data'] += [(utcToLocal(date) * 1000, hours) for (date, hours) in hoursByDay.items()]
