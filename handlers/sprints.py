@@ -381,7 +381,7 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 	print task.revision
 
 @get('sprints/active')
-def findActiveSprint(handler, request, project = None):
+def findActiveSprint(handler, request, project = None, search = None):
 	handler.title('Active Sprint')
 	requirePriv(handler, 'User')
 	if project:
@@ -389,6 +389,10 @@ def findActiveSprint(handler, request, project = None):
 		project = Project.load(projectid)
 		if not project:
 			ErrorBox.die('Load project', "No project with ID <b>%d</b>" % projectid)
+
+	url = "/sprints/%d"
+	if search:
+		url += "?search=%s" % search
 
 	sprints = Sprint.loadAll()
 	sprints = filter(lambda s: handler.session['user'] in s.members and s.isActive() and (s.project == project if project else True), sprints)
@@ -398,12 +402,12 @@ def findActiveSprint(handler, request, project = None):
 			ErrorBox.die('Active sprint', 'No active sprints found')
 			break
 		if case(1):
-			redirect("/sprints/%d" % sprints[0].id)
+			redirect(url % sprints[0].id)
 			break
 		if case():
 			print "You are active in multiple sprints%s:<br><br>" % (" in the %s project" % project.safe.name if project else '')
 			for sprint in sprints:
-				print "<a href=\"/sprints/%d\">%s</a><br>" % (sprint.id, sprint.safe.name)
+				print "<a href=\"/%s\">%s</a><br>" % (url % sprint.id, sprint.safe.name)
 			break
 
 @get('sprints/(?P<id>[0-9]+)/info')
