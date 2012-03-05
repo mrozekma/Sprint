@@ -92,6 +92,21 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 		print "    $('%s').addClass('selected');" % ', '.join("#filter-status a[status=\"%s\"]" % status.name for status in search.get('status').statuses)
 	print "    apply_filters();"
 	print "});"
+
+	print "usernames = Array(%s);" % ', '.join("'%s'" % user.username for user in sorted(sprint.members))
+	print "status_texts = Array();"
+	for statusBlock in statusMenu:
+		for statusName in statusBlock:
+			status = statuses[statusName]
+			print "status_texts['%s'] = '%s';" % (status.name, status.text)
+	print "goal_imgs = Array();"
+	print "goal_imgs[0] = '/static/images/tag-none.png';"
+	for goal in sprint.getGoals():
+		print "goal_imgs[%d] = '/static/images/tag-%s.png';" % (goal.id, goal.color)
+	print "goal_texts = Array();"
+	print "goal_texts[0] = \"None\";"
+	for goal in sprint.getGoals():
+		print "goal_texts[%d] = %s;" % (goal.id, toJS(goal.name))
 	print "</script>"
 
 	print "<div class=\"backlog-tabs\">"
@@ -140,23 +155,6 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print "</ul>"
 
 	print InfoBox('Loading...', id = 'post-status', close = True)
-
-	print "<script type=\"text/javascript\">"
-	print "usernames = Array(%s);" % ', '.join("'%s'" % user.username for user in sorted(sprint.members))
-	print "status_texts = Array();"
-	for statusBlock in statusMenu:
-		for statusName in statusBlock:
-			status = statuses[statusName]
-			print "status_texts['%s'] = '%s';" % (status.name, status.text)
-	print "goal_imgs = Array();"
-	print "goal_imgs[0] = '/static/images/tag-none.png';"
-	for goal in sprint.getGoals():
-		print "goal_imgs[%d] = '/static/images/tag-%s.png';" % (goal.id, goal.color)
-	print "goal_texts = Array();"
-	print "goal_texts[0] = \"None\";"
-	for goal in sprint.getGoals():
-		print "goal_texts[%d] = %s;" % (goal.id, toJS(goal.name))
-	print "</script>"
 
 	print "<div id=\"filter-assigned\">"
 	print Button('None').simple().negative()
