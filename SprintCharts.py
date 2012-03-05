@@ -291,7 +291,7 @@ class TaskChart(Chart):
 		if len(set(task.sprint for task in tasks)) > 1:
 			raise Exception("All tasks must be in the same sprint")
 
-		sprint = tasks[0].sprint
+		sprint = tasks[0].sprint if len(tasks) > 0 else None
 
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
@@ -306,8 +306,9 @@ class TaskChart(Chart):
 			x.dateTimeLabelFormats.day = '%a'
 			x.tickInterval = 24 * 3600 * 1000
 			x.maxZoom = 24 * 3600 * 1000
-			x.min = (sprint.start - 24*3600) * 1000
-			x.max = sprint.end * 1000
+			if sprint:
+				x.min = (sprint.start - 24*3600) * 1000
+				x.max = sprint.end * 1000
 			x.title.text = 'Day'
 		with self.yAxis as y:
 			y.min = 0

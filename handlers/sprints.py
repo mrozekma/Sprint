@@ -613,6 +613,7 @@ def showSprintHistory(handler, request, id):
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	tasks = sprint.getTasks(includeDeleted = True)
 
 	handler.title(sprint.safe.name)
 	Chart.include()
@@ -620,8 +621,11 @@ def showSprintHistory(handler, request, id):
 	chart.js()
 
 	print (tabs << 'history') % id
-	chart.placeholder()
-	showHistory(sprint.getTasks(includeDeleted = True), True)
+	if len(tasks) == 0:
+		print ErrorBox("This sprint has no tasks")
+	else:
+		chart.placeholder()
+		showHistory(tasks, True)
 	print "<br>"
 
 @get('sprints/(?P<id>[0-9]+)/availability')
