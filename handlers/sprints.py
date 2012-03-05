@@ -429,7 +429,11 @@ def showInfo(handler, request, id):
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
 	print "$(document).ready(function() {"
-	print "    $('input.date').datepicker({"
+	print "    $('input.date[name=start]').datepicker({"
+	print "        minDate: '%s'," % getNow().strftime('%m/%d/%Y')
+	print "        beforeShowDay: $.datepicker.noWeekends"
+	print "    });"
+	print "    $('input.date[name=end]').datepicker({"
 	print "        minDate: '%s'," % tsToDate(sprint.end).strftime('%m/%d/%Y')
 	print "        beforeShowDay: $.datepicker.noWeekends"
 	print "    });"
@@ -447,10 +451,16 @@ def showInfo(handler, request, id):
 	else:
 		print "%s<br><br>" % sprint.safe.name
 	print "<b>Duration</b><br>"
-	if editable:
-		print "%s - <input type=\"text\" name=\"end\" class=\"date\" value=\"%s\"><br><br>" % (tsToDate(sprint.start).strftime('%m/%d/%Y'), tsToDate(sprint.end).strftime('%m/%d/%Y'))
+	if editable and dateToTs(getNow()) < sprint.start: # Pre-planning:
+		print "<input type=\"text\" name=\"start\" class=\"date\" value=\"%s\">" % (tsToDate(sprint.start).strftime('%m/%d/%Y')),
 	else:
-		print "%s - %s<br><br>" % (tsToDate(sprint.start).strftime('%m/%d/%Y'), tsToDate(sprint.end).strftime('%m/%d/%Y'))
+		print tsToDate(sprint.start).strftime('%m/%d/%Y'),
+	print '-',
+	if editable:
+		print "<input type=\"text\" name=\"end\" class=\"date\" value=\"%s\">" % (tsToDate(sprint.end).strftime('%m/%d/%Y')),
+	else:
+		print tsToDate(sprint.end).strftime('%m/%d/%Y'),
+	print "<br><br>"
 	print "<b>Sprint goals</b><br>"
 	for goal in sprint.getGoals():
 		if editable:
@@ -474,7 +484,7 @@ def showInfo(handler, request, id):
 	print "</form>"
 
 @post('sprints/info')
-def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_members = None):
+def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None, p_members = None):
 	def die(msg):
 		print msg
 		done()
@@ -490,6 +500,22 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_members = Non
 
 	if sprint.project.owner != handler.session['user']:
 		die("You must be the scrummaster to modify sprint information")
+
+	if p_start:
+		if getNow() > tsToDate(sprint.start):
+			die("You cannot change the sprint's start date once the sprint has begun")
+		try:
+			start = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_start)
+			if not start:
+				raise ValueError
+			month, day, year = map(int, start.groups())
+			start = datetime(year, month, day, 0, 0, 0)
+		except ValueError:
+			die("Malformed start date: %s" % stripTags(p_start))
+		if start < tsToDate(tsStripHours(dateToTs(getNow()))):
+			die("You cannot start the sprint before today")
+	else:
+		start = None
 
 	try:
 		end = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_end)
@@ -512,6 +538,9 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_members = Non
 	if sprint.project.owner not in members:
 		die("The scrummaster (%s) must be a sprint member" % project.owner)
 
+	if (dateToTs(start) if start else sprint.start) > sprint.end:
+		die("Start date cannot be after end date")
+
 	avail = Availability(sprint)
 	addMembers = list(set(members) - set(sprint.members))
 	delMembers = list(set(sprint.members) - set(members))
@@ -527,12 +556,21 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_members = Non
 	sprint.members += addMembers
 	sprint.name = p_name
 	sprint.end = dateToTs(end)
+
+	if start:
+		sprint.start = dateToTs(start)
+
 	sprint.save()
 
 	for id in p_goals:
 		goal = Goal.load(id)
 		goal.name = p_goals[id]
 		goal.save()
+
+	if start:
+		for task in sprint.getTasks():
+			task.timestamp = sprint.start
+			task.save()
 
 	request['code'] = 299
 	delay(handler, SuccessBox("Updated info", close = 3, fixed = True))
