@@ -65,6 +65,7 @@ def task(handler, request, ids):
 		if not task:
 			ErrorBox.die('Tasks', "No task with ID <b>%d</b>" % id)
 		revs = task.getRevisions()
+		startRev = task.getRevisionAt(tsToDate(task.sprint.start))
 
 		header(task, task.safe.name, 1)
 
@@ -75,7 +76,7 @@ def task(handler, request, ids):
 		print "<br>"
 		print "Assigned to %s<br>" % task.assigned
 		print "Last changed %s ago<br><br>" % timesince(tsToDate(task.timestamp))
-		hours, total, lbl = task.hours, revs[0].hours, "<b>%s</b>" % statuses[task.status].text
+		hours, total, lbl = task.hours, startRev.hours, "<b>%s</b>" % statuses[task.status].text
 		if task.deleted:
 			print "Deleted<br>"
 		elif task.status == 'complete':

@@ -172,10 +172,10 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 
 	if sprint.isPlanning():
 		if sprint.isActive():
-			print InfoBox("Today is <b>sprint planning</b> &mdash; all changes will be collapsed into one revision")
+			print InfoBox("Today is <b>sprint planning</b> &mdash; tasks aren't finalized until the end of the day")
 		else:
 			daysTillPlanning = (tsToDate(sprint.start) - getNow()).days + 1
-			print InfoBox("The sprint has <b>not begun</b> &mdash; planning is %s. Until planning is over all changes will be collapsed into one revision made midnight of plan day" % ('tomorrow' if daysTillPlanning == 1 else "in %d days" % daysTillPlanning))
+			print InfoBox("The sprint has <b>not begun</b> &mdash; planning is %s. All changes are considered to have been made midnight of plan day" % ('tomorrow' if daysTillPlanning == 1 else "in %d days" % daysTillPlanning))
 	elif sprint.isReview():
 		print InfoBox("Today is <b>sprint review</b> &mdash; this is the last day to make changes to the backlog")
 
@@ -347,8 +347,9 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 			task.__setattr__(p_field, parsedValue)
 
 			# Is this within the 5-minute window, by the same user?
+			# If we're in pre-planning, the task's timestamp will be in the future, so (ts - task.timestamp) will be negative, which satisfies the check
 			ts = dateToTs(getNow())
-			if (task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60) or sprint.isPlanning():
+			if task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60:
 				task.save()
 			else:
 				task.creator = handler.session['user']
