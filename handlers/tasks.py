@@ -65,7 +65,7 @@ def task(handler, request, ids):
 		if not task:
 			ErrorBox.die('Tasks', "No task with ID <b>%d</b>" % id)
 		revs = task.getRevisions()
-		startRev = task.getRevisionAt(tsToDate(task.sprint.start))
+		startRev = task.getRevisionAt(tsToDate(task.sprint.start)) or task.getRevision(1)
 
 		header(task, task.safe.name, 1)
 
