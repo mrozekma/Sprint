@@ -129,7 +129,7 @@ class ActiveRecord(object):
 		return dict([(id, cls.load(id)) for id in ids])
 
 	@classmethod
-	def loadAll(cls, orderby = None, groupby = None, **attrs):
+	def loadAll(cls, orderby = None, groupby = None, limit = None, **attrs):
 		sql = "SELECT * FROM %s" % cls.table()
 		if len(attrs):
 			placeholders = ["%s = ?" % k for k in attrs.keys()]
@@ -138,6 +138,8 @@ class ActiveRecord(object):
 			sql += " GROUP BY %s" % groupby
 		if orderby:
 			sql += " ORDER BY %s" % orderby
+		if limit:
+			sql += " LIMIT %d, %d" % limit
 
 		vals = attrs.values()
 		rows = db().select(sql, *vals)
