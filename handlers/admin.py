@@ -528,22 +528,81 @@ def adminUnimpersonatePost(handler, request):
 		del handler.session['impersonator']
 
 @admin('admin/log', 'Log', 'log')
-def adminLog(handler, request):
+def adminLog(handler, request, page = 1, users = None, types = None):
+	PAGE_LEN = 100
+	PAGINATION_BOXES = 12
+
 	handler.title('Log')
 	requireAdmin(handler)
+	entries = LogEntry.loadAll(orderby = 'timestamp DESC')
 
-	from Privilege import dev
-	dev(handler)
+	users = set(User.load(int(id)) for id in users) if users else (User.loadAll(orderby = 'username') + [None])
+	# if not all(users):
+		# ErrorBox.die("Unrecognized user ID(s)")
 
-	fields = ['id', 'timestamp', 'user', 'ip', 'location', 'type', 'text']
-	print "<table border=\"0\" cellpadding=\"5\">"
-	print "<tr>"
-	print ''.join("<th>%s</th>" % field for field in fields)
-	print "<th>time</th>"
-	print "</tr>"
-	for entry in LogEntry.loadAll(orderby = 'timestamp DESC'):
-		print "<tr>"
-		print ''.join("<td>%s</td>" % entry.__getattribute__(field) for field in fields)
-		print "<td>%s</td>" % tsToDate(entry.timestamp)
-		print "</tr>"
-	print "</table>"
+	types = [str(type) for type in types] if types else LogEntry.getTypes()
+
+	entries = filter(lambda entry: entry.user in users and entry.type in types, entries)
+	page = int(page)
+	pages = len(entries) / PAGE_LEN
+	if page < 1: page = 1
+	if page > pages: page = pages
+
+	print "<form method=\"get\" action=\"/admin/log\">"
+	print "<select name=\"users[]\" multiple size=\"10\">"
+	for user in User.loadAll(orderby = 'username'):
+		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user in users else '', user.safe.username)
+	print "<option value=\"0\"%s>(anonymous)</option>" % (' selected' if None in users else '')
+	print "</select>"
+	print "<select name=\"types[]\" multiple size=\"10\">"
+	for type in LogEntry.getTypes():
+		print "<option value=\"%s\"%s>%s</option>" % (type, ' selected' if type in types else '', type)
+	print "</select>"
+	print "<br>"
+
+	print Button('Update', type = 'submit')
+	print "</form>"
+
+	firstPage, lastPage = max(1, page - (PAGINATION_BOXES - 1)), min(pages, page + (PAGINATION_BOXES - 1))
+	while lastPage - firstPage > ((PAGINATION_BOXES - 1) - sum([firstPage > 1, firstPage > 2, lastPage < pages, lastPage < pages - 1])):
+		if abs(firstPage - page) >= abs(lastPage - page):
+			firstPage += 1
+		else:
+			lastPage -= 1
+
+	link = "/admin/log?page=%d" + ''.join("&users[]=%d" % (user.id if user else 0) for user in users) + ''.join("&types[]=%s" % type for type in types)
+
+	print "<div class=\"pagination\">"
+	print "<ul>"
+	if page == 1:
+		print "<li class=\"disabled\"><a href=\"#\">&laquo;</a></li>"
+	else:
+		print "<li><a href=\"%s\">&laquo;</a></li>" % (link % (page - 1))
+	if firstPage > 1:
+		print "<li><a href=\"%s\">1</a></li>" % (link % 1)
+		if firstPage > 2:
+			print "<li class=\"disabled\"><a href=\"#\">...</a></li>"
+	for i in range(firstPage, lastPage + 1):
+		print "<li%s><a href=\"%s\">%d</a></li>" % (' class="active"' if i == page else '', link % i, i)
+	if lastPage < pages:
+		if lastPage < pages - 1:
+			print "<li class=\"disabled\"><a href=\"#\">...</a></li>"
+		print "<li><a href=\"%s\">%d</a></li>" % (link % pages, pages)
+	if page == pages:
+		print "<li class=\"disabled\"><a href=\"#\">&raquo;</a></li>"
+	else:
+		print "<li><a href=\"%s\">&raquo;</a></li>" % (link % (page + 1))
+	print "</ul>"
+	print "</div>"
+	print "<br>"
+
+	for entry in entries[(page * PAGE_LEN):((page + 1) * PAGE_LEN)]:
+		print "<div class=\"logentry\">"
+		print "<img class=\"gravatar\" src=\"%s\">" % (entry.user.getAvatar() if entry.user else User.getBlankAvatar())
+		print "<div>"
+		print "<b><span class=\"label\">%s</span> at %s</b><br>" % (entry.type, entry.location)
+		print "%s by %s<br>" % (tsToDate(entry.timestamp), "%s (%s)" % (entry.user.username, entry.ip) if entry.user else entry.ip)
+		print entry.text
+		print "</div>"
+		print "</div>"
+		print "<div class=\"clear\"></div>"

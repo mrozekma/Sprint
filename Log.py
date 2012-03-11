@@ -1,5 +1,8 @@
 from __future__ import division
 import traceback
+import datetime
+from math import ceil
+
 from DB import ActiveRecord, db
 from User import User
 from utils import *
@@ -18,7 +21,7 @@ class LogEntry(ActiveRecord):
 		if timestamp:
 			self.timestamp = timestamp
 		else:
-			now = getNow()
+			now = datetime.now() # Use real time, not mocked time through getNow()
 			self.timestamp = dateToTs(now) + now.microsecond / 1000000
 
 		if isinstance(location, int):
@@ -32,6 +35,11 @@ class LogEntry(ActiveRecord):
 	@classmethod
 	def table(cls):
 		return 'log'
+
+	@classmethod
+	def getTypes(cls):
+		rows = db().select("SELECT type FROM log GROUP BY type ORDER BY type ASC");
+		return [row['type'] for row in rows]
 
 def log(handler, type, fmt, *args):
 	LogEntry(type, fmt % args, handler.session['user'].id if handler.session['user'] else None, handler.client_address[0]).save()

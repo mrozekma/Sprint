@@ -1217,3 +1217,13 @@ table.granttable button {
 	50% {color: #f00;}
 	100% {color: #000;}
 }
+
+.logentry > * {
+	float: left;
+	padding: 0 5px 10px 0;
+}
+
+.logentry .gravatar {
+	position: relative;
+	top: -4px;
+}

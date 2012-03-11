@@ -70,5 +70,9 @@ class User(ActiveRecord):
 		return "http://www.gravatar.com/avatar/%s?s=%d&d=wavatar&r=pg" % (email, size)
 
 	@staticmethod
+	def getBlankAvatar(size = 64):
+		return "http://www.gravatar.com/avatar/%s?s=%d&d=mm" % ('0' * 64, size)
+
+	@staticmethod
 	def crypt(username, password):
 		return md5("%s\t%s" % (username, password))

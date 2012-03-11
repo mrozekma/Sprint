@@ -446,6 +446,7 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 				tasks[group].append((name, assigned, status, hours))
 
 	if dryrun:
+		request['log'] = False
 		for group in groups:
 			print "<br>"
 			print "<b>%s%s</b><br>" % (group.safe.name, ' (NEW)' if group in newGroups else '')
