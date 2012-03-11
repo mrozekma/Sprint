@@ -1,5 +1,6 @@
 from BaseHTTPServer import BaseHTTPRequestHandler
 from inspect import getargspec
+from collections import defaultdict
 import re
 import cgi
 import sys
@@ -37,63 +38,30 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		# self.leftMenu = LeftMenu()
 		BaseHTTPRequestHandler.__init__(self, request, address, server)
 
-	def buildResponse(self, method, data):
-		path = self.path
-		query = {}
-
+	def buildResponse(self, method, postData):
 		writer = ResponseWriter()
 		request = self.makeRequest()
 		request['method'] = method
 
 		try: # raise DoneRendering; starts here to catch self.error calls
-			self.title(None)
+			path = self.path
+			query = {}
 
-			# Pull out get variables
+			# Add GET params to query
 			if '?' in path:
 				path, queryStr = path.split('?', 1)
-				parts = queryStr.split('&')
-				query = dict(map(lambda x: x.split('=') if '=' in x else (x, True), parts))
-				if len(parts) != len(query):
-					self.error("Invalid request", "Query key collision")
+				queryStr = urllib.unquote(queryStr)
+				query = self.parseQueryString([item.split('=', 1) for item in queryStr.split('&')])
 
-			# Validate query keys (can't start with p_ to avoid collisions with post variables)
+			# Check GET params for a p_ prefix collision
 			for key in query:
 				if key[:2] == 'p_':
 					self.error("Invalid request", "Illegal query key: %s" % key)
 
-			# URL unquote
-			for key in query:
-				if isinstance(query[key], str):
-					query[key] = urllib.unquote(query[key])
+			# Add POST params to query with a p_ prefix
+			query.update(dict([('p_' + k, v) for (k, v) in postData.iteritems()]))
 
-			# Add p_ prefix to post variables
-			if data:
-				query.update(dict([('p_' + k, v) for (k, v) in data.iteritems()]))
-
-			# Convert foo[bar] keys to maps (epic nesting!)
-			changed = True
-			while changed:
-				changed = False
-				oldQuery = query
-				query = {}
-				for key in oldQuery:
-					match = re.match('(.*)\\[(.*)\\]', key)
-					if match:
-						changed = True
-						name, realKey = match.groups()
-						if re.match('^-?\\d+$', realKey):
-							realKey = int(realKey)
-						if name in query:
-							if not isinstance(query[name], dict):
-								self.error("Invalid request", "Name/map collision on query key: %s" % key)
-						else:
-							query[name] = {}
-						query[name][realKey] = oldQuery[key]
-					elif key in query:
-						self.error("Invalid request", "Duplicate key in request: %s" % key)
-					else:
-						query[key] = oldQuery[key]
-
+			self.title(None)
 			assert path[0] == '/'
 			path = path[1:]
 			if len(path) and path[-1] == '/': path = path[:-1]
@@ -171,6 +139,62 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 		return request
 
+	def parseQueryString(self, items):
+		def fmt(s):
+			try:
+				return int(s)
+			except ValueError:
+				return s
+
+		query = {}
+		for i in items:
+			k, v = (i[0], True) if len(i) == 1 else i
+			v = fmt(v)
+
+			match = re.match(('([^[]*)(\\[.*\\])'), k)
+			if match:
+				key, subKeys = match.groups()
+				subKeys = re.findall('\\[([^\\]]*)\\]', subKeys)
+				key, subKeys = fmt(key), map(fmt, subKeys)
+
+				if key in query:
+					if not isinstance(query[key], list if subKeys == [''] else dict):
+						self.error("Type conflict on query key %s" % key)
+				else:
+					query[key] = [] if subKeys == [''] else {}
+
+				base = query[key]
+				for thisSubKey in subKeys[:-2]:
+					if thisSubKey in base:
+						if not isinstance(base[thisSubKey], dict):
+							self.error("Type conflict on query key %s, subkey %s" % (key, thisSubKey))
+					else:
+						base[thisSubKey] = {}
+					base = base[thisSubKey]
+
+				type = list if subKeys[-1] == '' else dict
+				if len(subKeys) >= 2:
+					if subKeys[-2] in base:
+						if not isinstance(base[subKeys[-2]], type):
+							self.error("Type conflict on query key %s, subkey %s" % (key, subKeys[-2]))
+					else:
+						base[subKeys[-2]] = type()
+					base = base[subKeys[-2]]
+
+				if type == list:
+					base.append(v)
+				else:
+					if subKeys[-1] in base:
+						self.error("Collision on query key %s, subkey %s" % (key, subKeys[-1]))
+					base[subKeys[-1]] = v
+			else:
+				k = fmt(k)
+				if k in query:
+					self.error("Collision on query key %s" % k)
+				query[k] = v
+
+		return query
+
 	def replace(self, fromStr, toStr, count = -1):
 		self.replacements[fromStr] = (fromStr, toStr, count)
 
@@ -205,12 +229,12 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			self.wfile.write(self.response)
 			raise
 
-	def do_HEAD(self, method = 'get', data = None):
+	def do_HEAD(self, method = 'get', postData = {}):
 		self.session = Session.load(Session.determineKey(self))
 		self.processingRequest()
 
 		try:
-			request = self.buildResponse(method, data)
+			request = self.buildResponse(method, postData)
 			self.sendHead(request['code'], request['contentType'], request['forceDownload'])
 		except Redirect as r:
 			self.response = ''
@@ -224,18 +248,13 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		form = cgi.FieldStorage(fp = self.rfile, headers = self.headers, environ={'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': self.headers['Content-Type']}, keep_blank_values = True)
 		data = {}
 		try:
+			items = []
 			for k in form:
-				if k[-2:] == '[]':
-					data[k[:-2]] = form.getlist(k)
-				elif type(form[k]) is list:
-					self.session = Session.load(Session.determineKey(self))
-					self.processingRequest() #TODO Remove
-					self.response = "Multiple values for POST key: %s" % k
-					self.sendHead(200, 'text/html')
-					self.wfile.write(self.response)
-					return
+				if type(form[k]) is list:
+					items += [(k, v.value) for v in form[k]]
 				else:
-					data[k] = form[k].value
+					items.append((k, form[k].value))
+			data = self.parseQueryString(items)
 		except TypeError: pass # Happens with empty forms
 		self.do_HEAD('post', data)
 		self.wfile.write(self.response)

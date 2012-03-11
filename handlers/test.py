@@ -398,6 +398,22 @@ table.tests > td {
 		print "<tr><td><pre>%s</pre></td><td>%s</td></tr>" % (stripTags(plain), md.convert(plain))
 	print "</table>"
 
+@get('test/querystr')
+def testQueryStr(handler, request, a = None, b = None, c = None, d = None):
+	handler.title('Query String')
+	admin(handler)
+	from pprint import pprint
+	print "<pre>"
+	sys.stdout.write("a = ")
+	pprint(a)
+	sys.stdout.write("b = ")
+	pprint(b)
+	sys.stdout.write("c = ")
+	pprint(c)
+	sys.stdout.write("d = ")
+	pprint(d)
+	print "</pre>"
+
 # @get('test')
 # def test(handler, request):
 	# print """
