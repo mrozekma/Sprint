@@ -599,7 +599,6 @@ def showMetrics(handler, request, id):
 		('earned-value', 'Earned Value', EarnedValueChart('chart-earned-value', sprint)),
 		('by-user', 'Hours (by user)', HoursByUserChart('chart-by-user', sprint)),
 		('commitment', 'Total commitment', CommitmentChart('chart-commitment', sprint)),
-		# ('goals', 'Sprint goals', SprintGoalsChart('chart-sprint-goals', sprint)),
 	]
 
 	Chart.include()

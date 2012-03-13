@@ -248,39 +248,6 @@ class CommitmentChart(Chart):
 				'color': clrGen.next()
 			})
 
-class SprintGoalsChart(Chart):
-	def __init__(self, placeholder, sprint):
-		Chart.__init__(self, placeholder)
-
-		tasks = sprint.getTasks()
-		start = tsToDate(sprint.start)
-
-		self.chart.defaultSeriesType = 'bar'
-		self.title.text = ''
-		self.tooltip.formatter = "function() {return '<b>' + this.series.name + '</b>: ' + this.point.y + '%';}"
-		self.credits.enabled = False
-		self.xAxis.categories = [' ']
-		self.xAxis.title.text = 'Goals'
-		self.yAxis.min = 0
-		self.yAxis.max = 100
-		self.yAxis.title.text = 'Percent complete'
-		self.series = seriesList = []
-
-		originalTasks = Task.loadAll(sprintid = sprint.id, revision = 1)
-		taskMap = dict([(task.id, task) for task in tasks])
-		for goal in sprint.getGoals() + [None]:
-			if goal and goal.name == '':
-				continue
-			start = sum(t.hours for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
-			now = sum(t.hours for t in tasks if t.goalid == (goal.id if goal else 0))
-			pcnt = (start-now) / start if start > 0 and start > now else 0
-
-			seriesList.append({
-				'name': goal.name if goal else 'Other',
-				'data': [float("%2.2f" % (100*pcnt))],
-				'dataLabels': {'enabled': True}
-			})
-
 class TaskChart(Chart):
 	def __init__(self, placeholder, tasks):
 		Chart.__init__(self, placeholder)
