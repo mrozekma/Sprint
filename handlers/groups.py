@@ -1,4 +1,5 @@
 from __future__ import with_statement
+from itertools import groupby
 
 from rorn.Box import ErrorBox, InfoBox
 from rorn.Session import delay
@@ -6,7 +7,10 @@ from rorn.Session import delay
 from Privilege import requirePriv
 from Group import Group
 from User import User
+from Goal import Goal
 from Button import Button
+from Chart import Chart
+from SprintCharts import GroupGoalsChart
 from utils import *
 
 @get('groups/new')
@@ -82,6 +86,11 @@ def editGroup(handler, request, id):
 	group = Group.load(id)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+	tasks = group.getTasks()
+
+	chart = GroupGoalsChart(group)
+	Chart.include()
+	chart.js()
 
 	print "<style type=\"text/css\">"
 	print "table.list td.left {position: relative; top: 4px;}"
@@ -108,6 +117,21 @@ def editGroup(handler, request, id):
 	print "</table>"
 	print "</form>"
 
+	print "<h2>Assign Goal</h2>"
+	print "This is a quick way to set all the tasks in the group to the same sprint goal. The current breakdown is:"
+	chart.placeholder()
+
+	# The default is whichever goal currently has the most occurrences
+	defaultGoal = max((sum(task.goal == goal or False for task in tasks), goal) for goal in group.sprint.getGoals() + [None])[1]
+
+	print "<form method=\"post\" action=\"/groups/edit/%d/goal\">" % id
+	for goal in group.sprint.getGoals():
+		if goal.name:
+			print "<input type=\"radio\" id=\"goal%d\" name=\"goal\" value=\"%d\"%s>&nbsp;<label for=\"goal%d\"><img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;%s</label><br>" % (goal.id, goal.id, ' checked' if goal == defaultGoal else '', goal.id, goal.color, goal.name)
+	print "<input type=\"radio\" id=\"goal0\" name=\"goal\" value=\"0\"%s>&nbsp;<label for=\"goal0\"><img class=\"bumpdown\" src=\"/static/images/tag-none.png\">&nbsp;Other</label><br><br>" % ('' if defaultGoal else ' checked')
+	print Button('Assign', type = 'submit').positive()
+	print "</form>"
+
 	print "<h2>Delete Group</h2>"
 	if len(group.sprint.getGroups()) == 1:
 		print "You can't delete the last group in a sprint"
@@ -115,7 +139,6 @@ def editGroup(handler, request, id):
 		print "This group is undeletable"
 	else:
 		print "<form method=\"post\" action=\"/groups/edit/%d/delete\">" % id
-		tasks = group.getTasks()
 		if len(tasks):
 			print "This group has %d %s. Move %s to the <select name=\"newGroup\">" % (len(tasks), 'task' if len(tasks) == 1 else 'tasks', 'it' if len(tasks) == 1 else 'them')
 			for thisGroup in group.sprint.getGroups('name'):
@@ -142,6 +165,35 @@ def renameGroupPost(handler, request, id, p_name):
 
 	group.name = p_name
 	group.save()
+	redirect("/sprints/%d#group%d" % (group.sprintid, group.id))
+
+@post('groups/edit/(?P<id>[0-9]+)/goal')
+def assignGroupGoalPost(handler, request, id, p_goal):
+	def die(msg):
+		print msg
+		done()
+
+	handler.title('Manage Group')
+	requirePriv(handler, 'User')
+	request['wrappers'] = False
+
+	group = Group.load(id)
+	if not group:
+		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+
+	goal = Goal.load(int(p_goal))
+	if not goal:
+		ErrorBox.die('Invalid Goal', "No goal with ID <b>%d</b>" % int(p_goal))
+	elif not goal.sprint == group.sprint:
+		ErrorBox.die('Invalid Goal', "Selected goal is not part of the correct sprint")
+
+	for task in group.getTasks():
+		if task.goal != goal:
+			task.goal = goal
+			task.creator = handler.session['user']
+			task.timestamp = dateToTs(getNow())
+			task.revise()
+
 	redirect("/sprints/%d#group%d" % (group.sprintid, group.id))
 
 @post('groups/edit/(?P<id>[0-9]+)/delete')

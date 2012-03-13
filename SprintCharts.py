@@ -296,3 +296,27 @@ class TaskChart(Chart):
 			hoursByDay = dict((tsStripHours(rev.timestamp), rev.hours) for rev in revs)
 			hoursByDay[tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))] = task.hours
 			series['data'] += [(utcToLocal(date) * 1000, hours) for (date, hours) in hoursByDay.items()]
+
+class GroupGoalsChart(Chart):
+	def __init__(self, group):
+		Chart.__init__(self, 'group-goals-chart')
+		tasks = group.getTasks()
+		goals = set(task.goal for task in tasks)
+
+		self.title.text = ''
+		self.plotOptions.pie.dataLabels.enabled = True
+		self.tooltip.formatter = "function() {return this.point.name + ': '+ this.point.x + (this.point.x == 1 ? ' task' : ' tasks') + ' (' + this.y + '%)';}"
+		self.credits.enabled = False
+		self.series = [{
+			'type': 'pie',
+			'name': 'Sprint Goals',
+			'data': [{
+				'name': goal.name if goal else 'Other',
+				'color': goal.getHTMLColor() if goal else '#ccc',
+				'x': sum(task.goal == goal or False for task in tasks)
+			} for goal in goals]
+		}]
+
+		# Percentages
+		for m in self.series[0].data.get():
+			m['y'] = float("%2.2f" % (m['x'] * 100 / len(tasks)))
