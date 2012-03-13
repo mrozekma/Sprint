@@ -81,6 +81,9 @@ class Task(ActiveRecord):
 		rows = [x for x in rows]
 		return Task(**rows[0]) if len(rows) > 0 else None
 
+	def getStartRevision(self, includeAfterPlanning = True):
+		return self.getRevisionAt(tsToDate(self.sprint.start)) or (self.getRevision(1) if includeAfterPlanning else None)
+
 	### Data that depends on task status/history
 
 	def earnedValueHours(self):

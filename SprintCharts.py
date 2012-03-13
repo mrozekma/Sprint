@@ -215,8 +215,7 @@ class CommitmentChart(Chart):
 		}
 		seriesList.append(series)
 
-		endOfPlanning = dateToTs(tsToDate(sprint.start) + timedelta(1))
-		originalTasks = filter(lambda task: task.timestamp < endOfPlanning, Task.loadAll(sprintid = sprint.id, revision = 1, deleted = False))
+		originalTasks = filter(None, (task.getStartRevision(False) for task in tasks))
 		clrGen = cycle(clrs)
 		total = sum(t.hours for t in originalTasks)
 		for user in sorted(sprint.members):

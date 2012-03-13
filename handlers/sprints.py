@@ -623,7 +623,7 @@ def showMetrics(handler, request, id):
 		total = avail.getAllForward(getNow().date(), user)
 		print ProgressBar("<a style=\"color: #000\" href=\"/sprints/%d?search=assigned:%s\">%s</a>" % (sprint.id, user.safe.username, user.safe.username), hours, total, zeroDivZero = True, style = {100.01: 'progress-current-red'})
 
-	originalTasks = Task.loadAll(sprintid = sprint.id, revision = 1)
+	originalTasks = filter(None, (task.getStartRevision(False) for task in tasks))
 	taskMap = dict([(task.id, task) for task in tasks])
 	print "<a name=\"goals\">"
 	print "<h2><a href=\"#goals\">Sprint goals</a></h2>"
