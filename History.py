@@ -34,7 +34,7 @@ def showHistory(tasks, describeTask):
 	for rev in revs:
 		entries = []
 		if rev.revision == 1:
-			entries.append(('revision-create', "Task created by %s. Assigned to %s, %s, %d %s remain" % (userStr(rev), userStr(rev, rev.assigned), rev.getStatus().text.lower(), rev.hours, 'hour' if rev.hours == 1 else 'hours')))
+			entries.append(('revision-create', "<b>%s</b> created by %s. Assigned to %s, %s, %d %s remain" % (rev.safe.name, userStr(rev), userStr(rev, rev.assigned), rev.getStatus().text.lower(), rev.hours, 'hour' if rev.hours == 1 else 'hours')))
 			if rev.deleted:
 				entries.append(('revision-deleted', strings['deleted'][1] % {'deleted': 'Deleted', 'editor': userStr(rev)}))
 		else:
