@@ -51,7 +51,7 @@ if ($type == 'image/png') {
 }
 $outfile = "temp/$tempName.$ext";
 
-if ($typeString) {
+if (isset($typeString)) {
 	
 	// size
 	if ($_POST['width']) {
@@ -71,7 +71,12 @@ if ($typeString) {
 	// catch error
 	if (!is_file($outfile) || filesize($outfile) < 10) {
 		echo "<pre>$output</pre>";
-		echo "Error while converting SVG";		
+		echo "Error while converting SVG. ";
+		
+		if (strpos($output, 'SVGConverter.error.while.rasterizing.file') !== false) {
+			echo "SVG code for debugging: <hr/>";
+			echo htmlentities($svg);
+		}
 	} 
 	
 	// stream it
