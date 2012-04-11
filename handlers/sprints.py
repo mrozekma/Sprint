@@ -353,7 +353,7 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 				task.save()
 			else:
 				task.creator = handler.session['user']
-				task.timestamp = ts
+				task.timestamp = max(task.timestamp, ts)
 				task.revise()
 
 	elif p_field == 'taskmove':

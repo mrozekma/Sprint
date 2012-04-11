@@ -190,9 +190,14 @@ def assignGroupGoalPost(handler, request, id, p_goal):
 	for task in group.getTasks():
 		if task.goal != goal:
 			task.goal = goal
-			task.creator = handler.session['user']
-			task.timestamp = dateToTs(getNow())
-			task.revise()
+
+			ts = dateToTs(getNow())
+			if task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60:
+				task.save()
+			else:
+				task.creator = handler.session['user']
+				task.timestamp = max(task.timestamp, ts)
+				task.revise()
 
 	redirect("/sprints/%d#group%d" % (group.sprintid, group.id))
 
