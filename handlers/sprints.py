@@ -370,7 +370,11 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 		if predGroup.sprint != sprint:
 			die("Group/task sprint mismatch")
 
-		task.move((predTask.seq if predTask else 0) + 1, predGroup)
+		# If we're moving up, we want to be after the predecessor
+		# If we're moving down, we want to replace it (since it will shift up on its own)
+		#TODO I can't decide if this logic belongs in Task.move()
+		pos = (predTask.seq + (1 if predTask.seq < task.seq else 0)) if predTask else 0
+		task.move(pos, predGroup)
 	else:
 		die("Unexpected field name: %s" % stripTags(p_field))
 
