@@ -491,6 +491,12 @@ table.tasks tr.task td.flags {
 	white-space: nowrap;
 }
 
+table.tasks tr.task td.flags span.task-index {
+	position: relative;
+	top: -4px;
+	cursor: default;
+}
+
 table.tasks.editable tr.task img.status, table.tasks.editable tr.task img.goal {
 	cursor: pointer;
 }

@@ -7,6 +7,7 @@ $(document).ready(function() {
 	setup_filter_buttons();
 	setup_group_arrows();
 	setup_bugzilla($('tr.task'));
+	update_indexes();
 
 	$('#post-status').hide();
 	$('.saving').css('visibility', 'hidden');
@@ -156,6 +157,13 @@ function setup_bugzilla(tasks) {
 	});
 }
 
+function update_indexes() {
+	i = 0;
+	$('.task:visible .task-index').each(function() {
+		$(this).text(++i);
+	});
+}
+
 function apply_filters() {
 	assigned = $('#filter-assigned a.selected');
 	statuses = $('#filter-status a.selected');
@@ -181,6 +189,7 @@ function apply_filters() {
 	});
 
 	update_task_count();
+	update_indexes();
 }
 
 function fancy_cells(table_selector) {
@@ -224,6 +233,7 @@ function fancy_cells(table_selector) {
 					//FAIL
 				}
 			}
+			update_indexes();
 		},
 	});
 
@@ -355,6 +365,7 @@ function delete_task(task_id) {
 		row.hide();
 		totalTasks--;
 		update_task_count();
+		update_indexes();
 	}
 }
 

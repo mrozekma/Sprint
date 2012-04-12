@@ -250,6 +250,7 @@ def printTask(handler, task, days, group = None, highlight = False, editable = T
 	if isDevMode(handler):
 		print "<small class=\"debugtext\">(%d, %d, %d)</small>&nbsp;" % (task.id, task.seq, task.revision)
 	# print "<img src=\"/static/images/star.png\">&nbsp;"
+	print "<span class=\"task-index badge badge-info\"></span>&nbsp;"
 	print "<img id=\"goal_%d\" class=\"goal\" src=\"/static/images/tag-%s.png\" title=\"%s\">&nbsp;" % ((task.goal.id, task.goal.color, task.goal.safe.name) if task.goal else (0, 'none', 'None'))
 	print "<img id=\"status_%d\" class=\"status\" src=\"%s\" title=\"%s\">" % (task.id, task.stat.icon, task.stat.text)
 	print "</td>"
