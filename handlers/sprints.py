@@ -68,7 +68,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print "var isPlanning = %s;" % ('true' if sprint.isPlanning() else 'false')
 	print "var totalTasks = %d;" % len(tasks)
 	print "function update_task_count() {"
-	print "    var vis = $('#all-tasks .task').filter(function() {return $(this).css('display') != 'none'});"
+	print "    var vis = $('#all-tasks .task:visible');"
 	print "    var assigned = $.makeArray($('#filter-assigned .selected').map(function() {return $(this).attr('assigned');}));"
 	print "    var status = $.makeArray($('#filter-status .selected').map(function() {return $(this).attr('status');}));";
 	print "    txt = 'Showing ' + vis.length + ' of ' + totalTasks + (totalTasks == 1 ? ' task' : ' tasks');"
