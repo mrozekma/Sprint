@@ -52,7 +52,7 @@ def newGroup(handler, request, after):
 	print "</form>"
 
 @post('groups/new')
-def newGroupkPost(handler, request, p_group, p_name):
+def newGroupPost(handler, request, p_group, p_name):
 	def die(msg):
 		print msg
 		done()
@@ -66,7 +66,7 @@ def newGroupkPost(handler, request, p_group, p_name):
 	if not pred:
 		die("No group with ID <b>%d</b>" % predid)
 
-	group = Group(pred.sprint.id, p_name, pred.seq)
+	group = Group(pred.sprint.id, p_name, pred.seq + 1)
 	group.save()
 
 	request['code'] = 299
