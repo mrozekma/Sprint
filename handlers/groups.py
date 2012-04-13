@@ -231,10 +231,11 @@ def deleteGroupPost(handler, request, id, p_newGroup = None):
 			ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % int(p_newGroup))
 
 		# Move all the tasks to the end of the new group
-		seq = len(newGroup.getTasks())
+		pred = newGroup.getTasks()
+		pred = pred[-1] if pred else None
 		for task in tasks:
-			seq += 1
-			task.move(seq, newGroup)
+			task.move(pred, newGroup)
+			pred = task
 	elif len(tasks):
 		ErrorBox.die('Invalid Request', "Missing new group request argument")
 

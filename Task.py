@@ -136,7 +136,17 @@ class Task(ActiveRecord):
 			db().update("UPDATE tasks SET seq = seq + 1 WHERE groupid = ? AND seq >= ?", self.groupid, self.seq)
 		return ActiveRecord.save(self, pks = ['id', 'revision'])
 
-	def move(self, newSeq, newGroup):
+	def move(self, newPred, newGroup):
+		# newPred = None means move to the top of newGroup
+		# newGroup = None means the group is newPred's group
+		if newPred:
+			if not newGroup:
+				newGroup = newPred.group
+			elif newGroup and newPred.group != newGroup:
+				raise ValueError("Incompatible predecessor and group")
+		elif not newGroup:
+			raise ValueError("Neither predecessor nor group specified")
+
 		# Remove from current group (shift all later tasks up)
 		db().update("UPDATE tasks SET seq = seq - 1 WHERE groupid = ? AND seq > ?", self.groupid, self.seq)
 
@@ -146,7 +156,8 @@ class Task(ActiveRecord):
 			db().update("UPDATE tasks SET groupid = ? WHERE id = ?", self.groupid, self.id)
 
 		# Add to new group (shift all later tasks down)
-		self.seq = newSeq
+		# Reload newPred in case its sequence has changed
+		self.seq = Task.load(newPred.id).seq + 1 if newPred else 1
 		db().update("UPDATE tasks SET seq = seq + 1 WHERE groupid = ? AND seq >= ?", self.groupid, self.seq)
 		db().update("UPDATE tasks SET seq = ? WHERE id = ?", self.seq, self.id)
 
