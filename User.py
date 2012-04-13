@@ -69,14 +69,3 @@ class User(ActiveRecord):
 	@staticmethod
 	def crypt(username, password):
 		return md5("%s\t%s" % (username, password))
-
-# print map(str, User.loadAll())
-# print User.load(1)
-# print User.load(100)
-
-# usr = User.load(1)
-# usr.username = 'foobar'
-# usr.save()
-
-# usr = User('newuser', 'password')
-# usr.save()

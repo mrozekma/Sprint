@@ -1,12 +1,19 @@
 from sqlite3 import connect, Row
 from inspect import getargspec, getmembers
 import sys
+from os.path import isfile
 
 from utils import stripTags
 
+filename = 'db'
+
+class DBError(Exception): pass
+class TooManyRecordsError(DBError): pass
+class ArgumentMismatchError(DBError): pass
+
 class DB:
 	def __init__(self):
-		self.conn = connect('db')
+		self.conn = connect(filename)
 		self.conn.row_factory = Row
 		self.count = 0
 		self.totalCount = 0
@@ -53,6 +60,8 @@ singleton = None
 def db():
 	global singleton
 	if not singleton:
+		if not isfile(filename):
+			raise DBError("Database %s does not exist" % filename)
 		singleton = DB()
 	return singleton
 
@@ -60,11 +69,6 @@ def dbReconnect():
 	global singleton
 	singleton = None
 	return db()
-
-class DBError(Exception): pass
-# class NoRecordsError(DBError): pass
-class TooManyRecordsError(DBError): pass
-class ArgumentMismatchError(DBError): pass
 
 class ActiveRecord(object):
 	def __init__(self):
