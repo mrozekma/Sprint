@@ -20,17 +20,17 @@ class Group(ActiveRecord):
 	def save(self):
 		if not self.id:
 			# Shift everything after this sequence
-			db().update("UPDATE groups SET seq = seq + 1 WHERE seq >= ?", self.seq)
+			db().update("UPDATE groups SET seq = seq + 1 WHERE sprintid = ? AND seq >= ?", self.sprintid, self.seq)
 		return ActiveRecord.save(self)
 
 	def move(self, newSeq):
 		# Remove group from the list
-		db().update("UPDATE groups SET seq = seq - 1 WHERE seq > ?", self.seq)
+		db().update("UPDATE groups SET seq = seq - 1 WHERE sprintid = ? AND seq > ?", self.sprintid, self.seq)
 
 		# Insert it at the new spot
 		if newSeq:
 			self.seq = newSeq
-			db().update("UPDATE groups SET seq = seq + 1 WHERE seq > ?", self.seq)
+			db().update("UPDATE groups SET seq = seq + 1 WHERE sprintid = ? AND seq > ?", self.sprintid, self.seq)
 
 	def delete(self):
 		self.move(None)

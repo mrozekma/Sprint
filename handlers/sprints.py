@@ -225,7 +225,11 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print "<tbody>"
 	for group in groups:
 		print "<tr class=\"group\" id=\"group%d\" groupid=\"%d\">" % (group.id, group.id)
-		print "<td colspan=\"6\"><img src=\"/static/images/collapse.png\">&nbsp;<span>%s</span></td>" % group.name
+		print "<td colspan=\"6\">"
+		if isDevMode(handler):
+			print "<small class=\"debugtext\">(%d, %d)</small>&nbsp;" % (group.id, group.seq)
+		print "<img src=\"/static/images/collapse.png\">&nbsp;<span>%s</span>" % group.name
+		print "</td>"
 		print "<td class=\"actions\">"
 		if editable:
 			print "<a href=\"/groups/new?after=%d\"><img src=\"/static/images/group-new.png\" title=\"New Group\"></a>" % group.id
