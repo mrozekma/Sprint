@@ -54,6 +54,12 @@ def init():
 		exit(1)
 	print
 
+	print "All users are assumed to share a common e-mail domain. This is currently only used for gravatars, but might be used to send e-mails later"
+	email = raw_input('E-mail domain: ')
+	if email == '':
+		exit(1)
+	print
+
 	print "Creating database"
 	open(dbFilename, 'w').close()
 	try:
@@ -65,9 +71,10 @@ def init():
 
 	try:
 		settings.dbVersion = index
+		settings.emailDomain = email
 	except Exception, e:
 		remove(dbFilename)
-		die("Unable to set database version: %s" % e)
+		die("Unable to set default settings: %s" % e)
 
 	print "Creating admin user"
 	try:

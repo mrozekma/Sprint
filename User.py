@@ -2,6 +2,7 @@ from inspect import getmembers
 
 from DB import ActiveRecord, db
 from Privilege import Privilege
+from Settings import settings
 from utils import md5
 
 class User(ActiveRecord):
@@ -61,9 +62,11 @@ class User(ActiveRecord):
 		from Prefs import Prefs
 		return Prefs.load(userid = self.id) or Prefs.getDefaults(self)
 
+	def getEmail(self):
+		return "%s@%s" % (self.username, settings.emailDomain)
+
 	def getAvatar(self, size = 64):
-		email = "%s@microsemi-wl.com" % self.username
-		email = md5(email.strip().lower())
+		email = md5(self.getEmail().strip().lower())
 		return "http://www.gravatar.com/avatar/%s?s=%d&d=wavatar&r=pg" % (email, size)
 
 	@staticmethod
