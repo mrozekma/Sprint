@@ -6,6 +6,7 @@ import HTTPHandler
 import menu
 from DB import db
 from LoadValues import getRevisionInfo, isDevMode
+from Settings import settings
 from utils import *
 
 # class LeftMenu:
@@ -129,9 +130,13 @@ def footer(handler, path):
 			queries = db().resetCount()
 			print "Database requests: %d<br>" % queries
 	else:
-		print "<a href=\"http://work.mrozekma.com:8080/?p=Sprint;a=commitdiff;h=%s\">%s</a> (<span title=\"%s\">%s</span>)<br>" % (revisionHash, revisionHash, revisionDate, revisionRelative)
+		if 'gitURL' in settings:
+			print "<a href=\"%s\">%s</a>" % (settings.gitURL % {'hash': revisionHash}, revisionHash),
+		else:
+			print revisionHash,
+		print "(<span title=\"%s\">%s</span>)<br>" % (revisionDate, revisionRelative)
 	print "</div>"
-	
+
 	print "</body>"
 	print "</html>"
 

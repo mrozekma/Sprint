@@ -72,6 +72,7 @@ def init():
 	try:
 		settings.dbVersion = index
 		settings.emailDomain = email
+		settings.gitURL = 'https://github.com/mrozekma/sprint/commit/%(hash)s'
 	except Exception, e:
 		remove(dbFilename)
 		die("Unable to set default settings: %s" % e)
