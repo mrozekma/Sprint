@@ -8,7 +8,7 @@ except ImportError:
 	plottingLib = False
 
 from rorn.ResponseWriter import ResponseWriter
-from rorn.Box import ErrorBox
+from rorn.Box import *
 from rorn.code import showCode
 
 from Privilege import admin
@@ -322,7 +322,6 @@ def testBoxes(handler, request):
 	handler.title('Boxes')
 	admin(handler)
 
-	from rorn.Box import *
 	print Box("Box", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum")
 	print Box("Box (red)", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum", clr = 'red')
 	print Box("Box (green)", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum", clr = 'green')
