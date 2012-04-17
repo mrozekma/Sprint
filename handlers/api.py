@@ -49,7 +49,7 @@ def apiSprintInfo(handler, request, id):
 			})
 
 @get('api/sprints/list')
-def apiSprintsList(handler, request, start = None, end = None, _ = None):
+def apiSprintsList(handler, request, calendar = False, start = None, end = None, _ = None):
 	def die(msg):
 		print toJS({'error': msg})
 		done()
@@ -62,5 +62,15 @@ def apiSprintsList(handler, request, start = None, end = None, _ = None):
 	if start and end:
 		sprints = filter(lambda sprint: (start <= sprint.start <= end) or (start <= sprint.end <= end), sprints)
 
-	print toJS([{'id': sprint.id, 'title': sprint.name, 'start': tsToDate(sprint.start).strftime('%Y-%m-%d'), 'end': tsToDate(sprint.end).strftime('%Y-%m-%d')} for sprint in sprints])
+	rtn = [{'id': sprint.id,
+	        'title': sprint.name,
+	        'start': tsToDate(sprint.start).strftime('%Y-%m-%d'),
+	        'end': tsToDate(sprint.end).strftime('%Y-%m-%d'),
+	        'active': sprint.isActive(),
+	        'member': handler.session['user'] in sprint.members
+	       } for sprint in sprints]
+	if calendar:
+		for entry in rtn:
+			entry.update({'color': 'green' if entry['member'] and entry['active'] else '#36c;'})
+	print toJS(rtn)
 

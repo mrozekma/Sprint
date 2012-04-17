@@ -396,6 +396,10 @@ img.user, img.project, img.sprint {
 	margin-bottom: 15px;
 }
 
+.fc-event {
+	cursor: pointer !important;
+}
+
 #select-members {
 	width: 100%;
 	padding-right: 5px;

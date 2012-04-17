@@ -1,6 +1,6 @@
 $(document).ready(function() {
 	$('#calendar').fullCalendar({
-		events: '/api/sprints/list',
+		events: '/api/sprints/list?calendar',
 		weekends: false,
 		eventClick: function(event, jsEvent, view) {
 			document.location = '/sprints/' + event.id
