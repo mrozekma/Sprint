@@ -458,8 +458,15 @@ table.tasks tr.group td > img {
 	cursor: pointer;
 }
 
-table.tasks tr.task:hover {
-	background-color: rgba(0, 0, 255, .1);
+table.tasks tr.task td {
+	border-width: 1px 0px 1px 0px;
+	border-style: solid;
+	border-color: white;
+}
+
+table.tasks tr.task:hover td {
+	border-color: #bce8f1;
+	background-color: #d9edf7;
 }
 
 /*
@@ -489,16 +496,24 @@ table.tasks tr.dateline td:first-child {
 }
 
 table.tasks tr.task td.flags {
-	position: relative;
-	top: 2px;
 	text-align: right;
 	white-space: nowrap;
+}
+
+table.tasks tr.task td.flags * {
+	position: relative;
+	top: 2px;
 }
 
 table.tasks tr.task td.flags span.task-index {
 	position: relative;
 	top: -4px;
 	cursor: default;
+	background-color: #3a87ad;
+}
+
+table.tasks tr.task:hover td.flags span.task-index {
+	background-color: #2d6987;
 }
 
 table.tasks.editable tr.task img.status, table.tasks.editable tr.task img.goal {

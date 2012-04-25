@@ -315,7 +315,10 @@ def testBootstrap(handler, request):
 
 	print "Test <span class=\"label important\">Test</span><br>"
 	print "<button class=\"btn success\">Test</button>"
-	print "<br>"
+	print "<br><br>"
+
+	for type in ('error', 'warning', 'success', 'info', 'inverse'):
+		print "<span class=\"badge badge-%s\">%s</span>&nbsp;" % (type, type)
 
 @get('test/boxes')
 def testBoxes(handler, request):
