@@ -109,6 +109,12 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 		print "goal_texts[%d] = %s;" % (goal.id, toJS(goal.name))
 	print "</script>"
 
+	print "<div id=\"selected-task-box\">"
+	print "<span></span>"
+	print Button('history', id = 'selected-history').positive()
+	print Button('cancel', id = 'selected-cancel') #.negative()
+	print "</div>"
+
 	print "<div class=\"backlog-tabs\">"
 	print (tabs << 'backlog') % id
 	print "<input type=\"text\" id=\"search\" value=\"%s\">" % search.getFullString().replace('"', '&quot;')

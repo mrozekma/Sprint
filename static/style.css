@@ -419,6 +419,23 @@ img.user, img.project, img.sprint {
 	padding-left: 24px;
 }
 
+#selected-task-box {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	display: none;
+	border: 1px solid #000;
+	background-color: #ae1c12;
+	color: #fff;
+	width: 100%;
+	padding: 6px;
+	z-index: 2;
+}
+
+#selected-task-box span {
+	padding-right: 20px;
+}
+
 table.tasks td {
 	vertical-align: top;
 }
@@ -508,12 +525,19 @@ table.tasks tr.task td.flags * {
 table.tasks tr.task td.flags span.task-index {
 	position: relative;
 	top: -4px;
-	cursor: default;
 	background-color: #3a87ad;
 }
 
 table.tasks tr.task:hover td.flags span.task-index {
 	background-color: #2d6987;
+}
+
+table.tasks tr.task.selected td.flags span.task-index {
+	background-color: #b94a48;
+}
+
+table.tasks tr.task.selected:hover td.flags span.task-index {
+	background-color: #953b39;
 }
 
 table.tasks.editable tr.task img.status, table.tasks.editable tr.task img.goal {

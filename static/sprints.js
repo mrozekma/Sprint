@@ -7,7 +7,7 @@ $(document).ready(function() {
 	setup_filter_buttons();
 	setup_group_arrows();
 	setup_bugzilla($('tr.task'));
-	update_indexes();
+	setup_indexes();
 
 	$('#post-status').hide();
 	$('.saving').css('visibility', 'hidden');
@@ -155,6 +155,34 @@ function setup_bugzilla(tasks) {
 			link.hide();
 		}
 	});
+}
+
+function setup_indexes() {
+	$('tr.task .task-index').click(function() {
+		task = $(this).parents('tr.task');
+		task.toggleClass('selected');
+
+		selected = $('tr.task.selected');
+		box = $('#selected-task-box');
+		if(selected.length > 0) {
+			$('span', box).text(selected.length + (selected.length == 1 ? ' task' : ' tasks') + ' selected');
+			box.slideDown('fast');
+		} else {
+			box.slideUp('fast');
+		}
+	});
+
+	$('#selected-task-box #selected-history').click(function() {
+		ids = $('tr.task.selected').map(function() {return $(this).attr('taskid');});
+		idStr = $.makeArray(ids).join();
+		document.location = '/tasks/' + idStr;
+	});
+
+	$('#selected-task-box #selected-cancel').click(function() {
+		$('tr.task.selected .task-index').click();
+	});
+
+	update_indexes();
 }
 
 function update_indexes() {
