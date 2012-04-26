@@ -178,6 +178,12 @@ function setup_indexes() {
 		document.location = '/tasks/' + idStr;
 	});
 
+	$('#selected-task-box #selected-highlight').click(function() {
+		ids = $('tr.task.selected').map(function() {return $(this).attr('taskid');});
+		idStr = $.makeArray(ids).join();
+		document.location.search = 'search=highlight:' + idStr;
+	});
+
 	$('#selected-task-box #selected-cancel').click(function() {
 		$('tr.task.selected .task-index').click();
 	});
