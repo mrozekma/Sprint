@@ -74,5 +74,5 @@ def showHistory(tasks, describeTask):
 				if day != prevDay:
 					print "<h2>%s</h2>" % day.strftime("%d %b %Y").lstrip('0')
 				prevDay = day
-			print "<img class=\"bullet\" src=\"/static/images/%s.png\">&nbsp;%s<span class=\"timestamp\">[%s]</span>%s%s<br>" % (icon, "<span class=\"debugtext\">[%d]</span>&nbsp;" % rev.revision if isDevMode() else '', tsToDate(rev.timestamp).strftime('%H:%M:%S' if describeTask else '%Y-%m-%d %H:%M:%S'), "<a href=\"/tasks/%d\">%s</a>:&nbsp;" % (rev.id, rev.safe.name) if describeTask else '', text)
+			print "<img class=\"bullet\" src=\"/static/images/%s.png\">&nbsp;%s<span class=\"timestamp\">[%s]</span>%s%s<br>" % (icon, "<span class=\"debugtext\">[%d, %d]</span>&nbsp;" % (rev.id, rev.revision) if isDevMode() else '', tsToDate(rev.timestamp).strftime('%H:%M:%S' if describeTask else '%Y-%m-%d %H:%M:%S'), "<a href=\"/tasks/%d\">%s</a>:&nbsp;" % (rev.id, rev.safe.name) if describeTask else '', text)
 	print "</div>"

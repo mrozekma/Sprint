@@ -255,7 +255,13 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print "</form>"
 
 def printTask(handler, task, days, group = None, highlight = False, editable = True):
-	print "<tr class=\"task%s\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" goalid=\"%d\" status=\"%s\" assigned=\"%s\">" % (' highlight' if highlight else '', task.id, task.id, task.revision, group.id if group else 0, task.goal.id if task.goal else 0, task.stat.name, task.assigned.username)
+	classes = ['task']
+	if highlight:
+		classes.append('highlight')
+	if tsToDate(task.timestamp).date() == getNow().date():
+		classes.append('changed-today')
+
+	print "<tr class=\"%s\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" goalid=\"%d\" status=\"%s\" assigned=\"%s\">" % (' '.join(classes), task.id, task.id, task.revision, group.id if group else 0, task.goal.id if task.goal else 0, task.stat.name, task.assigned.username)
 
 	print "<td class=\"flags\">"
 	if isDevMode(handler):

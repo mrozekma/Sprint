@@ -372,7 +372,7 @@ function save_task(task, field, value, counter) {
 			$('span.boxbody', box).html(data);
 			break;
 		case 299:
-			$('tr.task[taskid=' + task.attr('taskid') + ']').attr('revid', data);
+			$('tr.task[taskid=' + task.attr('taskid') + ']').attr('revid', data).addClass('changed-today');
 			console.log("Changed saved; new revision is " + data);
 			box.fadeOut();
 			box = null;

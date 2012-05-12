@@ -532,6 +532,14 @@ table.tasks tr.task:hover td.flags span.task-index {
 	background-color: #2d6987;
 }
 
+table.tasks tr.task.changed-today td.flags span.task-index {
+	background-color: #468847;
+}
+
+table.tasks tr.task.changed-today:hover td.flags span.task-index {
+	background-color: #356635;
+}
+
 table.tasks tr.task.selected td.flags span.task-index {
 	background-color: #b94a48;
 }
