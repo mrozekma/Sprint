@@ -39,9 +39,11 @@ def projectsList(handler, request):
 		print "</div>"
 
 		print "<div class=\"project-members\">"
-		print "<div class=\"member scrummaster\">%s</div>" % project.owner.str('scrummaster')
+		scrummasters = set(sprint.owner for sprint in sprints)
+		for member in sorted(scrummasters):
+			print "<div class=\"member scrummaster\">%s</div>" % member.str('scrummaster')
 		for member in sorted(project.getMembers()):
-			if member == project.owner: continue
+			if member in scrummasters: continue
 			print "<div class=\"member %s\">%s</div>" % ('active' if member in activeMembers or len(activeSprints) == 0 else 'inactive', member.str('member'))
 		print "</div>"
 

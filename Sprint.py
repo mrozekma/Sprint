@@ -7,12 +7,14 @@ from Project import Project
 
 class Sprint(ActiveRecord):
 	project = ActiveRecord.idObjLink(Project, 'projectid')
+	owner = ActiveRecord.idObjLink(User, 'ownerid')
 
-	def __init__(self, projectid, name, start, end, id = None):
+	def __init__(self, projectid, name, ownerid, start, end, id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.projectid = projectid
 		self.name = name
+		self.ownerid = ownerid
 		self.start = start
 		self.end = end
 		self.members = ActiveRecord.loadLink(self, 'members', 'sprintid', User, 'userid')

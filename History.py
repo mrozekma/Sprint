@@ -8,7 +8,7 @@ from utils import *
 
 def userStr(rev, arg = None):
 	user = arg or rev.creator
-	return user.str('scrummaster' if user == rev.sprint.project.owner else 'member')
+	return user.str('scrummaster' if user == rev.sprint.owner else 'member')
 
 def showHistory(tasks, describeTask):
 	if isinstance(tasks, Task):

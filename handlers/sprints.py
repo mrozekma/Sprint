@@ -435,7 +435,7 @@ def showInfo(handler, request, id):
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
 	tasks = sprint.getTasks()
-	editable = sprint.project.owner == handler.session['user'] # Info can be edited even after the sprint closes
+	editable = sprint.owner == handler.session['user'] # Info can be edited even after the sprint closes
 
 	handler.title(sprint.safe.name)
 
@@ -520,7 +520,7 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 	if not sprint:
 		die("There is no sprint with ID %d" % id)
 
-	if sprint.project.owner != handler.session['user']:
+	if sprint.owner != handler.session['user']:
 		die("You must be the scrummaster to modify sprint information")
 
 	if p_start:
@@ -557,8 +557,8 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 	members = map(User.load, p_members) if p_members else []
 	if not all(members):
 		die("One or more members do not exist")
-	if sprint.project.owner not in members:
-		die("The scrummaster (%s) must be a sprint member" % project.owner)
+	if sprint.owner not in members:
+		die("The scrummaster (%s) must be a sprint member" % sprint.owner)
 
 	if (dateToTs(start) if start else sprint.start) > sprint.end:
 		die("Start date cannot be after end date")
@@ -568,7 +568,7 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 	delMembers = list(set(sprint.members) - set(members))
 	for user in delMembers:
 		for task in filter(lambda task: task.assigned == user, sprint.getTasks()):
-			task.assigned = sprint.project.owner
+			task.assigned = sprint.owner
 			task.creator = handler.session['user']
 			task.timestamp = dateToTs(getNow())
 			task.revise()
@@ -810,7 +810,7 @@ def newSprint(handler, request, project):
 	print "<tr><td class=\"left\">Members:</td><td class=\"right\">"
 	print "<select name=\"members[]\" id=\"select-members\" multiple>"
 	for user in sorted(User.loadAll()):
-		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user == handler.session['user'] or user == project.owner else '', user.safe.username)
+		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user == handler.session['user'] or user == handler.session['user'] else '', user.safe.username)
 	print "</select>"
 	print "</td></tr>"
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
@@ -862,10 +862,10 @@ def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members
 	members = map(User.load, p_members) if p_members else []
 	if None in members:
 		die("Unknown username")
-	if project.owner not in members:
-		die("The scrummaster (%s) must be a sprint member" % project.owner)
+	if handler.session['user'] not in members:
+		die("The scrummaster (%s) must be a sprint member" % handler.session['user'])
 
-	sprint = Sprint(project.id, p_name, dateToTs(start), dateToTs(end))
+	sprint = Sprint(project.id, p_name, handler.session['user'].id, dateToTs(start), dateToTs(end))
 	sprint.members += members
 	sprint.save()
 	# Make a default 'Miscellaneous' group so there's something to add tasks to

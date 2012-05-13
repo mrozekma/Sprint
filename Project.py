@@ -5,13 +5,10 @@ from User import User
 from utils import stripTags
 
 class Project(ActiveRecord):
-	owner = ActiveRecord.idObjLink(User, 'ownerid')
-
 	# Test projects have negative IDs
-	def __init__(self, ownerid, name, id = None):
+	def __init__(self, name, id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
-		self.ownerid = ownerid
 		self.name = name
 
 	def getSprints(self):
