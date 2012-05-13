@@ -128,7 +128,7 @@ def footer(handler, path):
 		print "<span style=\"color: #f00;\">Development build</span><br>"
 		if isDevMode(handler):
 			queries = db().resetCount()
-			print "Database requests: %d<br>" % queries
+			print "Database (%s) requests: %d<br>" % (settings.dbVersion, queries)
 	else:
 		if 'gitURL' in settings:
 			print "<a href=\"%s\">%s</a>" % (settings.gitURL % {'hash': revisionHash}, revisionHash),

@@ -1,7 +1,8 @@
 from sqlite3 import connect, Row
 from inspect import getargspec, getmembers
 import sys
-from os.path import isfile
+from os import listdir
+from os.path import isdir, isfile, splitext
 
 from utils import stripTags
 
@@ -55,6 +56,22 @@ class DB:
 		c = self.count
 		self.count = 0
 		return c
+
+	@staticmethod
+	def getTemplates():
+		if not isdir('db-templates'):
+			raise DBError("Unable to find db-templates directory")
+
+		templates = []
+		for script in listdir('db-templates'):
+			index, ext = splitext(script)
+			if ext != '.sql':
+				raise DBError("Unexpected template file: %s" % script)
+			try:
+				templates.append(int(index, 0))
+			except ValueError:
+				raise DBError("Unexpected template file: %s" % script)
+		return sorted(templates)
 
 singleton = None
 def db():

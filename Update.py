@@ -1,23 +1,40 @@
 import sys
-from os import listdir, remove
+from os import remove
 from os.path import isdir, splitext
 from getpass import getpass
 from socket import gethostname
+from shutil import copy
 
 from DB import DB, DBError, db, filename as dbFilename
 from User import User
 from Privilege import Privilege
 from Settings import settings, PORT
+from utils import *
 
 def check():
 	if '--init' in sys.argv:
 		init()
+		exit(0)
 
 	try:
 		db()
 	except DBError, e:
 		print e
 		print "If you've never run this tool before, run %s --init to configure it" % sys.argv[0]
+		exit(1)
+
+	dbVersion = DB.getTemplates()[-1]
+	if '--update' in sys.argv:
+		if int(settings.dbVersion) < dbVersion:
+			update()
+			exit(0)
+		elif int(settings.dbVersion) == dbVersion:
+			print "Unable to update -- already at database version %d" % dbVersion
+	if int(settings.dbVersion) < dbVersion:
+		print "The database is %s behind. Run %s --update to update it" % (pluralize(dbVersion - int(settings.dbVersion), 'version', 'versions'), sys.argv[0])
+		exit(1)
+	elif int(settings.dbVersion) > dbVersion:
+		print "The database is %s ahead; downgrading is not supported" % pluralize(int(settings.dbVersion) - dbVersion, 'version', 'versions')
 		exit(1)
 
 def init():
@@ -31,19 +48,10 @@ def init():
 	except DBError:
 		pass
 
-	if not isdir('db-templates'):
-		die("Unable to find db-templates directory")
-
-	templates = []
-	for script in listdir('db-templates'):
-		index, ext = splitext(script)
-		if ext != '.sql':
-			die("Unexpected template file: %s" % script)
-		try:
-			templates.append(int(index, 0))
-		except ValueError:
-			die("Unexpected template file: %s" % script)
-	templates.sort()
+	try:
+		templates = DB.getTemplates()
+	except DBError, e:
+		die(str(e))
 
 	print "The database starts with a root user you can use to manage the installation"
 	username = raw_input('Username: ')
@@ -62,12 +70,7 @@ def init():
 
 	print "Creating database"
 	open(dbFilename, 'w').close()
-	try:
-		for index in templates:
-			map(db().update, open("db-templates/%d.sql" % index).readlines())
-	except Exception, e:
-		remove(dbFilename)
-		die("Unable to apply template %d: %s" % (index, e))
+	applyTemplates(templates, lambda: remove(dbFilename))
 
 	try:
 		settings.dbVersion = index
@@ -89,4 +92,28 @@ def init():
 		die("Unable to create admin user: %s" % e)
 
 	print "Done. You can run %s normally now and browse to http://%s:%d/" % (sys.argv[0], gethostname(), PORT)
-	exit(0)
+
+def update():
+	templates = DB.getTemplates()
+	dbVersion = templates[-1]
+	if int(settings.dbVersion) >= dbVersion:
+		print "Unable to update version %d to %d" % (int(settings.dbVersion), dbVersion)
+		exit(1)
+
+	backupFilename = "%s-preupgrade%s" % splitext(dbFilename)
+	copy(dbFilename, backupFilename)
+	print "Backed up database to %s" % backupFilename
+
+	newTemplates = templates[templates.index(int(settings.dbVersion))+1:]
+	applyTemplates(newTemplates, lambda: copy(backupFilename, dbFilename))
+	settings.dbVersion = dbVersion
+	print "Updated to database version %d. You can run %s normally now and browse to http://%s:%d/" % (dbVersion, sys.argv[0], gethostname(), PORT)
+
+def applyTemplates(templates, failFn):
+	try:
+		for index in templates:
+			map(db().update, open("db-templates/%d.sql" % index).readlines())
+	except Exception, e:
+		print "Unable to apply template %d: %s" % (index, e)
+		failFn()
+		exit(1)
