@@ -22,6 +22,7 @@ from Table import LRTable
 from Cron import Cron
 from LoadValues import getLoadtime, setDevMode
 from Log import LogEntry, log
+from Settings import settings
 from relativeDates import timesince
 from utils import *
 
@@ -69,6 +70,44 @@ def adminTest(handler, request):
 				tokString = tokString.replace("'", "")
 				print "<a href=\"/%s\">%s</a><br>" % (tokString, stripTags(tokString))
 				found = 0
+
+@admin('admin/settings', 'Settings', 'settings')
+def adminSettings(handler, request):
+	handler.title('Settings')
+	requireAdmin(handler)
+	undelay(handler)
+
+	print "<style type=\"text/css\">"
+	print "table.list td.right > * {width: 400px;}"
+	print "table.list td.right button {width: 200px;}" # Half of the above value
+	print "table.list tr td:first-of-type {font-weight: bold;}"
+	print "</style>"
+
+	print "<h3>Mutable settings</h3>"
+	print "<form method=\"post\" action=\"/admin/settings\">"
+	print "<table class=\"list\">"
+	print "<tr><td class=\"left\">E-mail domain:</td><td class=\"right\"><input type=\"text\" name=\"emailDomain\" value=\"%s\"></td></tr>" % settings.emailDomain
+	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
+	print Button('Save', id = 'save-button', type = 'submit').positive()
+	print Button('Cancel', type = 'button', url = '/admin').negative()
+	print "</td></tr>"
+	print "</table>"
+	print "</form>"
+	print "<br>"
+
+	print "<h3>Immutable settings</h3>"
+	print "<table class=\"list\">"
+	print "<tr><td>Database version:</td><td>%s</td></tr>" % settings.dbVersion
+	print "</table>"
+
+@post('admin/settings')
+def adminSettingsPost(handler, request, p_emailDomain):
+	handler.title('Settings')
+	requireAdmin(handler)
+	settings.emailDomain = p_emailDomain
+
+	delay(handler, SuccessBox("Updated settings", close = True))
+	redirect('/admin/settings')
 
 @admin('admin/users', 'Users', 'users')
 def adminUsers(handler, request):
