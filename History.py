@@ -16,7 +16,7 @@ def showHistory(tasks, describeTask):
 
 	revs = [task.getRevisions() for task in tasks]
 	revs = [rev for l in revs for rev in l] # Flatten
-	revs.sort(key = lambda rev: rev.timestamp, reverse = True) # Sort descending by timestamp
+	revs.sort(key = lambda rev: rev.timestamp) # Sort ascending by timestamp
 	revMap = dict([((rev.id, rev.revision), rev) for rev in revs]) # Map (id, revision #) to the revision
 
 	print "<div class=\"revision-history\">"
