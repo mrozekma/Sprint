@@ -31,7 +31,7 @@ def task(handler, request, ids):
 	Chart.include()
 
 	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/prettify/sunburst.css\">"
-	print "<script src=\"/static/prettify/prettify.js\"></script>"
+	print "<script src=\"/static/prettify/prettify.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/jquery.typing-0.2.0.min.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/tasks.js\" type=\"text/javascript\"></script>"
 	undelay(handler)
@@ -105,11 +105,11 @@ def task(handler, request, ids):
 			print "<form method=\"post\" action=\"/tasks/%d/notes/%d/modify\">" % (id, note.id)
 			print "<div class=\"avatar\"><div><img src=\"%s\"></div></div>" % note.user.getAvatar()
 			print "<div class=\"text\">"
-			print "<div class=\"title\"><b>%s</b> by <b>%s</b>" % (tsToDate(note.timestamp).replace(microsecond = 0), note.user.safe.username)
+			print "<div class=\"title\"><a class=\"timestamp\" href=\"#note%d\">%s</a> by <span class=\"author\">%s</span>" % (note.id, tsToDate(note.timestamp).replace(microsecond = 0), note.user.safe.username)
 			if note.user == handler.session['user']:
 				print "<button name=\"action\" value=\"delete\" class=\"fancy mini danger\">delete</button>"
 			print "</div>"
-			print "<div class=\"body\">%s</div>" % note.render()
+			print "<div class=\"body markdown\">%s</div>" % note.render()
 			print "</div>"
 			print "</form>"
 			print "</div>"
@@ -118,11 +118,14 @@ def task(handler, request, ids):
 		print "<form method=\"post\" action=\"/tasks/%d/notes/new\">" % id
 		print "<div class=\"avatar\"><div><img src=\"%s\"></div></div>" % handler.session['user'].getAvatar()
 		print "<div class=\"text\">"
-		print "<div class=\"title\"><b>New note</b></div>"
+		print "<div class=\"title\">"
+		print "<b>New note</b>"
+		print "<a target=\"_blank\" href=\"/help/markdown\" class=\"fancy mini\">help</a>"
+		print "</div>"
 		print "<div class=\"body\"><textarea name=\"body\"></textarea></div>"
 		print Button('Post').post().positive()
 		print "<hr>"
-		print "<div class=\"body\"><div id=\"preview\"></div></div>"
+		print "<div class=\"body markdown\"><div id=\"preview\"></div></div>"
 		print "</div>"
 		print "</form>"
 		print "</div>"

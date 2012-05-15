@@ -1,11 +1,22 @@
-from markdown import Markdown
+from markdown import Markdown, Extension
 
 from DB import ActiveRecord
 from Task import Task
 from User import User
 from utils import *
 
-md = Markdown(output_format = 'html4', safe_mode = 'escape', lazy_ol = False, extensions = ['nl2br', 'fenced_code']) # 'codehilite'
+standardExtensions = ['nl2br', 'fenced_code', 'sane_lists'] # 'codehilite'
+
+extensions = standardExtensions[:]
+import markdown_extensions
+for v in markdown_extensions.__dict__.values():
+	try:
+		if issubclass(v, Extension) and v != Extension:
+			extensions.append(v())
+	except TypeError:
+		pass
+
+md = Markdown(output_format = 'html4', safe_mode = 'escape', lazy_ol = False, extensions = extensions)
 
 class Note(ActiveRecord):
 	task = ActiveRecord.idObjLink(Task, 'taskid')

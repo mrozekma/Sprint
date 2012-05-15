@@ -147,6 +147,7 @@ function setup_bugzilla(tasks) {
 		}
 		*/
 
+		//TODO Make the domain a setting
 		if(match = name.match(/(?:bug |bz)([0-9]+)/i)) {
 			id = parseInt(match[1], 10);
 			link.attr('href', 'http://bugs.arxandefense.com/show_bug.cgi?id=' + id);

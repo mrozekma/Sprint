@@ -702,21 +702,6 @@ div.notes .note .text > * {
 	padding: 5px;
 }
 
-div.notes .note .text .body p {
-	margin: 0px;
-}
-
-div.notes .note .text .body blockquote {
-	margin: 5px 0px 5px 0px;
-	padding: 5px 5px 5px 10px;
-	background-color: #bbb;
-}
-
-div.notes .note .text .body pre code {
-	display: block;
-	padding: 5px;
-}
-
 div.notes .note .text .title {
 	background: #bbb;
 	border-bottom: 1px solid #bbb;
@@ -725,6 +710,15 @@ div.notes .note .text .title {
 div.notes .note .text .title button {
 	float: right;
 	margin-left: 5px;
+}
+
+div.notes .note .text .title a.timestamp {
+	color: #000;
+	font-weight: bold;
+}
+
+div.notes .note .text .title .author {
+	font-weight: bold;
 }
 
 div.notes .new-note {
@@ -746,9 +740,13 @@ div.notes .new-note .text .body textarea {
 	min-height: 100px;
 }
 
-div.notes .new-note .text button {
+div.notes .new-note .text > button {
 	margin: 0px 0px 5px 10px;
 	width: 200px;
+}
+
+div.notes .new-note .text .title a {
+	float: right;
 }
 
 div.notes .new-note #preview {
@@ -757,6 +755,21 @@ div.notes .new-note #preview {
 	border: 1px dashed #aaa;
 	width: 100%;
 	min-height: 100px;
+}
+
+.markdown p {
+	margin: 0px;
+}
+
+.markdown blockquote {
+	margin: 5px 0px 5px 0px;
+	padding: 5px 5px 5px 10px;
+	background-color: #bbb;
+}
+
+.markdown pre code {
+	display: block;
+	padding: 5px;
 }
 
 .revision-history img.bullet {
