@@ -99,3 +99,9 @@ function buildmode(mode) {
 		window.location.reload(true);
 	});
 }
+
+function unimpersonate() {
+	$.post('/admin/unimpersonate', {}, function(data, text, request) {
+		window.location.reload(true);
+	});
+}

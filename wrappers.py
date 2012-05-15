@@ -2,11 +2,13 @@ from datetime import datetime
 from random import randint
 import sys
 import os
+
 import HTTPHandler
 import menu
 from DB import db
 from LoadValues import getRevisionInfo, isDevMode
 from Settings import settings
+from User import User
 from utils import *
 
 # class LeftMenu:
@@ -72,7 +74,13 @@ def header(handler, path):
 
 	print "<div id=\"main_a\">"
 	if handler.session['user']:
+		print "<div class=\"avatar\">"
 		print "<img class=\"avatar\" src=\"%s\">" % handler.session['user'].getAvatar()
+		if 'impersonator' in handler.session:
+			print "<div class=\"subavatar\">"
+			print "<img class=\"subavatar\" src=\"%s\" onClick=\"unimpersonate();\" title=\"Unimpersonate\">" % handler.session['impersonator'].getAvatar()
+			print "</div>"
+		print "</div>"
 	print "<div class=\"navigation\">"
 	print "<div class=\"ident\">"
 	if handler.session['user']:

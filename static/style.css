@@ -89,9 +89,21 @@ a {
 	padding-top: 30px;
 }
 
-img.avatar {
+#main_a div.avatar {
 	float: right;
 	padding: 5px;
+}
+
+#main_a div.subavatar {
+	position: absolute;
+}
+
+#main_a div.subavatar img.subavatar {
+	position: relative;
+	bottom: 24px;
+	left: 40px;
+	width: 24px;
+	cursor: pointer;
 }
 
 /* .username.me { */

@@ -170,6 +170,8 @@ def adminUsersPost(handler, request, p_action, p_username, p_privileges = []):
 			if not user:
 				ErrorBox.die('Impersonate User', "No user named <b>%s</b>" % stripTags(p_username))
 
+			if not 'impersonator' in handler.session:
+				handler.session['impersonator'] = handler.session['user']
 			handler.session['user'] = user
 			redirect('/')
 			break
@@ -513,6 +515,12 @@ def adminBuildModePost(handler, request, p_mode):
 		setDevMode(True)
 	elif p_mode == 'production':
 		setDevMode(False)
+
+@post('admin/unimpersonate')
+def adminUnimpersonatePost(handler, request):
+	if 'impersonator' in handler.session:
+		handler.session['user'] = handler.session['impersonator']
+		del handler.session['impersonator']
 
 @admin('admin/log', 'Log', 'log')
 def adminLog(handler, request):

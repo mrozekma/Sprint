@@ -47,6 +47,8 @@ def logout(handler, request):
 def logoutPost(handler, request):
 	if handler.session['user']:
 		del handler.session['user']
+		if 'impersonator' in handler.session:
+			del handler.session['impersonator']
 		redirect('/')
 	else:
 		print ErrorBox("Logout Failed", "You are not logged in")
