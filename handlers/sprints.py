@@ -48,7 +48,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 
 	# Redirect to search help page if searched for empty string
 	if search == '':
-		redirect('/search')
+		redirect('/help/search')
 
 	handler.title(sprint.safe.name)
 

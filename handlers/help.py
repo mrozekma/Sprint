@@ -4,12 +4,9 @@ from Search import Search
 
 from utils import *
 
-@get('search')
-def search(handler, request):
+@get('help/search')
+def helpSearch(handler, request):
 	handler.title("Search")
-
-	print WarningBox('Unimplemented', "Searching directly from this page is unimplemented; go to a <a href=\"/\">sprint page</a> to search")
-	print "<br>"
 
 	print "Searching is a combination of miscellaneous filters and a free-form task name fuzzy search. The search operators are:<br>"
 
