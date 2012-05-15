@@ -40,6 +40,17 @@ code {
 	background-color: #FFF;
 }
 
+.sysmessage {
+	text-align: center;
+	padding: 5px 0px 5px 0px;
+	border-width: 0px 1px 0px 1px;
+	border-style: solid;
+	border-color: #000;
+	background-color: #000;
+	color: #fff;
+	font-weight: bold;
+}
+
 .footer_timestamp {
 	font-size: 70%;
 }

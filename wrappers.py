@@ -108,6 +108,10 @@ def header(handler, path):
 	print "<div id=\"main_b\"></div>"
 
 	print "<div id=\"main_c\">"
+
+	if settings.systemMessage:
+		print "<div class=\"sysmessage\">%s</div>" % settings.systemMessage
+
 	print "<div id=\"main_d\">"
 
 	# print "<div style=\"width: 200px; float: left\">"

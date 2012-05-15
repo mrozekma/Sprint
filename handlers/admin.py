@@ -87,6 +87,7 @@ def adminSettings(handler, request):
 	print "<form method=\"post\" action=\"/admin/settings\">"
 	print "<table class=\"list\">"
 	print "<tr><td class=\"left\">E-mail domain:</td><td class=\"right\"><input type=\"text\" name=\"emailDomain\" value=\"%s\"></td></tr>" % settings.emailDomain
+	print "<tr><td class=\"left\">System message:</td><td class=\"right\"><input type=\"text\" name=\"systemMessage\" value=\"%s\"></td></tr>" % (settings.systemMessage or '')
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
 	print Button('Save', id = 'save-button', type = 'submit').positive()
 	print Button('Cancel', type = 'button', url = '/admin').negative()
@@ -101,10 +102,14 @@ def adminSettings(handler, request):
 	print "</table>"
 
 @post('admin/settings')
-def adminSettingsPost(handler, request, p_emailDomain):
+def adminSettingsPost(handler, request, p_emailDomain, p_systemMessage):
 	handler.title('Settings')
 	requireAdmin(handler)
 	settings.emailDomain = p_emailDomain
+	if p_systemMessage == '':
+		del settings['systemMessage']
+	else:
+		settings.systemMessage = p_systemMessage
 
 	delay(handler, SuccessBox("Updated settings", close = True))
 	redirect('/admin/settings')
