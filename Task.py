@@ -84,6 +84,10 @@ class Task(ActiveRecord):
 	def getStartRevision(self, includeAfterPlanning = True):
 		return self.getRevisionAt(tsToDate(self.sprint.start)) or (self.getRevision(1) if includeAfterPlanning else None)
 
+	def getNotes(self):
+		from Note import Note
+		return Note.loadAll(taskid = self.id, orderby = 'timestamp ASC')
+
 	### Data that depends on task status/history
 
 	def earnedValueHours(self):

@@ -1,0 +1,1 @@
+CREATE TABLE notes(id integer not null primary key autoincrement, taskid integer CONSTRAINT task REFERENCES tasks(id), userid integer CONSTRAINT user REFERENCES users(id), body text, timestamp integer);

@@ -7,6 +7,8 @@ try:
 except ImportError:
 	plottingLib = False
 
+from markdown import Markdown
+
 from rorn.ResponseWriter import ResponseWriter
 from rorn.Box import *
 from rorn.code import showCode
@@ -358,6 +360,43 @@ def testSaveButtonPost(handler, request):
 	admin(handler)
 
 	print "Post"
+
+@get('test/markdown')
+def testMarkdown(handler, request):
+	handler.title('Markdown')
+	admin(handler)
+
+	md = Markdown(output_format = 'html4', safe_mode = 'escape', lazy_ol = False, extensions = ['nl2br', 'fenced_code', 'codehilite'])
+	tests = [
+		"test",
+		"test *test* test",
+		"* one\n* two\n* three",
+		"one\ntwo",
+		"<b>test</b>",
+		"http://google.com/",
+		"[Google](http://google.com/)",
+		"    int x;\n    x++;\n    printf(\"%d\\n\", 4);",
+		"foo\n~~~\nint x;\n~~~",
+	]
+
+	print """
+<link rel="stylesheet" type="text/css" href="/markdown.css">
+<style type="text/css">
+table.tests {
+    width: 100%;
+}
+
+table.tests > td {
+    border: 1px solid #000;
+}
+</style>
+"""
+
+	print "<table class=\"tests\" border=\"1\" cellspacing=\"0\">"
+	print "<tr><th>Plain</th><th>Markdown</th></tr>"
+	for plain in tests:
+		print "<tr><td><pre>%s</pre></td><td>%s</td></tr>" % (stripTags(plain), md.convert(plain))
+	print "</table>"
 
 # @get('test')
 # def test(handler, request):

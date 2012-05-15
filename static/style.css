@@ -669,6 +669,96 @@ ul#goal-menu {
 	width: 350px;
 }
 
+div.notes .note .avatar img {
+	float: left;
+	padding-right: 10px;
+}
+
+div.notes .note {
+	margin-left: 80px;
+	min-height: 80px;
+	margin-bottom: 10px;
+	background-color: #eee;
+	border: 1px solid #bbb;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+}
+
+div.notes .note .avatar {
+	position: relative;
+}
+
+div.notes .note .avatar div {
+	position: absolute;
+	left: -80px;
+	font-weight: bold;
+}
+
+div.notes .note .text {
+	text-align: justify;
+}
+
+div.notes .note .text > * {
+	padding: 5px;
+}
+
+div.notes .note .text .body p {
+	margin: 0px;
+}
+
+div.notes .note .text .body blockquote {
+	margin: 5px 0px 5px 0px;
+	padding: 5px 5px 5px 10px;
+	background-color: #bbb;
+}
+
+div.notes .note .text .body pre code {
+	display: block;
+	padding: 5px;
+}
+
+div.notes .note .text .title {
+	background: #bbb;
+	border-bottom: 1px solid #bbb;
+}
+
+div.notes .note .text .title button {
+	float: right;
+	margin-left: 5px;
+}
+
+div.notes .new-note {
+	display: none;
+}
+
+div.notes .new-note .text .body {
+	padding: 5px 15px 0px 10px;
+}
+
+div.notes .new-note .text hr {
+	height: 0px;
+	border-width: 0px;
+	border-top: 1px solid #aaa;
+}
+
+div.notes .new-note .text .body textarea {
+	width: 100%;
+	min-height: 100px;
+}
+
+div.notes .new-note .text button {
+	margin: 0px 0px 5px 10px;
+	width: 200px;
+}
+
+div.notes .new-note #preview {
+	position: relative;
+	top: -10px;
+	border: 1px dashed #aaa;
+	width: 100%;
+	min-height: 100px;
+}
+
 .revision-history img.bullet {
 	position: relative;
 	top: 3px;

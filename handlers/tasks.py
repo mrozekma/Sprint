@@ -1,7 +1,9 @@
 from __future__ import with_statement
 from json import dumps as toJS
+from markdown import Markdown
+from pygments.formatters import HtmlFormatter
 
-from rorn.Session import delay
+from rorn.Session import delay, undelay
 from rorn.Box import ErrorBox, CollapsibleBox, InfoBox, SuccessBox
 from rorn.ResponseWriter import ResponseWriter
 
@@ -19,6 +21,7 @@ from Chart import Chart
 from SprintCharts import TaskChart
 from ProgressBar import ProgressBar
 from Availability import Availability
+from Note import Note
 from relativeDates import timesince
 from utils import *
 
@@ -26,6 +29,12 @@ from utils import *
 def task(handler, request, ids):
 	requirePriv(handler, 'User')
 	Chart.include()
+
+	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/prettify/sunburst.css\">"
+	print "<script src=\"/static/prettify/prettify.js\"></script>"
+	print "<script src=\"/static/jquery.typing-0.2.0.min.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/tasks.js\" type=\"text/javascript\"></script>"
+	undelay(handler)
 
 	tasks = {}
 	if isinstance(ids, int): # Single ID
@@ -88,6 +97,40 @@ def task(handler, request, ids):
 		else:
 			print ProgressBar(lbl, total-hours, total, zeroDivZero = True)
 
+		header(task, 'Notes', 2)
+		print "<div class=\"notes\">"
+
+		for note in task.getNotes():
+			print "<div id=\"note%d\" class=\"note\">" % note.id
+			print "<form method=\"post\" action=\"/tasks/%d/notes/%d/modify\">" % (id, note.id)
+			print "<div class=\"avatar\"><div><img src=\"%s\"></div></div>" % note.user.getAvatar()
+			print "<div class=\"text\">"
+			print "<div class=\"title\"><b>%s</b> by <b>%s</b>" % (tsToDate(note.timestamp).replace(microsecond = 0), note.user.safe.username)
+			if note.user == handler.session['user']:
+				print "<button name=\"action\" value=\"delete\" class=\"fancy mini danger\">delete</button>"
+			print "</div>"
+			print "<div class=\"body\">%s</div>" % note.render()
+			print "</div>"
+			print "</form>"
+			print "</div>"
+
+		print "<div class=\"note new-note\">"
+		print "<form method=\"post\" action=\"/tasks/%d/notes/new\">" % id
+		print "<div class=\"avatar\"><div><img src=\"%s\"></div></div>" % handler.session['user'].getAvatar()
+		print "<div class=\"text\">"
+		print "<div class=\"title\"><b>New note</b></div>"
+		print "<div class=\"body\"><textarea name=\"body\"></textarea></div>"
+		print Button('Post').post().positive()
+		print "<hr>"
+		print "<div class=\"body\"><div id=\"preview\"></div></div>"
+		print "</div>"
+		print "</form>"
+		print "</div>"
+
+		print "<button class=\"btn start-new-note\">Add Note</button>"
+		print "</div>"
+		print "<div class=\"clear\"></div>"
+
 		header(task, 'History', 2)
 		chart = TaskChart("chart%d" % id, task)
 		chart.js()
@@ -95,6 +138,53 @@ def task(handler, request, ids):
 		chart.placeholder()
 		showHistory(task, False)
 		print "<br>"
+
+@post('tasks/(?P<taskid>[0-9]+)/notes/new')
+def newNotePost(handler, request, taskid, p_body, dryrun = False):
+	handler.title('New Note')
+	requirePriv(handler, 'User')
+
+	taskid = int(taskid)
+	task = Task.load(taskid)
+	if not task:
+		ErrorBox.die('Invalid Task', "No task with ID <b>%d</b>" % taskid)
+	if p_body == '':
+		ErrorBox.die('Empty Body', "No note provided")
+
+	note = Note(task.id, handler.session['user'].id, p_body)
+
+	if dryrun:
+		request['wrappers'] = False
+		print note.render()
+	else:
+		note.save()
+		redirect("/tasks/%d#note%d" % (task.id, note.id))
+
+@post('tasks/(?P<taskid>[0-9]+)/notes/(?P<id>[0-9]+)/modify')
+def newNoteModify(handler, request, taskid, id, p_action):
+	handler.title('New Note')
+	requirePriv(handler, 'User')
+
+	if p_action != 'delete':
+		ErrorBox.die('Invalid Action', "Unrecognized action <b>%s</b>" % p_action)
+
+	taskid = int(taskid)
+	task = Task.load(taskid)
+	if not task:
+		ErrorBox.die('Invalid Task', "No task with ID <b>%d</b>" % taskid)
+
+	id = int(id)
+	note = Note.load(id)
+	if not note:
+		ErrorBox.die('Invalid Note', "No note with ID <b>%d</b>" % noteid)
+	elif note.task != task: # Doesn't really matter, but shouldn't happen
+		ErrorBox.die('Task mismatch', "Note/task mismatch")
+	elif note.user != handler.session['user']:
+		ErrorBox.die('Permission denied', "Notes can only be deleted by their creators")
+
+	note.delete()
+	delay(handler, SuccessBox("Deleted note", close = 3))
+	redirect("/tasks/%d" % task.id)
 
 tabs = Tabs()
 tabs['single'] = '/tasks/new/single?group=%d'
@@ -132,7 +222,7 @@ def newTaskSingle(handler, request, group):
 	print "<script type=\"text/javascript\">"
 	print "next_url = '/sprints/%d#group%d';" % (group.sprint.id, group.id)
 	print "</script>"
-	print "<script src=\"/static/tasks.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/tasks-new.js\" type=\"text/javascript\"></script>"
 
 	print InfoBox('', id = 'post-status', close = True)
 
@@ -182,6 +272,7 @@ def newTaskPost(handler, request, p_group, p_name, p_goal, p_status, p_assigned,
 		print msg
 		done()
 
+	requirePriv(handler, 'User')
 	request['wrappers'] = False
 
 	groupid = to_int(p_group, 'group', die)
@@ -234,7 +325,7 @@ def newTaskMany(handler, request, group):
 	sprint = defaultGroup.sprint
 
 	print "<script src=\"/static/jquery.typing-0.2.0.min.js\" type=\"text/javascript\"></script>"
-	print "<script src=\"/static/tasks.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/tasks-new.js\" type=\"text/javascript\"></script>"
 	print "<script type=\"text/javascript\">"
 	print "next_url = '/sprints/%d';" % sprint.id
 	print "</script>"
