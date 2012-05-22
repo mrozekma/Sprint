@@ -1,6 +1,7 @@
 from __future__ import with_statement, division
 from datetime import datetime, date, timedelta
 from json import dumps as toJS
+from collections import OrderedDict
 
 from rorn.Session import delay, undelay
 from rorn.ResponseWriter import ResponseWriter
@@ -24,6 +25,7 @@ from History import showHistory
 from Export import exports
 from LoadValues import isDevMode
 from Search import Search
+from Event import Event
 from utils import *
 
 # groupings = ['status', 'owner', 'hours']
@@ -334,9 +336,6 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 	if task.sprint != sprint:
 		die("Attempting to modify task outside the specified sprint")
 
-	# print "%d, %d, %s, %s" % (p_id, p_rev_id, p_field, p_value)
-
-	# self.__setattr__(var, obj.id)
 	# hours, taskmove, name, assigned, status
 	if task.revision != p_rev_id: #TODO Implement collision support
 		die("Collision with %s detected. Changes not saved" % task.creator)
@@ -351,7 +350,7 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 				if not parsedValue:
 					die("Unknown goal: <b>%s</b>" % stripTags(p_value))
 				if parsedValue.sprint != sprint:
-					die("Attempting to use goal output the specified sprint")
+					die("Attempting to use goal outside the specified sprint")
 				break
 			elif case('assigned'):
 				parsedValue = User.load(username = p_value)
@@ -373,6 +372,8 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 				task.creator = handler.session['user']
 				task.timestamp = max(task.timestamp, ts)
 				task.revise()
+
+			Event.taskUpdate(handler, task, p_field, parsedValue)
 
 	elif p_field == 'taskmove':
 		if p_value[0] == ':': # Beginning of the group
@@ -575,6 +576,19 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 		avail.delete(user)
 		sprint.members.remove(user)
 
+	# For event dispatching
+	changes = OrderedDict([
+		('name', None if sprint.name == p_name else p_name),
+		('start', None if tsToDate(sprint.start) == start else start),
+		('end', None if tsToDate(sprint.end) == end else end),
+		('addMembers', addMembers),
+		('delMembers', delMembers),
+
+		# Updated later
+		('addGoals', []),
+		('removeGoals', [])
+	])
+
 	sprint.members += addMembers
 	sprint.name = p_name
 	sprint.end = dateToTs(end)
@@ -586,6 +600,12 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 
 	for id in p_goals:
 		goal = Goal.load(id)
+		if goal.name != p_goals[id]:
+			if goal.name:
+				changes['removeGoals'].append(goal.name)
+			if p_goals[id]:
+				changes['addGoals'].append(p_goals[id])
+
 		goal.name = p_goals[id]
 		goal.save()
 
@@ -596,6 +616,7 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 
 	request['code'] = 299
 	delay(handler, SuccessBox("Updated info", close = 3, fixed = True))
+	Event.sprintInfoUpdate(handler, sprint, changes)
 
 
 @get('sprints/(?P<id>[0-9]+)/metrics')
@@ -778,6 +799,7 @@ def sprintAvailabilityPost(handler, request, id, p_hours):
 
 	request['code'] = 299
 	delay(handler, SuccessBox("Updated availability", close = 3, fixed = True))
+	Event.sprintAvailUpdate(handler, sprint)
 
 @get('sprints/new')
 def newSprint(handler, request, project):
@@ -875,6 +897,7 @@ def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members
 
 	request['code'] = 299
 	print "/sprints/%d" % sprint.id
+	Event.newSprint(handler, sprint)
 
 @get('sprints/export')
 def exportSprints(handler, request, project):

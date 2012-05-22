@@ -8,6 +8,7 @@ from Privilege import requirePriv
 from Task import statuses, statusMenu
 from Table import LRTable
 from Button import Button
+from Event import Event
 from resetpw import printResetForm
 from sprints import tabs as sprintTabs
 from utils import *
@@ -77,6 +78,7 @@ def prefsPost(handler, request, p_default_tab, p_backlog_style):
 
 	request['code'] = 299
 	print "Saved changes"
+	Event.prefs(handler)
 
 @get('prefs/backlog.css')
 def prefsCSS(handler, request):

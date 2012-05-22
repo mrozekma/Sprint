@@ -19,6 +19,9 @@ class Prefs(ActiveRecord):
 		for row in db().select("SELECT status, style FROM prefs_backlog_styles WHERE userid = ?", self.userid):
 			self.backlogStyles[row['status']] = row['style']
 
+	def getLogString(self):
+		return "default sprint tab: %s\nbacklog styles: %s" % (self.defaultSprintTab, ', '.join("%s: %s" % (k, v) for k, v in self.backlogStyles.iteritems()))
+
 	@staticmethod
 	def create(user, defaultSprintTab, backlogStyles):
 		rtn = Prefs(user.id, defaultSprintTab)

@@ -23,6 +23,7 @@ from ProgressBar import ProgressBar
 from Availability import Availability
 from Note import Note
 from relativeDates import timesince
+from Event import Event
 from utils import *
 
 @get('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)')
@@ -141,53 +142,6 @@ def task(handler, request, ids):
 		chart.placeholder()
 		showHistory(task, False)
 		print "<br>"
-
-@post('tasks/(?P<taskid>[0-9]+)/notes/new')
-def newNotePost(handler, request, taskid, p_body, dryrun = False):
-	handler.title('New Note')
-	requirePriv(handler, 'User')
-
-	taskid = int(taskid)
-	task = Task.load(taskid)
-	if not task:
-		ErrorBox.die('Invalid Task', "No task with ID <b>%d</b>" % taskid)
-	if p_body == '':
-		ErrorBox.die('Empty Body', "No note provided")
-
-	note = Note(task.id, handler.session['user'].id, p_body)
-
-	if dryrun:
-		request['wrappers'] = False
-		print note.render()
-	else:
-		note.save()
-		redirect("/tasks/%d#note%d" % (task.id, note.id))
-
-@post('tasks/(?P<taskid>[0-9]+)/notes/(?P<id>[0-9]+)/modify')
-def newNoteModify(handler, request, taskid, id, p_action):
-	handler.title('New Note')
-	requirePriv(handler, 'User')
-
-	if p_action != 'delete':
-		ErrorBox.die('Invalid Action', "Unrecognized action <b>%s</b>" % p_action)
-
-	taskid = int(taskid)
-	task = Task.load(taskid)
-	if not task:
-		ErrorBox.die('Invalid Task', "No task with ID <b>%d</b>" % taskid)
-
-	id = int(id)
-	note = Note.load(id)
-	if not note:
-		ErrorBox.die('Invalid Note', "No note with ID <b>%d</b>" % noteid)
-	elif note.task != task: # Doesn't really matter, but shouldn't happen
-		ErrorBox.die('Task mismatch', "Note/task mismatch")
-	elif note.user != handler.session['user']:
-		ErrorBox.die('Permission denied', "Notes can only be deleted by their creators")
-
-	note.delete()
-	delay(handler, SuccessBox("Deleted note", close = 3))
-	redirect("/tasks/%d" % task.id)
 
 tabs = Tabs()
 tabs['single'] = '/tasks/new/single?group=%d'
@@ -315,6 +269,7 @@ $(document).ready(function() {
 });
 </script>""" % task.id)
 	delay(handler, SuccessBox("Added task <b>%s</b>" % task.safe.name, close = 3, fixed = True))
+	Event.newTask(handler, task)
 
 @get('tasks/new/many')
 def newTaskMany(handler, request, group):
@@ -460,7 +415,9 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 				group.id = 0
 			group.save()
 			for name, assigned, status, hours in groupTasks:
-				Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, status, hours).save()
+				task = Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, status, hours)
+				task.save()
+				Event.newTask(handler, task)
 
 		numGroups = len(newGroups)
 		numTasks = sum(map(lambda g: len(g), tasks.values()))
@@ -589,7 +546,9 @@ def newTaskImportPost(handler, request, group, source, p_include, p_group, p_nam
 		if not assigned:
 			ErrorBox.die('Malformed Request', "Invalid user ID %d" % assignedID)
 
-		Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, 'not started', hours).save()
+		task = Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, 'not started', hours)
+		task.save()
+		Event.newTask(handler, task)
 
 	numTasks = len(ids)
 	if numGroups > 0 and numGroups > 0:
@@ -672,6 +631,7 @@ def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_tasks = 
 		for task in tasks:
 			task.assigned = user
 			task.save()
+			Event.taskUpdate(handler, task, 'assigned', user)
 
 	# Return current info
 	tasks = filter(lambda task: task.stillOpen(), sprint.getTasks())
@@ -685,6 +645,55 @@ def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_tasks = 
 			'tasks': [{'id': task.id, 'text': "(%d) %s" % (task.hours, task.name)} for task in userTasks]
 		}
 	print toJS(m)
+
+@post('tasks/(?P<taskid>[0-9]+)/notes/new')
+def newNotePost(handler, request, taskid, p_body, dryrun = False):
+	handler.title('New Note')
+	requirePriv(handler, 'User')
+
+	taskid = int(taskid)
+	task = Task.load(taskid)
+	if not task:
+		ErrorBox.die('Invalid Task', "No task with ID <b>%d</b>" % taskid)
+	if p_body == '':
+		ErrorBox.die('Empty Body', "No note provided")
+
+	note = Note(task.id, handler.session['user'].id, p_body)
+
+	if dryrun:
+		request['wrappers'] = False
+		print note.render()
+	else:
+		note.save()
+		Event.newNote(handler, note)
+		redirect("/tasks/%d#note%d" % (task.id, note.id))
+
+@post('tasks/(?P<taskid>[0-9]+)/notes/(?P<id>[0-9]+)/modify')
+def newNoteModify(handler, request, taskid, id, p_action):
+	handler.title('New Note')
+	requirePriv(handler, 'User')
+
+	if p_action != 'delete':
+		ErrorBox.die('Invalid Action', "Unrecognized action <b>%s</b>" % p_action)
+
+	taskid = int(taskid)
+	task = Task.load(taskid)
+	if not task:
+		ErrorBox.die('Invalid Task', "No task with ID <b>%d</b>" % taskid)
+
+	id = int(id)
+	note = Note.load(id)
+	if not note:
+		ErrorBox.die('Invalid Note', "No note with ID <b>%d</b>" % noteid)
+	elif note.task != task: # Doesn't really matter, but shouldn't happen
+		ErrorBox.die('Task mismatch', "Note/task mismatch")
+	elif note.user != handler.session['user']:
+		ErrorBox.die('Permission denied', "Notes can only be deleted by their creators")
+
+	note.delete()
+	delay(handler, SuccessBox("Deleted note", close = 3))
+	Event.deleteNote(handler, note)
+	redirect("/tasks/%d" % task.id)
 
 @get('tasks/mine')
 def tasksMine(handler, request):

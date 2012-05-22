@@ -52,4 +52,7 @@ class Settings:
 	def __delitem__(self, name):
 		self._get(name).delete()
 
+	def __str__(self):
+		return "\n".join("%s: %s" % i for i in self.items())
+
 settings = Settings()

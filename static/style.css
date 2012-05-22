@@ -1218,12 +1218,53 @@ table.granttable button {
 	100% {color: #000;}
 }
 
+.logentry {
+	margin-left: 75px;
+}
+
+.logentry > div {
+	width: 100%;
+}
+
 .logentry > * {
 	float: left;
 	padding: 0 5px 10px 0;
 }
 
-.logentry .gravatar {
+.logentry div.gravatar {
 	position: relative;
-	top: -4px;
+}
+
+.logentry div.gravatar img.gravatar {
+	position: absolute;
+	top: 8px;
+	left: -75px;
+}
+
+.logentry pre {
+	word-wrap: break-word;
+}
+
+.logentry .label.logtype-admin {
+	background-color: #b94a48;
+}
+
+.logentry .label.logtype-group {
+	background-color: #3a87ad;
+}
+
+.logentry .label.logtype-note {
+	background-color: #c67605;
+}
+
+.logentry .label.logtype-sprint {
+	background-color: #333333;
+}
+
+.logentry .label.logtype-task {
+	background-color: #3a87ad;
+}
+
+.logentry .label.logtype-user {
+	background-color: #468847
 }

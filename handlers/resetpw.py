@@ -6,6 +6,7 @@ from User import User
 from Table import LRTable
 from Button import Button
 from Privilege import requirePriv
+from Event import Event
 from utils import *
 
 def printResetForm(handler, user, key = None):
@@ -62,3 +63,4 @@ def resetUserPasswordPost(handler, request, username, key, p_newPassword, p_newP
 	user.save()
 
 	print SuccessBox('Password changed', "Your password has been reset; you can <a href=\"/login\">login</a> now")
+	Event.passwordReset(handler, user)

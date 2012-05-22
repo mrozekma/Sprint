@@ -5,6 +5,7 @@ import socket
 from Cron import Cron
 from Settings import PORT
 from Update import check
+from Event import Event, DebugLogger, DBLogger
 
 check()
 

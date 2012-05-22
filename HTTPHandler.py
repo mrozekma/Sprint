@@ -6,6 +6,7 @@ from rorn.ResponseWriter import ResponseWriter
 from wrappers import header, footer
 from DB import db
 from User import User
+from Event import Event
 from Log import LogEntry
 from utils import *
 
@@ -28,7 +29,8 @@ class HTTPHandler(ParentHandler):
 			filename = fn.func_code.co_filename
 			if filename.startswith(basePath()):
 				filename = filename[len(basePath())+1:]
-			request['log'] = LogEntry('handle', "%s %s" % (request['method'].upper(), request['path']), userid = self.session['user'].id if self.session['user'] else None, ip = self.client_address[0], location = "%s(%s:%d)" % (fn.func_code.co_name, filename, fn.func_code.co_firstlineno))
+			request['log'] = LogEntry('rorn.handle', "%s %s" % (request['method'].upper(), request['path']), userid = self.session['user'].id if self.session['user'] else None, ip = self.client_address[0], location = "%s(%s:%d)" % (fn.func_code.co_name, filename, fn.func_code.co_firstlineno))
+			Event.pageHandle(self, fn)
 
 		fn(handler = self, request = request, **query)
 

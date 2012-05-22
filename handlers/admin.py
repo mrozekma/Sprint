@@ -23,6 +23,7 @@ from Cron import Cron
 from LoadValues import getLoadtime, setDevMode
 from Log import LogEntry, log
 from Settings import settings
+from Event import Event
 from relativeDates import timesince
 from utils import *
 
@@ -107,11 +108,13 @@ def adminSettingsPost(handler, request, p_emailDomain, p_systemMessage):
 	requireAdmin(handler)
 	settings.emailDomain = p_emailDomain
 	if p_systemMessage == '':
-		del settings['systemMessage']
+		if settings.systemMessage:
+			del settings['systemMessage']
 	else:
 		settings.systemMessage = p_systemMessage
 
 	delay(handler, SuccessBox("Updated settings", close = True))
+	Event.adminSettings(handler, settings)
 	redirect('/admin/settings')
 
 @admin('admin/users', 'Users', 'users')
@@ -165,6 +168,7 @@ def adminUsersPost(handler, request, p_action, p_username, p_privileges = []):
 			hadPreviousKey = (user.resetkey != None and user.resetkey != '0')
 			user.resetkey = "%x" % random.randint(268435456, 4294967295)
 			user.save()
+			Event.genResetKey(handler, user)
 
 			print "Reset key for %s: <a href=\"/resetpw/%s?key=%s\">%s</a><br>" % (user, user.safe.username, user.resetkey, user.resetkey)
 			if hadPreviousKey:
@@ -177,6 +181,7 @@ def adminUsersPost(handler, request, p_action, p_username, p_privileges = []):
 
 			if not 'impersonator' in handler.session:
 				handler.session['impersonator'] = handler.session['user']
+			Event.impersonate(handler, user)
 			handler.session['user'] = user
 			redirect('/')
 			break
@@ -195,8 +200,10 @@ def adminUsersPost(handler, request, p_action, p_username, p_privileges = []):
 
 			user = User(p_username, '')
 			user.save()
+			Event.newUser(handler, user)
 			for priv in privileges:
 				db().update("INSERT INTO grants(userid, privid) VALUES(?, ?)", user.id, priv.id)
+				Event.grantPrivilege(handler, user, priv)
 
 			delay(handler, SuccessBox("Added user <b>%s</b>" % stripTags(p_username), close = True))
 			redirect("/users/%s" % user.username)
@@ -232,8 +239,10 @@ def adminProjectsPost(handler, request, p_name):
 	if Project.load(name = p_name):
 		ErrorBox.die('Add Project', "There is already a project named <b>%s</b>" % stripTags(p_name))
 
-	Project(p_name).save()
+	project = Project(p_name)
+	project.save()
 	delay(handler, SuccessBox("Added project <b>%s</b>" % stripTags(p_name), close = True))
+	Event.newProject(handler, project)
 	redirect('/')
 
 @admin('admin/sessions', 'Sessions', 'sessions')
@@ -368,9 +377,11 @@ def adminPrivilegesPost(handler, request, p_grant):
 			if has and name not in privs:
 				print "Revoking %s from %s<br>" % (name, username)
 				db().update("DELETE FROM grants WHERE userid = ? AND privid = ?", user.id, priv.id)
+				Event.revokePrivilege(handler, user, priv)
 			elif not has and name in privs:
 				print "Granting %s to %s<br>" % (name, username)
 				db().update("INSERT INTO grants(userid, privid) VALUES(?, ?)", user.id, priv.id)
+				Event.grantPrivilege(handler, user, priv)
 	print "Done"
 
 shells = {}
@@ -423,6 +434,7 @@ def adminShellPost(handler, request, p_code):
 
 	writer = ResponseWriter()
 	try:
+		Event.shell(handler, p_code)
 		exec compile(p_code, '<admin shell>', 'single') in shells[handler.session.key]
 		stderr = ''
 	except:
@@ -481,9 +493,9 @@ def adminTimePost(handler, request, p_date, p_time):
 		hour, minute = map(int, ts2.groups())
 
 		effective = datetime(year, month, day, hour, minute, 0)
-		print effective
-		print effective - datetime.now()
-		setNowDelta(effective - datetime.now())
+		delta = effective - datetime.now()
+		setNowDelta(delta)
+		Event.mockTime(handler, effective, delta)
 	except ValueError, e:
 		die(e.message)
 
@@ -512,6 +524,7 @@ def adminCronPost(handler, request):
 	requireAdmin(handler)
 
 	Cron.runAll()
+	Event.cron(handler)
 	redirect('/admin/cron')
 
 @post('admin/build')
@@ -526,6 +539,7 @@ def adminUnimpersonatePost(handler, request):
 	if 'impersonator' in handler.session:
 		handler.session['user'] = handler.session['impersonator']
 		del handler.session['impersonator']
+		Event.impersonate(handler, None)
 
 @admin('admin/log', 'Log', 'log')
 def adminLog(handler, request, page = 1, users = None, types = None):
@@ -544,7 +558,7 @@ def adminLog(handler, request, page = 1, users = None, types = None):
 
 	entries = filter(lambda entry: entry.user in users and entry.type in types, entries)
 	page = int(page)
-	pages = len(entries) / PAGE_LEN
+	pages = max(len(entries) / PAGE_LEN, 1)
 	if page < 1: page = 1
 	if page > pages: page = pages
 
@@ -596,13 +610,15 @@ def adminLog(handler, request, page = 1, users = None, types = None):
 	print "</div>"
 	print "<br>"
 
-	for entry in entries[(page * PAGE_LEN):((page + 1) * PAGE_LEN)]:
+	for entry in entries[((page - 1) * PAGE_LEN):(page * PAGE_LEN)]:
 		print "<div class=\"logentry\">"
+		print "<div class=\"gravatar\">"
 		print "<img class=\"gravatar\" src=\"%s\">" % (entry.user.getAvatar() if entry.user else User.getBlankAvatar())
+		print "</div>"
 		print "<div>"
-		print "<b><span class=\"label\">%s</span> at %s</b><br>" % (entry.type, entry.location)
+		print "<b><span class=\"label logtype-%s\">%s</span> at %s</b><br>" % (entry.type.split('.')[0], entry.type, entry.location)
 		print "%s by %s<br>" % (tsToDate(entry.timestamp), "%s (%s)" % (entry.user.username, entry.ip) if entry.user else entry.ip)
-		print entry.text
+		print "<pre>%s</pre>" % entry.text
 		print "</div>"
 		print "</div>"
 		print "<div class=\"clear\"></div>"

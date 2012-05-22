@@ -11,6 +11,7 @@ from Goal import Goal
 from Button import Button
 from Chart import Chart
 from SprintCharts import GroupGoalsChart
+from Event import Event
 from utils import *
 
 @get('groups/new')
@@ -77,6 +78,7 @@ $(document).ready(function() {
 });
 </script>""" % group.id)
 	print "/sprints/%d#group%d" % (group.sprint.id, group.id)
+	Event.newGroup(handler, group)
 
 @get('groups/edit/(?P<id>[0-9]+)')
 def editGroup(handler, request, id):
@@ -163,8 +165,10 @@ def renameGroupPost(handler, request, id, p_name):
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
 
+	oldName = group.name
 	group.name = p_name
 	group.save()
+	Event.renameGroup(handler, group, oldName)
 	redirect("/sprints/%d#group%d" % (group.sprintid, group.id))
 
 @post('groups/edit/(?P<id>[0-9]+)/goal')
@@ -198,6 +202,9 @@ def assignGroupGoalPost(handler, request, id, p_goal):
 				task.creator = handler.session['user']
 				task.timestamp = max(task.timestamp, ts)
 				task.revise()
+
+			#TODO Event
+			# NO
 
 	redirect("/sprints/%d#group%d" % (group.sprintid, group.id))
 
@@ -241,4 +248,5 @@ def deleteGroupPost(handler, request, id, p_newGroup = None):
 
 	sprintid = group.sprintid
 	group.delete()
+	Event.deleteGroup(handler, group)
 	redirect("/sprints/%d%s" % (sprintid, "#group%d" % newGroup.id if newGroup else ''))
