@@ -76,6 +76,16 @@ class HoursChart(Chart):
 
 		setupTimeline(self, sprint, ['Projected hours'])
 
+		# Add commitment percentage to the axis label
+		labels = self.xAxis.categories.get()
+		for i in range(len(labels)):
+			needed = seriesList[0]['data'][i][1]
+			avail = seriesList[1]['data'][i][1]
+			pcnt = "%d" % (needed * 100 / avail) if avail > 0 else "inf"
+			labels[i] += "<br>%s%%" % pcnt
+		self.xAxis.categories = labels
+		self.xAxis.labels.formatter = "function() {return this.value.replace('inf', '\u221e');}"
+
 		# Trendline
 		TREND_DAYS = 3
 		if futureIndex >= TREND_DAYS - 1:

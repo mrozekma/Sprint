@@ -675,16 +675,6 @@ def showMetrics(handler, request, id):
 			continue
 		print ProgressBar("<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;<a style=\"color: #000\" href=\"/sprints/%d?search=goal:%s\">%s</a>" % (goal.color if goal else 'none', sprint.id, goal.color if goal else 'none', goal.safe.name if goal else 'Other'), start - now, start, zeroDivZero = False, style = {100: 'progress-current-green'})
 
-	print "<a name=\"averages\">"
-	print "<h2><a href=\"#averages\">Averages</a></h2>"
-	avail = Availability(sprint)
-	# numDays = (tsToDate(sprint.end) - tsToDate(sprint.start)).days + 1
-	numDays = len([day for day in sprint.getDays()])
-	availability = (avail.getAllForward(tsToDate(sprint.start)) / numDays)
-	tasking = (sum(task.hours if task else 0 for task in [task.getRevisionAt(tsToDate(sprint.start)) for task in sprint.getTasks()]) / numDays)
-	pcnt = 100 * tasking / availability if availability > 0 else 0
-	print "Daily availability: <b>%2.2f hours</b><br>" % availability
-	print "Daily tasking: %2.2f hours (%2.2f%%)" % (tasking, pcnt)
 	print "<br><br>"
 
 @get('sprints/(?P<id>[0-9]+)/history')
