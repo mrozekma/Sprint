@@ -1,7 +1,6 @@
 from __future__ import with_statement
 from json import dumps as toJS
 from markdown import Markdown
-from pygments.formatters import HtmlFormatter
 
 from rorn.Session import delay, undelay
 from rorn.Box import ErrorBox, CollapsibleBox, InfoBox, SuccessBox

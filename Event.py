@@ -49,7 +49,7 @@ map(_, TYPES)
 class DebugLogger(EventHandler):
 	def default(self, type, handler, *args):
 		sys.__stdout__.write("DebugLogger: %s: %s\n" % (type, '\t'.join(map(str, args))))
-addEventHandler(DebugLogger())
+# addEventHandler(DebugLogger())
 
 class DBLogger(EventHandler):
 	def pageHandle(self, handler, fn):
@@ -167,5 +167,4 @@ class DBLogger(EventHandler):
 
 	def cron(self, handler):
 		log(handler, 'admin.cron.run', "")
-
 addEventHandler(DBLogger())
