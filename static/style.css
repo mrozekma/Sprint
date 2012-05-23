@@ -459,6 +459,13 @@ img.user, img.project, img.sprint {
 	padding-right: 20px;
 }
 
+#filter-assigned .fancy, #filter-status .fancy {
+	display: inline-block;
+	margin-bottom: 4px;
+	word-wrap: normal;
+	white-space: nowrap;
+}
+
 table.tasks td {
 	vertical-align: top;
 }

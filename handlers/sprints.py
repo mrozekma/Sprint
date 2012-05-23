@@ -166,13 +166,13 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print InfoBox('Loading...', id = 'post-status', close = True)
 
 	print "<div id=\"filter-assigned\">"
-	print Button('None').simple().negative()
+	print "<a class=\"fancy danger\" href=\"#\"><img src=\"/static/images/cross.png\">&nbsp;None</a>"
 	for member in sorted(sprint.members):
 		print "<a class=\"fancy\" assigned=\"%s\" href=\"/sprints/%d?search=assigned:%s\"><img src=\"%s\">&nbsp;%s</a>" % (member.username, id, member.username, member.getAvatar(16), member.username)
 	print "</div><br>"
 
 	print "<div id=\"filter-status\">"
-	print Button('None').simple().negative()
+	print "<a class=\"fancy danger\" href=\"#\"><img src=\"/static/images/cross.png\">&nbsp;None</a>"
 	for status in sorted(statuses.values()):
 		print "<a class=\"fancy\" status=\"%s\" href=\"/sprints/%d?search=status:%s\"><img src=\"%s\">%s</a>" % (status.name, id, status.name.replace(' ', '-'), status.getIcon(), status.text)
 	print "</div><br>"
