@@ -73,8 +73,6 @@ class HTTPHandler(BaseHTTPRequestHandler):
 					for k, v in match.groupdict().items():
 						if k in query:
 							self.error("Invalid request", "Duplicate key in request: %s" % k)
-						if re.match('^-?\\d+$', v):
-							v = int(v)
 						query[k] = v
 					break
 
@@ -140,26 +138,18 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		return request
 
 	def parseQueryString(self, items):
-		def fmt(s):
-			try:
-				return int(s)
-			except ValueError:
-				return s
-
 		query = {}
 		for i in items:
 			k, v = (i[0], True) if len(i) == 1 else i
-			v = fmt(v)
 
 			match = re.match(('([^[]*)(\\[.*\\])'), k)
 			if match:
 				key, subKeys = match.groups()
 				subKeys = re.findall('\\[([^\\]]*)\\]', subKeys)
-				key, subKeys = fmt(key), map(fmt, subKeys)
 
 				if key in query:
 					if not isinstance(query[key], list if subKeys == [''] else dict):
-						self.error("Type conflict on query key %s" % key)
+						self.error("Invalid request", "Type conflict on query key %s" % key)
 				else:
 					query[key] = [] if subKeys == [''] else {}
 
@@ -167,7 +157,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 				for thisSubKey in subKeys[:-2]:
 					if thisSubKey in base:
 						if not isinstance(base[thisSubKey], dict):
-							self.error("Type conflict on query key %s, subkey %s" % (key, thisSubKey))
+							self.error("Invalid request", "Type conflict on query key %s, subkey %s" % (key, thisSubKey))
 					else:
 						base[thisSubKey] = {}
 					base = base[thisSubKey]
@@ -176,7 +166,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 				if len(subKeys) >= 2:
 					if subKeys[-2] in base:
 						if not isinstance(base[subKeys[-2]], type):
-							self.error("Type conflict on query key %s, subkey %s" % (key, subKeys[-2]))
+							self.error("Invalid request", "Type conflict on query key %s, subkey %s" % (key, subKeys[-2]))
 					else:
 						base[subKeys[-2]] = type()
 					base = base[subKeys[-2]]
@@ -185,12 +175,11 @@ class HTTPHandler(BaseHTTPRequestHandler):
 					base.append(v)
 				else:
 					if subKeys[-1] in base:
-						self.error("Collision on query key %s, subkey %s" % (key, subKeys[-1]))
+						self.error("Invalid request", "Collision on query key %s, subkey %s" % (key, subKeys[-1]))
 					base[subKeys[-1]] = v
 			else:
-				k = fmt(k)
 				if k in query:
-					self.error("Collision on query key %s" % k)
+					self.error("Invalid request", "Collision on query key %s" % k)
 				query[k] = v
 
 		return query

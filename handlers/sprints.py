@@ -44,6 +44,7 @@ def sprint(handler, request):
 @get('sprints/(?P<id>[0-9]+)')
 def showBacklog(handler, request, id, search = None, devEdit = False):
 	requirePriv(handler, 'User')
+	id = int(id)
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
@@ -432,6 +433,7 @@ def findActiveSprint(handler, request, project = None, search = None):
 @get('sprints/(?P<id>[0-9]+)/info')
 def showInfo(handler, request, id):
 	requirePriv(handler, 'User')
+	id = int(id)
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
@@ -622,6 +624,7 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 @get('sprints/(?P<id>[0-9]+)/metrics')
 def showMetrics(handler, request, id):
 	requirePriv(handler, 'User')
+	id = int(id)
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
@@ -680,6 +683,7 @@ def showMetrics(handler, request, id):
 @get('sprints/(?P<id>[0-9]+)/history')
 def showSprintHistory(handler, request, id):
 	requirePriv(handler, 'User')
+	id = int(id)
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
@@ -701,6 +705,7 @@ def showSprintHistory(handler, request, id):
 @get('sprints/(?P<id>[0-9]+)/availability')
 def showAvailability(handler, request, id):
 	requirePriv(handler, 'User')
+	id = int(id)
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)

@@ -526,7 +526,7 @@ def newTaskImportPost(handler, request, group, source, p_include, p_group, p_nam
 	groups, numGroups = {}, 0
 	# Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, status, hours).save()
 	for id in ids:
-		groupID, name, hours, assignedID = p_group[id], p_name[id], p_hours[id], p_assigned[id]
+		groupID, name, hours, assignedID = int(p_group[id]), p_name[id], int(p_hours[id]), int(p_assigned[id])
 		if not groupID in groups:
 			groups[groupID] = Group.load(groupID)
 			if not groups[groupID]:

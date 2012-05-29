@@ -85,6 +85,7 @@ def editGroup(handler, request, id):
 	requirePriv(handler, 'User')
 	handler.title('Manage Group')
 
+	id = int(id)
 	group = Group.load(id)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
