@@ -42,4 +42,7 @@ class LogEntry(ActiveRecord):
 		return [row['type'] for row in rows]
 
 def log(handler, type, fmt, *args):
-	LogEntry(type, fmt % args, handler.session['user'].id if handler.session['user'] else None, handler.client_address[0]).save()
+	str = fmt
+	if args:
+		str %= args
+	LogEntry(type, str, handler.session['user'].id if handler.session['user'] else None, handler.client_address[0]).save()
