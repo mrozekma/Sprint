@@ -24,10 +24,6 @@ def loginPost(handler, request, p_username, p_password):
 			Event.login(handler, user, False, "Account disabled")
 			delay(handler, ErrorBox("Login Failed", "Your account has been disabled"))
 			redirect('/')
-		elif isDevMode() and not user.hasPrivilege('Dev'):
-			Event.login(handler, user, False, "Non-dev login blocked")
-			delay(handler, ErrorBox("Login Failed", "This is a development build"))
-			redirect('/')
 
 		if user.resetkey:
 			user.resetkey = None
