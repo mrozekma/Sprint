@@ -5,7 +5,8 @@ import socket
 from Cron import Cron
 from Settings import PORT
 from Update import check
-from Event import Event, DebugLogger, DBLogger
+from Event import addEventHandler
+from event_handlers import *
 
 check()
 
@@ -16,6 +17,9 @@ except socket.error, (errno, msg):
 	exit(1)
 
 Cron.start()
+
+# addEventHandler(DebugLogger.DebugLogger())
+addEventHandler(DBLogger.DBLogger())
 
 try:
 	server.serve_forever()
