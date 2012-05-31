@@ -1,7 +1,4 @@
 $(document).ready(function() {
-	$('.notes .note .text .body pre code').addClass('prettyprint');
-	prettyPrint();
-
 	$('.start-new-note').click(function(e) {
 		newNote = $('.new-note', $(this).parents('.notes'));
 		newNote.show();

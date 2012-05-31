@@ -9,6 +9,7 @@ from DB import db
 from LoadValues import getRevisionInfo, isDevMode
 from Settings import settings
 from User import User
+from Message import Message
 from utils import *
 
 def header(handler, path):
@@ -52,10 +53,14 @@ def header(handler, path):
 	if handler.session['user']:
 		print "<div class=\"avatar\">"
 		print "<img class=\"avatar\" src=\"%s\">" % handler.session['user'].getAvatar()
+		print "<div class=\"subavatar\">"
 		if 'impersonator' in handler.session:
-			print "<div class=\"subavatar\">"
 			print "<img class=\"subavatar\" src=\"%s\" onClick=\"unimpersonate();\" title=\"Unimpersonate\">" % handler.session['impersonator'].getAvatar()
-			print "</div>"
+		else:
+			unreadMessages = Message.loadAll(userid = handler.session['user'].id, read = False)
+			if len(unreadMessages) > 0:
+				print "<a class=\"inbox\" href=\"/messages/inbox\">%d</a>" % len(unreadMessages)
+		print "</div>"
 		print "</div>"
 	print "<div class=\"navigation\">"
 	print "<div class=\"ident\">"

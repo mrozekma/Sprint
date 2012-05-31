@@ -104,6 +104,9 @@ class Task(ActiveRecord):
 	def stillOpen(self):
 		return self.status not in ('complete', 'canceled', 'deferred', 'split') and not self.deleted
 
+	def link(self):
+		return "<a href=\"/tasks/%d\">%s</a>" % (self.id, self.safe.name)
+
 	### ActiveRecord methods
 
 	@classmethod

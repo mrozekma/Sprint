@@ -20,6 +20,7 @@ Cron.start()
 
 # addEventHandler(DebugLogger.DebugLogger())
 addEventHandler(DBLogger.DBLogger())
+addEventHandler(MessageDispatcher.MessageDispatcher())
 
 try:
 	server.serve_forever()

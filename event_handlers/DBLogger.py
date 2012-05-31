@@ -76,7 +76,7 @@ class DBLogger(EventHandler):
 
 	def newNote(self, handler, note):
 		lines = [
-			"task: <a href=\"/tasks/%d\">%s</a>" % (note.task.id, note.task.safe.name),
+			"task: %s" % note.task.link(),
 			"user: %s" % note.user,
 			"body: %s" % note.safe.body
 		]
@@ -84,7 +84,7 @@ class DBLogger(EventHandler):
 		log(handler, 'note.new', "\n".join(lines))
 
 	def deleteNote(self, handler, note):
-		log(handler, 'note.delete', "%d\ntask: <a href=\"/tasks/%d\">%s</a>" % (note.id, note.task.id, note.task.safe.name))
+		log(handler, 'note.delete', "%d\ntask: %s" % (note.id, note.task.link()))
 
 	def adminSettings(self, handler, settings):
 		log(handler, 'admin.settings', str(settings))

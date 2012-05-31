@@ -56,6 +56,9 @@ def user(handler, request, username):
 		print "<h3>Authentication</h3>"
 		print "Your password can be changed <a href=\"/resetpw\">here</a><br>"
 
+		print "<h3>Messages</h3>"
+		print "Your inbox and sent messages can be viewed <a href=\"/messages/inbox\">here</a><br>"
+
 	print "<h3>Last seen</h3>"
 	if not user.lastseen:
 		print "Never"
@@ -63,6 +66,15 @@ def user(handler, request, username):
 		print "Just now"
 	else:
 		print "%s ago" % timesince(tsToDate(user.lastseen))
+
+	if handler.session['user'] and handler.session['user'] != user:
+		print "<h3>Message</h3>"
+		print "<small>(Messages are formatted in <a target=\"_blank\" href=\"/help/markdown\">markdown</a>)</small>"
+		print "<form id=\"message-form\" method=\"post\" action=\"/messages/send\">"
+		print "<input type=\"hidden\" name=\"userid\" value=\"%d\">" % user.id
+		print "<textarea name=\"body\" class=\"large\"></textarea>"
+		print Button('Send').post().positive()
+		print "</form>"
 
 	print "<h3>Project distribution</h3>"
 	sprints = filter(lambda s: user in s.members, Sprint.loadAllActive())

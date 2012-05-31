@@ -1,6 +1,5 @@
 from __future__ import with_statement
 from json import dumps as toJS
-from markdown import Markdown
 
 from rorn.Session import delay, undelay
 from rorn.Box import ErrorBox, CollapsibleBox, InfoBox, SuccessBox
@@ -23,6 +22,7 @@ from Availability import Availability
 from Note import Note
 from relativeDates import timesince
 from Event import Event
+from Markdown import Markdown
 from utils import *
 
 @get('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)')
@@ -30,8 +30,7 @@ def task(handler, request, ids):
 	requirePriv(handler, 'User')
 	Chart.include()
 
-	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/prettify/sunburst.css\">"
-	print "<script src=\"/static/prettify/prettify.js\" type=\"text/javascript\"></script>"
+	Markdown.head('.notes .note .text .body pre code')
 	print "<script src=\"/static/jquery.typing-0.2.0.min.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/tasks.js\" type=\"text/javascript\"></script>"
 	undelay(handler)
@@ -103,7 +102,7 @@ def task(handler, request, ids):
 		for note in task.getNotes():
 			print "<div id=\"note%d\" class=\"note\">" % note.id
 			print "<form method=\"post\" action=\"/tasks/%d/notes/%d/modify\">" % (id, note.id)
-			print "<div class=\"avatar\"><div><img src=\"%s\"></div></div>" % note.user.getAvatar()
+			print "<div class=\"avatar\"><img src=\"%s\"></div>" % note.user.getAvatar()
 			print "<div class=\"text\">"
 			print "<div class=\"title\"><a class=\"timestamp\" href=\"#note%d\">%s</a> by <span class=\"author\">%s</span>" % (note.id, tsToDate(note.timestamp).replace(microsecond = 0), note.user.safe.username)
 			if note.user == handler.session['user']:
@@ -122,7 +121,7 @@ def task(handler, request, ids):
 		print "<b>New note</b>"
 		print "<a target=\"_blank\" href=\"/help/markdown\" class=\"fancy mini\">help</a>"
 		print "</div>"
-		print "<div class=\"body\"><textarea name=\"body\"></textarea></div>"
+		print "<div class=\"body\"><textarea name=\"body\" class=\"large\"></textarea></div>"
 		print Button('Post').post().positive()
 		print "<hr>"
 		print "<div class=\"body markdown\"><div id=\"preview\"></div></div>"
@@ -405,7 +404,7 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 			print "<br>"
 			print "<b>%s%s</b><br>" % (group.safe.name, ' (NEW)' if group in newGroups else '')
 			for name, assigned, status, hours in tasks[group]:
-				print "%s (assigned to %s, %s, %d %s remain)<br>" % (stripTags(name), assigned, status, hours, 'hour' if hours == 1 else 'hours')
+				print "%s (assigned to %s, %s, %d %s)<br>" % (stripTags(name), assigned, status, hours, 'hour remains' if hours == 1 else 'hours remain')
 	else:
 		for group in groups:
 			# Changing a group's ID will change its hash, so this pulls from tasks before saving the group in case it's new
