@@ -164,7 +164,10 @@ class ActiveRecord(object):
 			# rows = [x for x in db().select("SELECT last_insert_rowid()")]
 			# self.id = rows[0]['last_insert_rowid()']
 
-			self.id = cls.loadAll(orderby = None)[-1].id
+			# And this is painfully inefficient
+			# self.id = cls.loadAll(orderby = None)[-1].id
+
+			self.id = list(db().select("SELECT MAX(id) AS max_id FROM %s" % cls.table()))[0]['max_id']
 
 	def delete(self):
 		cls = self.__class__
