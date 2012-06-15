@@ -9,6 +9,7 @@ from User import User
 from Event import Event
 from Log import LogEntry
 from Lock import lock, unlock
+from LoadValues import bricked
 from utils import *
 
 class HTTPHandler(ParentHandler):
@@ -49,6 +50,9 @@ class HTTPHandler(ParentHandler):
 		unlock('global')
 
 	def processingRequest(self):
+		if bricked():
+			raise Exception(bricked())
+
 		lock('global')
 		db().resetCount()
 		self.replace('$headerbg$', '#0152A1', 1)

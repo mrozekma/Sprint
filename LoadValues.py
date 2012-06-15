@@ -6,6 +6,7 @@ from datetime import datetime
 
 loadTime = datetime.now()
 devMode = ('--dev' in sys.argv) # Also checked in wrappers
+brickMessage = False
 
 def getRevisionInfo():
 	# These are recomputed each time because revisionRelative changes
@@ -22,3 +23,11 @@ def isDevMode(handler = None):
 def setDevMode(dev):
 	global devMode
 	devMode = dev
+
+def brick(msg):
+	global brickMessage
+	brickMessage = msg or True
+	sys.__stdout__.write("BRICK: %s\n" % brickMessage)
+
+def bricked():
+	return brickMessage
