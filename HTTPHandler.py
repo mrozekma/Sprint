@@ -8,6 +8,7 @@ from DB import db
 from User import User
 from Event import Event
 from Log import LogEntry
+from Lock import lock, unlock
 from utils import *
 
 class HTTPHandler(ParentHandler):
@@ -45,7 +46,10 @@ class HTTPHandler(ParentHandler):
 			footer(self, request['path'])
 			self.response = writer.done()
 
+		unlock('global')
+
 	def processingRequest(self):
+		lock('global')
 		db().resetCount()
 		self.replace('$headerbg$', '#0152A1', 1)
 

@@ -7,6 +7,7 @@ from shutil import copy
 from rorn.ResponseWriter import ResponseWriter
 from rorn.Session import sessions
 
+from Lock import getLock
 from utils import *
 
 cronjobs = []
@@ -19,6 +20,7 @@ def job(name):
 class CronThread(Thread):
 	def __init__(self):
 		Thread.__init__(self)
+		self.name = 'cron'
 		self.daemon = True
 		self.running = False
 
@@ -26,7 +28,8 @@ class CronThread(Thread):
 		self.running = True
 		while self.running:
 			if getNow().hour == 0:
-				Cron.runAll()
+				with getLock('global'):
+					Cron.runAll()
 
 			sleep(60*60)
 

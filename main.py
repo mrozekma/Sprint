@@ -1,12 +1,15 @@
 from BaseHTTPServer import HTTPServer
 from HTTPHandler import HTTPHandler
 import socket
+from threading import currentThread
 
 from Cron import Cron
 from Settings import PORT
 from Update import check
 from Event import addEventHandler
 from event_handlers import *
+
+currentThread().name = 'main'
 
 check()
 
