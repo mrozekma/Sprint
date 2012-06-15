@@ -2,6 +2,7 @@ from BaseHTTPServer import HTTPServer
 from HTTPHandler import HTTPHandler
 import socket
 from threading import currentThread
+import signal
 
 from Cron import Cron
 from Settings import PORT
@@ -24,6 +25,9 @@ Cron.start()
 # addEventHandler(DebugLogger.DebugLogger())
 addEventHandler(DBLogger.DBLogger())
 addEventHandler(MessageDispatcher.MessageDispatcher())
+
+# When python is started in the background it ignores SIGINT instead of throwing a KeyboardInterrupt
+signal.signal(signal.SIGINT, signal.default_int_handler)
 
 try:
 	server.serve_forever()
