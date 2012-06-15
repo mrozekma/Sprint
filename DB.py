@@ -4,6 +4,7 @@ import sys
 from os import listdir
 from os.path import isdir, isfile, splitext
 from threading import Timer
+from StringIO import StringIO
 
 from LoadValues import brick
 from Lock import getLock
@@ -74,27 +75,23 @@ class DiskQueue:
 
 class DB:
 	def __init__(self):
-		try:
-			from apsw import Connection as APSWConn
-			print "Using in-memory database mirrored to disk"
-			diskConn, memConn = APSWConn(filename), APSWConn(':memory:')
+		self.diskConn = connect(filename, check_same_thread = False)
+		self.conn = connect(':memory:')
 
-			sys.stdout.write("Backfilling in-memory database...")
-			sys.stdout.flush()
-			with memConn.backup('main', diskConn, 'main') as backup:
-				while not backup.done:
-					backup.step(100)
-					sys.stdout.write(".")
-					sys.stdout.flush()
-				print " done"
+		sys.stdout.write("Backfilling in-memory database... ")
+		sys.stdout.flush()
+		sql = StringIO()
+		for line in self.diskConn.iterdump():
+			sql.write(line)
+			sql.write('\n')
 
-			self.disk, self.conn = connect(diskConn, check_same_thread = False), connect(memConn)
-			self.diskQueue = DiskQueue(self.disk)
-		except ImportError:
-			print "Using disk database"
-			self.conn = connect(filename)
-			self.diskQueue = None
+		cur = self.conn.cursor()
+		cur.executescript(sql.getvalue())
+		self.conn.commit()
+		cur.close()
+		print "done"
 
+		self.diskQueue = DiskQueue(self.diskConn)
 		self.conn.row_factory = Row
 		self.counts = dict((k, 0) for k in ('select', 'update', 'total'))
 
@@ -143,7 +140,7 @@ class DB:
 		if self.diskQueue:
 			self.diskQueue.update(expr, *args)
 
-		# Memory (unless we're using a straight-to-disk database; then this is the disk write)
+		# Memory
 		cur = self.cursor(expr, *args)
 		self.conn.commit()
 		cur.close()
