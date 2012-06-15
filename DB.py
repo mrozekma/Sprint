@@ -3,7 +3,10 @@ from inspect import getargspec, getmembers
 import sys
 from os import listdir
 from os.path import isdir, isfile, splitext
+from threading import Timer
 
+from LoadValues import brick
+from Lock import getLock
 from utils import stripTags
 
 filename = 'db'
@@ -12,19 +15,102 @@ class DBError(Exception): pass
 class TooManyRecordsError(DBError): pass
 class ArgumentMismatchError(DBError): pass
 
+class DiskQueue:
+	PERIOD = 30 # commit every __ seconds
+	SIZE   = 10 # commit every __ updates
+
+	def __init__(self, conn):
+		self.conn = conn
+		self.cursor = None
+		self.size = 0
+		self.timer = None
+		self.schedule()
+
+	def update(self, expr, *args):
+		try:
+			if not self.cursor:
+				self.cursor = self.conn.cursor()
+			self.cursor.execute(expr, args)
+		except Exception, e:
+			self.handleException(e)
+
+		self.size += 1
+		if self.size >= DiskQueue.SIZE:
+			self.trigger()
+
+	def schedule(self, wait = None):
+		if self.timer:
+			self.timer.cancel()
+		self.timer = Timer(DiskQueue.PERIOD if wait is None else wait, self.tick)
+		self.timer.name = 'db disk queue'
+		self.timer.daemon = True
+		self.timer.start()
+
+	def flush(self):
+		if self.timer:
+			self.timer.cancel()
+		if self.size > 0:
+			with getLock('global'):
+				sys.__stdout__.write("Writing database to disk\n")
+				self.conn.commit()
+				self.cursor.close()
+				self.cursor, self.size = None, 0
+
+	def trigger(self):
+		self.schedule(0)
+
+	# If the main thread needs to trigger this, it should use DiskQueue.trigger()
+	def tick(self):
+		try:
+			with getLock('#db'):
+				self.flush()
+				self.schedule()
+		except Exception, e:
+			self.handleException(e)
+
+	def handleException(self, e):
+		brick("An unrecoverable problem was encountered while commiting queued database updates to disk: \"%s\". Recent changes may be permanently lost, and the tool must be restarted to correct the memory mapped database" % e)
+		raise e
+
 class DB:
 	def __init__(self):
-		self.conn = connect(filename)
+		try:
+			from apsw import Connection as APSWConn
+			print "Using in-memory database mirrored to disk"
+			diskConn, memConn = APSWConn(filename), APSWConn(':memory:')
+
+			sys.stdout.write("Backfilling in-memory database...")
+			sys.stdout.flush()
+			with memConn.backup('main', diskConn, 'main') as backup:
+				while not backup.done:
+					backup.step(100)
+					sys.stdout.write(".")
+					sys.stdout.flush()
+				print " done"
+
+			self.disk, self.conn = connect(diskConn, check_same_thread = False), connect(memConn)
+			self.diskQueue = DiskQueue(self.disk)
+		except ImportError:
+			print "Using disk database"
+			self.conn = connect(filename)
+			self.diskQueue = None
+
 		self.conn.row_factory = Row
-		self.count = 0
-		self.totalCount = 0
+		self.counts = dict((k, 0) for k in ('select', 'update', 'total'))
 
 	def cursor(self, expr = None, *args):
 		cur = self.conn.cursor()
 		if expr:
 			cur.execute(expr, args)
-		self.count += 1
-		self.totalCount += 1
+
+			# Attempt to detect certain types of operations to update the counts
+			# Not really important if this misses things
+			if expr.startswith('SELECT'):
+				self.counts['select'] += 1
+			elif expr.startswith('INSERT') or expr.startswith('UPDATE'):
+				self.counts['update'] += 1
+			self.counts['total'] += 1
+
 		return cur
 
 	def selectRow(self, expr, *args):
@@ -36,6 +122,8 @@ class DB:
 		raise StopIteration
 
 	def select(self, expr, *args):
+		self.counts['select'] += 1
+		self.counts['total'] += 1
 		for row in self.selectRow(expr, *args):
 			yield dict([(k, row[k]) for k in row.keys()])
 		raise StopIteration
@@ -48,14 +136,22 @@ class DB:
 
 	def update(self, expr, *args):
 		# print "Updating `%s' with bound args `%s'" % (expr, args)
+		self.counts['update'] += 1
+		self.counts['total'] += 1
+
+		# Disk
+		if self.diskQueue:
+			self.diskQueue.update(expr, *args)
+
+		# Memory (unless we're using a straight-to-disk database; then this is the disk write)
 		cur = self.cursor(expr, *args)
 		self.conn.commit()
 		cur.close()
 
 	def resetCount(self):
-		c = self.count
-		self.count = 0
-		return c
+		rtn = self.counts['select'], self.counts['update']
+		self.counts['select'] = self.counts['update'] = 0
+		return rtn
 
 	@staticmethod
 	def getTemplates():

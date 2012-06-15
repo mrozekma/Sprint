@@ -91,6 +91,7 @@ def init():
 		remove(dbFilename)
 		die("Unable to create admin user: %s" % e)
 
+	db().diskQueue.flush()
 	print "Done. You can run %s normally now and browse to http://%s:%d/" % (sys.argv[0], gethostname(), PORT)
 
 def update():
@@ -107,6 +108,7 @@ def update():
 	newTemplates = templates[templates.index(int(settings.dbVersion))+1:]
 	applyTemplates(newTemplates, lambda: copy(backupFilename, dbFilename))
 	settings.dbVersion = dbVersion
+	db().diskQueue.flush()
 	print "Updated to database version %d. You can run %s normally now and browse to http://%s:%d/" % (dbVersion, sys.argv[0], gethostname(), PORT)
 
 def applyTemplates(templates, failFn):

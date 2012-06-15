@@ -7,13 +7,14 @@ from pprint import pformat
 from json import loads as fromJS, dumps as toJS
 from cgi import escape
 from datetime import time
+from threading import enumerate as threads
 
 from rorn.Box import ErrorBox, SuccessBox
 from rorn.Session import sessions, delay, undelay
 from rorn.ResponseWriter import ResponseWriter
 from rorn.code import highlightCode
 
-from DB import db
+from DB import db, DiskQueue
 from Privilege import Privilege, admin as requireAdmin, defaults as privDefaults
 from Project import Project
 from User import User
@@ -24,6 +25,7 @@ from LoadValues import getLoadtime, setDevMode
 from Log import LogEntry, log
 from Settings import settings
 from Event import Event
+from Lock import locks
 from relativeDates import timesince
 from utils import *
 
@@ -42,16 +44,57 @@ def adminIndex(handler, request):
 	for page in pages:
 		print "<div class=\"admin-list-entry\"><a href=\"%(url)s\"><img class=\"admin-icon\" src=\"/static/images/admin-%(icon)s.png\"></a><br>%(name)s</div>" % page
 
-@admin('admin/stats', 'Statistics', 'stats')
-def adminStats(handler, request):
-	handler.title('Statistics')
+@admin('admin/info', 'Information', 'info')
+def adminInfo(handler, request):
+	handler.title('Information')
 	requireAdmin(handler)
+
+	print """
+<style type="text/css">
+table#threads {
+    border-color: #000;
+    border-collapse: collapse
+}
+table#threads tr th {
+    background-color: #ccc;
+}
+
+table#threads tr td.center {
+    text-align: center;
+}
+</style>
+"""
 
 	print "<h3>Uptime</h3>"
 	loadTime = getLoadtime()
 	print "Started %s<br>" % loadTime
 	print "Up for %s<br>" % timesince(loadTime)
-	print "%d total database requests" % db().totalCount
+
+	print "<h3>Database</h3>"
+	if db().diskQueue:
+		print "Writing to memory; mirroring to disk every %d seconds / %d writes<br>" % (DiskQueue.PERIOD, DiskQueue.SIZE)
+		print "Current queue size: %d<br>" % db().diskQueue.size
+	else:
+		print "Writing directly to disk<br>"
+	print "%d total requests" % db().counts['total']
+
+	print "<h3>Threads</h3>"
+	print "<table id=\"threads\" border=\"1\" cellspacing=\"0\" cellpadding=\"4\">"
+	print "<tr><th>ID</th><th>Name</th><th>Alive</th><th>Daemon</th></tr>"
+	for thread in threads():
+		print "<tr><td>%s</td><td>%s</td><td class=\"center\"><img src=\"/static/images/%s.png\"></td><td class=\"center\"><img src=\"/static/images/%s.png\"></td></tr>" % (thread.ident, thread.name, 'tick' if thread.isAlive() else 'cross', 'tick' if thread.daemon else 'cross')
+	print "</table>"
+
+	print "<h3>Locks</h3>"
+	print "<ul>"
+	for (name, lock) in locks.iteritems():
+		avail = lock.avail()
+		print "<li>%s:" % name,
+		if avail > 0:
+			print "<span style=\"color: #0a0;\">%d available</span>" % avail
+		else:
+			print "<span style=\"color: #a00;\">locked</span>"
+	print "</ul>"
 
 @admin('admin/test', 'Test pages', 'test-pages')
 def adminTest(handler, request):
