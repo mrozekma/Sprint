@@ -1,6 +1,5 @@
 from sqlite3 import connect, Row
 from inspect import getargspec, getmembers
-import sys
 from os import listdir
 from os.path import isdir, isfile, splitext
 from threading import Timer
@@ -34,6 +33,7 @@ class DiskQueue:
 			self.cursor.execute(expr, args)
 		except Exception, e:
 			self.handleException(e)
+			raise
 
 		self.size += 1
 		if self.size >= DiskQueue.SIZE:
@@ -52,34 +52,39 @@ class DiskQueue:
 			self.timer.cancel()
 		if self.size > 0:
 			with getLock('global'):
-				sys.__stdout__.write("Writing database to disk\n")
-				self.conn.commit()
-				self.cursor.close()
-				self.cursor, self.size = None, 0
+				# Make sure another thread hasn't already flushed the DB
+				if self.size > 0:
+					from Log import console
+					console('db', "Writing %d %s to disk", self.size, 'entry' if self.size == 1 else 'entries')
+					db().counts['flush'] += 1
+					self.conn.commit()
+					self.cursor.close()
+					self.cursor, self.size = None, 0
 
 	def trigger(self):
 		self.schedule(0)
 
-	# If the main thread needs to trigger this, it should use DiskQueue.trigger()
+	# This runs in the DiskQueue thread
+	# If the main thread needs to call this, it should use DiskQueue.trigger()
 	def tick(self):
 		try:
-			with getLock('#db'):
+			with getLock('global'):
 				self.flush()
 				self.schedule()
 		except Exception, e:
 			self.handleException(e)
+			raise
 
 	def handleException(self, e):
 		brick("An unrecoverable problem was encountered while commiting queued database updates to disk: \"%s\". Recent changes may be permanently lost, and the tool must be restarted to correct the memory mapped database" % e)
-		raise e
 
 class DB:
 	def __init__(self):
 		self.diskConn = connect(filename, check_same_thread = False)
 		self.conn = connect(':memory:')
 
-		sys.stdout.write("Backfilling in-memory database... ")
-		sys.stdout.flush()
+		from Log import console
+		console('db', 'Starting memory backfill')
 		sql = StringIO()
 		for line in self.diskConn.iterdump():
 			sql.write(line)
@@ -89,11 +94,11 @@ class DB:
 		cur.executescript(sql.getvalue())
 		self.conn.commit()
 		cur.close()
-		print "done"
+		console('db', 'Database loaded')
 
 		self.diskQueue = DiskQueue(self.diskConn)
 		self.conn.row_factory = Row
-		self.counts = dict((k, 0) for k in ('select', 'update', 'total'))
+		self.counts = dict((k, 0) for k in ('select', 'update', 'total', 'flush'))
 
 	def cursor(self, expr = None, *args):
 		cur = self.conn.cursor()
@@ -137,8 +142,7 @@ class DB:
 		self.counts['total'] += 1
 
 		# Disk
-		if self.diskQueue:
-			self.diskQueue.update(expr, *args)
+		self.diskQueue.update(expr, *args)
 
 		# Memory
 		cur = self.cursor(expr, *args)

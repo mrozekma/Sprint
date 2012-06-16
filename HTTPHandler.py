@@ -7,8 +7,8 @@ from wrappers import header, footer
 from DB import db
 from User import User
 from Event import Event
-from Log import LogEntry
-from Lock import lock, unlock
+from Log import LogEntry, console
+from Lock import getLock
 from LoadValues import bricked
 from utils import *
 
@@ -16,9 +16,13 @@ class HTTPHandler(ParentHandler):
 	def __init__(self, request, address, server):
 		ParentHandler.__init__(self, request, address, server)
 
-	def log_message(self, format, *args):
+	def log_message(self, fmt, *args):
 		user = self.session['user'].username if self.session and self.session['user'] else self.address_string()
-		sys.__stdout__.write("[%s] %s(%s) %s\n" % (self.log_date_time_string(), user or 'logged out', self.address_string(), format % args))
+		console('rorn', "%s(%s) %s", user or 'logged out', self.address_string(), fmt % args)
+
+	def do_HEAD(self, method = 'get', postData = {}):
+		with getLock('global'):
+			ParentHandler.do_HEAD(self, method, postData)
 
 	def makeRequest(self):
 		return dict(ParentHandler.makeRequest(self).items() + {
@@ -47,13 +51,10 @@ class HTTPHandler(ParentHandler):
 			footer(self, request['path'])
 			self.response = writer.done()
 
-		unlock('global')
-
 	def processingRequest(self):
 		if bricked():
 			raise Exception(bricked())
 
-		lock('global')
 		db().resetCount()
 		self.replace('$headerbg$', '#0152A1', 1)
 

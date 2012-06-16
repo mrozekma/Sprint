@@ -5,6 +5,7 @@ import socket
 from threading import currentThread
 import signal
 
+from Log import console
 from DB import db
 from Cron import Cron
 from Settings import PORT
@@ -34,15 +35,16 @@ signal.signal(signal.SIGINT, signal.default_int_handler)
 try:
 	server.serve_forever()
 except KeyboardInterrupt:
-	sys.__stdout__.write("\n\nExiting at user request\n")
+	sys.__stdout__.write("\n\n")
+	console('main', 'Exiting at user request')
 except Exception, e:
-	sys.__stdout__.write("\n\n%s\n", e)
+	sys.__stdout__.write("\n\n")
+	console('main', '%s', e)
 
-sys.__stdout__.write("Closing server sockets\n")
+console('main', 'Closing server sockets')
 server.server_close()
 
-if db().diskQueue:
-	sys.__stdout__.write("Flushing database\n")
-	db().diskQueue.flush()
+console('main', 'Flushing database')
+db().diskQueue.flush()
 
-print "Done"
+console('main', 'Done')

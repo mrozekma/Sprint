@@ -46,3 +46,9 @@ def log(handler, type, fmt, *args):
 	if args:
 		str %= args
 	LogEntry(type, str, handler.session['user'].id if handler.session['user'] else None, handler.client_address[0]).save()
+
+def console(source, fmt, *args):
+	str = fmt
+	if args:
+		str %= args
+	sys.__stdout__.write("[%s] [%s] %s\n" % (datetime.now().replace(microsecond = 0), source, str))

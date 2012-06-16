@@ -51,15 +51,15 @@ def adminInfo(handler, request):
 
 	print """
 <style type="text/css">
-table#threads {
+table {
     border-color: #000;
     border-collapse: collapse
 }
-table#threads tr th {
+table tr th {
     background-color: #ccc;
 }
 
-table#threads tr td.center {
+table tr td.center {
     text-align: center;
 }
 </style>
@@ -71,30 +71,24 @@ table#threads tr td.center {
 	print "Up for %s<br>" % timesince(loadTime)
 
 	print "<h3>Database</h3>"
-	if db().diskQueue:
-		print "Writing to memory; mirroring to disk every %d seconds / %d writes<br>" % (DiskQueue.PERIOD, DiskQueue.SIZE)
-		print "Current queue size: %d<br>" % db().diskQueue.size
-	else:
-		print "Writing directly to disk<br>"
-	print "%d total requests" % db().counts['total']
+	print "Writing to memory; mirroring to disk every %d seconds / %d writes<br>" % (DiskQueue.PERIOD, DiskQueue.SIZE)
+	print "Current queue size: %d<br>" % db().diskQueue.size
+	print "Disk writes: %d<br>" % db().counts['flush']
+	print "Total requests: %d" % db().counts['total']
 
 	print "<h3>Threads</h3>"
-	print "<table id=\"threads\" border=\"1\" cellspacing=\"0\" cellpadding=\"4\">"
+	print "<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\">"
 	print "<tr><th>ID</th><th>Name</th><th>Alive</th><th>Daemon</th></tr>"
 	for thread in threads():
 		print "<tr><td>%s</td><td>%s</td><td class=\"center\"><img src=\"/static/images/%s.png\"></td><td class=\"center\"><img src=\"/static/images/%s.png\"></td></tr>" % (thread.ident, thread.name, 'tick' if thread.isAlive() else 'cross', 'tick' if thread.daemon else 'cross')
 	print "</table>"
 
 	print "<h3>Locks</h3>"
-	print "<ul>"
+	print "<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\">"
+	print "<tr><th>Name</th><th>Available</th><th>Reentrant</th></tr>"
 	for (name, lock) in locks.iteritems():
-		avail = lock.avail()
-		print "<li>%s:" % name,
-		if avail > 0:
-			print "<span style=\"color: #0a0;\">%d available</span>" % avail
-		else:
-			print "<span style=\"color: #a00;\">locked</span>"
-	print "</ul>"
+		print "<tr><td>%s</td><td class=\"center\"><img src=\"/static/images/%s.png\"></td><td class=\"center\"><img src=\"/static/images/%s.png\"></td></tr>" % (name, 'tick' if lock.avail() else 'cross', 'tick' if lock.reentrant() else 'cross')
+	print "</table>"
 
 @admin('admin/test', 'Test pages', 'test-pages')
 def adminTest(handler, request):
