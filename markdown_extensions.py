@@ -3,6 +3,7 @@ from markdown.inlinepatterns import Pattern
 from markdown.util import etree, AtomicString
 
 from User import User
+from Settings import settings
 
 class SVNPattern(Pattern):
 	def handleMatch(self, m):
@@ -19,13 +20,14 @@ class SVNExtension(Extension):
 		md.inlinePatterns.add('svn', svnPattern, '_end')
 
 class BugzillaPattern(Pattern):
-	#TODO Use the same setting used by sprints.js once it's created
-	URL = "http://bugs.arxandefense.com/show_bug.cgi?id=%d"
-
 	def handleMatch(self, m):
+		url = settings.bugzillaURL
+		if url == '':
+			return None
+
 		bugID = int(m.group(3))
 		link = etree.Element('a')
-		link.set('href', BugzillaPattern.URL % bugID)
+		link.set('href', "%s/show_bug.cgi?id=%d" % (url, bugID))
 		link.text = m.group(2)
 		return link
 bugzillaPattern = BugzillaPattern('((?:bz|bug )([0-9]+))')

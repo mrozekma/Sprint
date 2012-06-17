@@ -135,6 +135,11 @@ function setup_group_arrows() {
 }
 
 function setup_bugzilla(tasks) {
+	if(bugzilla_url == undefined || bugzilla_url == "") {
+		$('td.actions a.bugzilla', tasks).hide();
+		return;
+	}
+
 	tasks.each(function() {
 		name = $('td.name span', $(this)).text();
 		link = $('td.actions a.bugzilla', $(this));
@@ -150,7 +155,7 @@ function setup_bugzilla(tasks) {
 		//TODO Make the domain a setting
 		if(match = name.match(/(?:bug |bz)([0-9]+)/i)) {
 			id = parseInt(match[1], 10);
-			link.attr('href', 'http://bugs.arxandefense.com/show_bug.cgi?id=' + id);
+			link.attr('href', bugzilla_url + '/show_bug.cgi?id=' + id);
 			link.show();
 		} else {
 			link.hide();

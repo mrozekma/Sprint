@@ -64,6 +64,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print "<script src=\"/static/jquery.editable-1.3.3.js\" type=\"text/javascript\"></script>"
 	# print "<script src=\"/static/jquery.uitablefilter.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/jquery.tablednd_0_5.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/settings/sprints.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/sprints.js\" type=\"text/javascript\"></script>"
 
 	print "<script type=\"text/javascript\">"

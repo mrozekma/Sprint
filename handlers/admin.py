@@ -126,6 +126,7 @@ def adminSettings(handler, request):
 	print "<table class=\"list\">"
 	print "<tr><td class=\"left\">E-mail domain:</td><td class=\"right\"><input type=\"text\" name=\"emailDomain\" value=\"%s\"></td></tr>" % settings.emailDomain
 	print "<tr><td class=\"left\">System message:</td><td class=\"right\"><input type=\"text\" name=\"systemMessage\" value=\"%s\"></td></tr>" % (settings.systemMessage or '')
+	print "<tr><td class=\"left\">Bugzilla URL:</td><td class=\"right\"><input type=\"text\" name=\"bugzillaURL\" value=\"%s\"></td></tr>" % (settings.bugzillaURL or '')
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
 	print Button('Save', id = 'save-button', type = 'submit').positive()
 	print Button('Cancel', type = 'button', url = '/admin').negative()
@@ -140,7 +141,7 @@ def adminSettings(handler, request):
 	print "</table>"
 
 @post('admin/settings')
-def adminSettingsPost(handler, request, p_emailDomain, p_systemMessage):
+def adminSettingsPost(handler, request, p_emailDomain, p_systemMessage, p_bugzillaURL):
 	handler.title('Settings')
 	requireAdmin(handler)
 	settings.emailDomain = p_emailDomain
@@ -149,6 +150,9 @@ def adminSettingsPost(handler, request, p_emailDomain, p_systemMessage):
 			del settings['systemMessage']
 	else:
 		settings.systemMessage = p_systemMessage
+	if p_bugzillaURL != '' and p_bugzillaURL[-1] == '/':
+		p_bugzillaURL = p_bugzillaURL[:-1]
+	settings.bugzillaURL = p_bugzillaURL
 
 	delay(handler, SuccessBox("Updated settings", close = True))
 	Event.adminSettings(handler, settings)
