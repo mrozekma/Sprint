@@ -164,9 +164,17 @@ function setup_bugzilla(tasks) {
 }
 
 function setup_indexes() {
-	$('tr.task .task-index').click(function() {
+	$('tr.task .task-index').click(function(e) {
 		task = $(this).parents('tr.task');
 		task.toggleClass('selected');
+
+		if(e.shiftKey) {
+			$('tr.task:visible').toggleClass('selected', task.hasClass('selected'));
+		} else if(e.ctrlKey) {
+			group_id = task.attr('groupid');
+			group_tasks = $('tr.task[groupid=' + group_id + ']:visible');
+			group_tasks.toggleClass('selected', task.hasClass('selected'));
+		}
 
 		selected = $('tr.task.selected');
 		box = $('#selected-task-box');
@@ -178,16 +186,28 @@ function setup_indexes() {
 		}
 	});
 
-	$('#selected-task-box #selected-history').click(function() {
+	$('#selected-task-box #selected-history').click(function(e) {
 		ids = $('tr.task.selected').map(function() {return $(this).attr('taskid');});
 		idStr = $.makeArray(ids).join();
-		document.location = '/tasks/' + idStr;
+		if(e.button == 1 || e.ctrlKey) {
+			window.open('/tasks/' + idStr);
+		} else {
+			document.location = '/tasks/' + idStr;
+		}
+		$('#selected-task-box #selected-cancel').click();
+		e.preventDefault();
 	});
 
-	$('#selected-task-box #selected-highlight').click(function() {
+	$('#selected-task-box #selected-highlight').click(function(e) {
 		ids = $('tr.task.selected').map(function() {return $(this).attr('taskid');});
 		idStr = $.makeArray(ids).join();
-		document.location.search = 'search=highlight:' + idStr;
+		if(e.button == 1 || e.ctrlKey) {
+			window.open('?search=highlight:' + idStr);
+		} else {
+			document.location.search = 'search=highlight:' + idStr;
+		}
+		$('#selected-task-box #selected-cancel').click();
+		e.preventDefault();
 	});
 
 	$('#selected-task-box #selected-cancel').click(function() {
