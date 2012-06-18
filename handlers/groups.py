@@ -196,13 +196,10 @@ def assignGroupGoalPost(handler, request, id, p_goal):
 		if task.goal != goal:
 			task.goal = goal
 
-			ts = dateToTs(getNow())
-			if task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60:
+			if task.creator == handler.session['user'] and (dateToTs(getNow()) - task.timestamp) < 5*60:
 				task.save()
 			else:
-				task.creator = handler.session['user']
-				task.timestamp = max(task.timestamp, ts)
-				task.revise()
+				task.saveRevision(handler.session['user'])
 
 			#TODO Event
 			# NO

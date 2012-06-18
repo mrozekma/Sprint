@@ -367,13 +367,10 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 
 			# Is this within the 5-minute window, by the same user?
 			# If we're in pre-planning, the task's timestamp will be in the future, so (ts - task.timestamp) will be negative, which satisfies the check
-			ts = dateToTs(getNow())
-			if task.creator == handler.session['user'] and (ts - task.timestamp) < 5*60:
+			if task.creator == handler.session['user'] and (dateToTs(getNow()) - task.timestamp) < 5*60:
 				task.save()
 			else:
-				task.creator = handler.session['user']
-				task.timestamp = max(task.timestamp, ts)
-				task.revise()
+				task.saveRevision(handler.session['user'])
 
 			Event.taskUpdate(handler, task, p_field, parsedValue)
 
@@ -573,9 +570,7 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 	for user in delMembers:
 		for task in filter(lambda task: task.assigned == user, sprint.getTasks()):
 			task.assigned = sprint.owner
-			task.creator = handler.session['user']
-			task.timestamp = dateToTs(getNow())
-			task.revise()
+			task.saveRevision(handler.session['user'])
 		avail.delete(user)
 		sprint.members.remove(user)
 

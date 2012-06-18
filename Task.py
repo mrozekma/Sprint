@@ -190,3 +190,8 @@ class Task(ActiveRecord):
 
 		placeholders = ', '.join(map(lambda x: "?", fields))
 		db().update("INSERT INTO %s(%s) VALUES(%s)" % (cls.table(), ', '.join(fields), placeholders), *boundArgs)
+
+	def saveRevision(self, author):
+		self.creator = author
+		self.timestamp = max(self.timestamp, dateToTs(getNow()))
+		self.revise()
