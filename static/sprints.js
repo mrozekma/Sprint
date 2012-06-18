@@ -210,6 +210,18 @@ function setup_indexes() {
 		e.preventDefault();
 	});
 
+	$('#selected-task-box #selected-edit').click(function(e) {
+		ids = $('tr.task.selected').map(function() {return $(this).attr('taskid');});
+		idStr = $.makeArray(ids).join();
+		if(e.button == 1 || e.ctrlKey) {
+			window.open('/tasks/' + idStr + '/edit');
+		} else {
+			document.location = '/tasks/' + idStr + '/edit';
+		}
+		$('#selected-task-box #selected-cancel').click();
+		e.preventDefault();
+	});
+
 	$('#selected-task-box #selected-cancel').click(function() {
 		$('tr.task.selected .task-index').click();
 	});

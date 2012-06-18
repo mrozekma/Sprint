@@ -2,7 +2,7 @@ from __future__ import with_statement
 from json import dumps as toJS
 
 from rorn.Session import delay, undelay
-from rorn.Box import ErrorBox, CollapsibleBox, InfoBox, SuccessBox
+from rorn.Box import ErrorBox, CollapsibleBox, InfoBox, SuccessBox, WarningBox
 from rorn.ResponseWriter import ResponseWriter
 
 from Privilege import requirePriv
@@ -47,7 +47,7 @@ def task(handler, request, ids):
 				print "<h%d>%s</h%d>" % (level, text, level)
 	else: # Many IDs
 		ids = map(int, uniq(ids.split(',')))
-		tasks = dict([(id, Task.load(id)) for id in ids])
+		tasks = dict((id, Task.load(id)) for id in ids)
 		handler.title("Task Information")
 
 		if not all(tasks.values()):
@@ -698,3 +698,101 @@ def tasksMine(handler, request):
 	handler.title("My tasks")
 	requirePriv(handler, 'User')
 	redirect("/users/%s/tasks" % handler.session['user'].username)
+
+@get('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)/edit')
+def taskEdit(handler, request, ids):
+	handler.title("Edit tasks")
+	requirePriv(handler, 'User')
+
+	ids = map(int, uniq(ids.split(',')))
+	tasks = dict((id, Task.load(id)) for id in ids)
+	if not all(tasks.values()):
+		ids = [str(id) for (id, task) in tasks.iteritems() if not task]
+		ErrorBox.die("No %s with %s %s" % ('task' if len(ids) == 1 else 'tasks', 'ID' if len(ids) == 1 else 'IDs', ', '.join(ids)))
+	tasks = [tasks[id] for id in ids]
+	if len(set(task.sprint for task in tasks)) > 1:
+		ErrorBox.die("All tasks must be in the same sprint")
+	sprint = tasks[0].sprint
+
+	print "<h3>New values</h3>"
+	print "<form method=\"post\" action=\"/tasks/%s/edit\">" % ','.join(map(str, ids))
+	print "<table id=\"task-edit-values\" class=\"list\">"
+	print "<tr><td class=\"left\">Assigned:</td><td class=\"right\"><select name=\"assigned\">"
+	print "<option value=\"\">(unchanged)</option>"
+	for user in sorted(sprint.members):
+		print "<option value=\"%d\">%s</option>" % (user.id, user.safe.username)
+	print "</select></td></tr>"
+	print "<tr><td class=\"left\">Hours:</td><td class=\"right\"><input type=\"text\" name=\"hours\" class=\"hours\"></td></tr>"
+	print "<tr><td class=\"left\">Status:</td><td class=\"right\"><select name=\"status\">"
+	print "<option value=\"\">(unchanged)</option>"
+	for statusSet in statusMenu:
+		for name in statusSet:
+			print "<option value=\"%s\">%s</option>" % (name, statuses[name].text)
+	print "</select></td></tr>"
+	print "<tr><td class=\"left\">Sprint Goal:</td><td class=\"right\"><select name=\"goal\">"
+	print "<option value=\"\">(unchanged)</option>"
+	print "<option value=\"0\">None</option>"
+	for goal in sprint.getGoals():
+		print "<option value=\"%d\">%s</option>" % (goal.id, goal.safe.name)
+	print "</select></td></tr>"
+	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
+	print Button('Save', type = 'submit').positive()
+	print Button('Cancel', url = "/sprints/%d" % sprint.id, type = 'button').negative()
+	print "</td></tr>"
+	print "</table>"
+	print "</form><br>"
+
+	print "<h3>Current values</h3>"
+	print "<table border=0 cellspacing=0 cellpadding=2 class=\"task-edit\">"
+	for task in tasks:
+		print "<tr><td class=\"task-name\" colspan=\"4\">%s</td></tr>" % task.safe.name
+		print "<tr class=\"task-fields\">"
+		print "<td class=\"task-assigned\">%s</td>" % task.assigned
+		print "<td class=\"task-hours\"><img src=\"/static/images/time-icon.png\">&nbsp;%d %s</td>" % (task.hours, 'hour' if task.hours == 1 else 'hours')
+		print "<td class=\"task-status\"><img class=\"status\" src=\"%s\">&nbsp;%s</td>" % (task.stat.icon, task.stat.text)
+		print "<td class=\"task-goal\"><img class=\"goal\" src=\"/static/images/tag-%s.png\">&nbsp;%s</td>" % ((task.goal.color, task.goal.safe.name) if task.goal else ('none', 'None'))
+		print "</tr>"
+	print "</table>"
+
+@post('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)/edit')
+def taskEditPost(handler, request, ids, p_assigned, p_hours, p_status, p_goal):
+	handler.title("Edit tasks")
+	requirePriv(handler, 'User')
+
+	ids = map(int, uniq(ids.split(',')))
+	tasks = dict((id, Task.load(id)) for id in ids)
+	if not all(tasks.values()):
+		ids = [str(id) for (id, task) in tasks.iteritems() if not task]
+		ErrorBox.die("No %s with %s %s" % ('task' if len(ids) == 1 else 'tasks', 'ID' if len(ids) == 1 else 'IDs', ', '.join(ids)))
+	tasks = [tasks[id] for id in ids]
+	if len(set(task.sprint for task in tasks)) > 1:
+		ErrorBox.die("All tasks must be in the same sprint")
+	sprint = tasks[0].sprint
+
+	changes = {
+		'assigned': None if p_assigned == '' else User.load(int(p_assigned)),
+		'hours': None if p_hours == '' else int(p_hours),
+		'status': None if p_status == '' else p_status,
+		'goal': None if p_goal == '' else Goal.load(int(p_goal))
+	}
+
+	if changes['assigned'] and changes['assigned'] not in sprint.members:
+		ErrorBox.die("Unable to assign tasks to a non-sprint member")
+	if changes['goal'] and changes['goal'].sprint != sprint:
+		ErrorBox.die("Unable to set goal to a goal outside the sprint")
+
+	changed = set()
+	for task in tasks:
+		for field, value in changes.iteritems():
+			if value and getattr(task, field) != value:
+				setattr(task, field, value)
+				changed.add(task)
+				Event.taskUpdate(handler, task, field, value)
+
+	if len(changed) == 0:
+		delay(handler, WarningBox("No changes necessary", close = 3, fixed = True))
+	else:
+		for task in changed:
+			task.saveRevision(handler.session['user'])
+		delay(handler, SuccessBox("Updated %d %s" % (len(changed), 'task' if len(changed) == 1 else 'tasks')))
+	redirect("/sprints/%d" % sprint.id)

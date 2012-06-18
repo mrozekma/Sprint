@@ -117,6 +117,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print "<span></span>"
 	print Button('history', id = 'selected-history').positive()
 	print Button('highlight', id = 'selected-highlight').positive()
+	print Button('mass edit', id = 'selected-edit').positive()
 	print Button('cancel', id = 'selected-cancel') #.negative()
 	print "</div>"
 
