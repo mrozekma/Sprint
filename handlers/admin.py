@@ -127,6 +127,7 @@ def adminSettings(handler, request):
 	print "<tr><td class=\"left\">E-mail domain:</td><td class=\"right\"><input type=\"text\" name=\"emailDomain\" value=\"%s\"></td></tr>" % settings.emailDomain
 	print "<tr><td class=\"left\">System message:</td><td class=\"right\"><input type=\"text\" name=\"systemMessage\" value=\"%s\"></td></tr>" % (settings.systemMessage or '')
 	print "<tr><td class=\"left\">Bugzilla URL:</td><td class=\"right\"><input type=\"text\" name=\"bugzillaURL\" value=\"%s\"></td></tr>" % (settings.bugzillaURL or '')
+	print "<tr><td class=\"left\">Redis host:</td><td class=\"right\"><input type=\"text\" name=\"redis\" value=\"%s\"></td></tr>" % (settings.redis or '')
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
 	print Button('Save', id = 'save-button', type = 'submit').positive()
 	print Button('Cancel', type = 'button', url = '/admin').negative()
@@ -141,18 +142,37 @@ def adminSettings(handler, request):
 	print "</table>"
 
 @post('admin/settings')
-def adminSettingsPost(handler, request, p_emailDomain, p_systemMessage, p_bugzillaURL):
+def adminSettingsPost(handler, request, p_emailDomain, p_systemMessage, p_bugzillaURL, p_redis):
 	handler.title('Settings')
 	requireAdmin(handler)
+
 	settings.emailDomain = p_emailDomain
+
 	if p_systemMessage == '':
 		if settings.systemMessage:
 			del settings['systemMessage']
 	else:
 		settings.systemMessage = p_systemMessage
+
 	if p_bugzillaURL != '' and p_bugzillaURL[-1] == '/':
 		p_bugzillaURL = p_bugzillaURL[:-1]
 	settings.bugzillaURL = p_bugzillaURL
+
+	if p_redis == '':
+		if settings.redis:
+			del settings['redis']
+	else:
+		if ':' in p_redis:
+			try:
+				host, port = p_redis.split(':', 1)
+				port = int(port)
+			except ValueError:
+				ErrorBox.die("Invalid setting", "Malformed redis host")
+		else:
+			host = p_redis
+			port = 6379
+
+		settings.redis = "%s:%d" % (host, port)
 
 	delay(handler, SuccessBox("Updated settings", close = True))
 	Event.adminSettings(handler, settings)
@@ -538,7 +558,7 @@ def adminTimePost(handler, request, p_date, p_time):
 		setNowDelta(delta)
 		Event.mockTime(handler, effective, delta)
 	except ValueError, e:
-		die(e.message)
+		ErrorBox.die(e.message)
 
 	request['wrappers'] = False
 	redirect('/admin/time')

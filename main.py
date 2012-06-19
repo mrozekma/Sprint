@@ -8,7 +8,7 @@ import signal
 from Log import console
 from DB import db
 from Cron import Cron
-from Settings import PORT
+from Settings import PORT, settings
 from Update import check
 from Event import addEventHandler
 from event_handlers import *
@@ -28,6 +28,10 @@ Cron.start()
 # addEventHandler(DebugLogger.DebugLogger())
 addEventHandler(DBLogger.DBLogger())
 addEventHandler(MessageDispatcher.MessageDispatcher())
+if settings.redis:
+	host, port = settings.redis.split(':', 1)
+	port = int(port)
+	addEventHandler(EventPublisher.EventPublisher(host, port))
 
 # When python is started in the background it ignores SIGINT instead of throwing a KeyboardInterrupt
 signal.signal(signal.SIGINT, signal.default_int_handler)
