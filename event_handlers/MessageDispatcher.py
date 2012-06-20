@@ -1,13 +1,15 @@
 import re
 
 from Event import EventHandler
+from Note import Note
 from User import User
 from Message import Message
 
 types = {
 	'sprintMembership': ("Added to a sprint", "You were added to %s"),
 	'taskAssigned': ("Assigned a task", "You were assigned the task %s"),
-	'note': ("Mentioned in a note", "You were mentioned in a note on %s"),
+	'noteMention': ("Mentioned in a note", "You were mentioned in a note on %s"),
+	'noteRelated': ("Note created", "A user posted a note on %s, %s"),
 	'priv': ("Granted a privilege", "You were granted the %s privilege: %s"),
 }
 
@@ -46,10 +48,21 @@ class MessageDispatcher(EventHandler):
 			self.sendMessage(handler, task.assigned, 'taskAssigned', task.link())
 
 	def newNote(self, handler, note):
+		usersContacted = []
 		for username in re.findall("<a href=\"/users/([a-z0-9]+)\">", note.render()):
 			user = User.load(username = username)
-			if user: # Should never be false
-				self.sendMessage(handler, user, 'note', "<a href=\"/tasks/%d#note%d\">%s</a>" % (note.task.id, note.id, note.task.safe.name))
+			if user and (user not in usersContacted):
+				usersContacted.append(user)
+				self.sendMessage(handler, user, 'noteMention', "<a href=\"/tasks/%d#note%d\">%s</a>" % (note.task.id, note.id, note.task.safe.name))
+
+		if note.task.assigned not in usersContacted:
+			usersContacted.append(note.task.assigned)
+			self.sendMessage(handler, note.task.assigned, 'noteRelated', "<a href=\"/tasks/%d#note%d\">%s</a>" % (note.task.id, note.id, note.task.safe.name), "a task assigned to you")
+
+		for note in Note.loadAll(taskid = note.task.id):
+			if note.user not in usersContacted:
+				usersContacted.append(note.user)
+				self.sendMessage(handler, note.user, 'noteRelated', "<a href=\"/tasks/%d#note%d\">%s</a>" % (note.task.id, note.id, note.task.safe.name), "a task you've also commented on")
 
 	def grantPrivilege(self, handler, user, priv):
 		self.sendMessage(handler, user, 'priv', priv.name, priv.description)

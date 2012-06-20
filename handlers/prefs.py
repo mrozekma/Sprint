@@ -19,7 +19,7 @@ backlogStyles = [
 	('hide', 'Hide', 'display: none;')
 ]
 
-messageTypes = [('sprintMembership', "Added to a sprint"), ('taskAssigned', "Assigned a task"), ('note', "Mentioned in a note"), ('priv', "Granted a privilege")]
+messageTypes = [('sprintMembership', "Added to a sprint"), ('taskAssigned', "Assigned a task"), ('noteRelated', "Someone added a note on a task you own or have a note on"), ('noteMention', "Mentioned in a note"), ('priv', "Granted a privilege")]
 
 @get('prefs')
 def prefs(handler, request):

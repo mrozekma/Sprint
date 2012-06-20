@@ -54,5 +54,4 @@ class Prefs(ActiveRecord):
 
 	@staticmethod
 	def getDefaults(user):
-		return Prefs.create(user, 'backlog', dict((name, 'show') for block in statusMenu for name in block), {'sprintMembership': False, 'taskAssigned': False, 'note': True, 'priv': True})
-messageTypes = [('sprintMembership', "Added to a sprint"), ('taskAssigned', "Assigned a task"), ('note', "Mentioned in a note"), ('priv', "Granted a privilege")]
+		return Prefs.create(user, 'backlog', dict((name, 'show') for block in statusMenu for name in block), {'sprintMembership': False, 'taskAssigned': False, 'noteMention': True, 'noteRelated': True, 'priv': True})
