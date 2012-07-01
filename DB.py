@@ -282,15 +282,18 @@ class ActiveRecord(object):
 	# getter
 	@staticmethod
 	def idToObj(cls, field):
-		return lambda self: cls.load(self.__getattribute__(field))
+		return lambda self: cls.load(self.__getattribute__(field)) if self else None
 
 	# setter
 	@staticmethod
 	def objToId(var):
 		def fn(self, obj):
-			if not obj.id:
-				raise ValueError("Attempted to pull id from unsaved object")
-			self.__setattr__(var, obj.id)
+			if obj:
+				if not obj.id:
+					raise ValueError("Attempted to pull id from unsaved object")
+				self.__setattr__(var, obj.id)
+			else:
+				self.__setattr__(var, 0)
 		return fn
 
 	@staticmethod
