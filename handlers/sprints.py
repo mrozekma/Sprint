@@ -349,11 +349,13 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 				parsedValue = p_value
 				break
 			elif case('goal'):
-				parsedValue = Goal.load(p_value)
-				if not parsedValue:
-					die("Unknown goal: <b>%s</b>" % stripTags(p_value))
-				if parsedValue.sprint != sprint:
-					die("Attempting to use goal outside the specified sprint")
+				parsedValue = None
+				if p_value != '0':
+					parsedValue = Goal.load(p_value)
+					if not parsedValue:
+						die("Unknown goal: <b>%s</b>" % stripTags(p_value))
+					if parsedValue.sprint != sprint:
+						die("Attempting to use goal outside the specified sprint")
 				break
 			elif case('assigned'):
 				parsedValue = User.load(username = p_value)
