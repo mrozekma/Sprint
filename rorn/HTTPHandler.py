@@ -257,7 +257,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 	def makeRequest(self):
 		return {
-			'path': [],
+			'path': '',
 			'contentType': 'text/html',
 			'forceDownload': False,
 			'code': 200

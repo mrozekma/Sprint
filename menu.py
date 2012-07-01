@@ -1,3 +1,5 @@
+from urllib import urlencode
+
 menu = [
 	('Login', '/login', ['-User']),
 	('Home', '/', []),
@@ -12,5 +14,13 @@ def hasPriv(user, priv):
 		return not hasPriv(user, priv[1:])
 	return user and user.hasPrivilege(priv)
 
-def render(handler):
-	return '&nbsp;|&nbsp;'.join("<a href=\"%s\">%s</a>" % (url, text) for (text, url, reqPrivs) in menu if all(hasPriv(handler.session['user'], priv) for priv in reqPrivs))
+def render(handler, path):
+	rtn = []
+	for text, url, reqPrivs in menu:
+		# Special case for /login that adds the current page URL
+		if url == '/login':
+			url += '?' + urlencode([('redir', path)])
+
+		if all(hasPriv(handler.session['user'], priv) for priv in reqPrivs):
+			rtn.append("<a href=\"%s\">%s</a>" % (url, text))
+	return '&nbsp;|&nbsp;'.join(rtn)

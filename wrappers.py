@@ -81,7 +81,7 @@ def header(handler, path):
 			print "</div>"
 
 	print "<div class=\"topmenu\">"
-	print menu.render(handler)
+	print menu.render(handler, path)
 	print "</div>"
 	print "</div>"
 	print "</div>"

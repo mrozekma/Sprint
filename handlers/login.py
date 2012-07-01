@@ -1,5 +1,4 @@
 from rorn.Box import LoginBox, ErrorBox, WarningBox, SuccessBox
-from rorn.Session import delay
 
 from User import User
 from Button import Button
@@ -8,35 +7,38 @@ from Event import Event
 from utils import *
 
 @get('login')
-def login(handler, request):
+def login(handler, request, redir = '/'):
 	handler.title('Login')
 	if handler.session['user']:
 		print WarningBox('Logged In', 'You are already logged in as %s' % handler.session['user'])
 	else:
-		print LoginBox()
+		print LoginBox(redir)
 
 @post('login')
-def loginPost(handler, request, p_username, p_password):
+def loginPost(handler, request, p_username, p_password, p_redir):
+	def die(msg):
+		print ErrorBox("Login Failed", msg)
+		print LoginBox(p_redir)
+		done()
+
 	handler.title('Login')
 	user = User.load(username = p_username, password = User.crypt(p_username, p_password))
-	if user:
-		if not user.hasPrivilege('User'):
-			Event.login(handler, user, False, "Account disabled")
-			delay(handler, ErrorBox("Login Failed", "Your account has been disabled"))
-			redirect('/')
 
-		if user.resetkey:
-			user.resetkey = None
-			user.save()
-
-		handler.session['user'] = user
-		Event.login(handler, user, True)
-		delay(handler, SuccessBox("Login Complete", "Logged in as %s" % user, close = True))
-		redirect('/')
-	else:
+	if not user:
 		Event.login(handler, None, False, "Failed login for %s" % p_username)
-		delay(handler, ErrorBox("Login Failed", "Invalid username/password combination"))
-		redirect('/')
+		die("Invalid username/password combination")
+
+	if not user.hasPrivilege('User'):
+		Event.login(handler, user, False, "Account disabled")
+		die("Your account has been disabled")
+
+	if user.resetkey:
+		user.resetkey = None
+		user.save()
+
+	handler.session['user'] = user
+	Event.login(handler, user, True)
+	redirect(p_redir)
 
 @get('logout')
 def logout(handler, request):

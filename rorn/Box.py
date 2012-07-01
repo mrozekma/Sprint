@@ -103,12 +103,16 @@ class ErrorBox(AlertBox):
 ##########################
 
 class LoginBox:
+	def __init__(self, redir = None):
+		self.redir = redir
+
 	def __str__(self):
 		writer = ResponseWriter()
 		print "<div class=\"box blue rounded login\">"
 		print "<div class=\"title\">Login</div>"
 		print "<span class=\"boxBody\">"
 		print "<form method=\"post\" action=\"/login\">"
+		print "<input type=\"hidden\" name=\"redir\" value=\"%s\">" % (self.redir or '/{{path}}')
 		print "<table style=\"margin-left: 30px;\">"
 		print "<tr><td class=\"left\">Username:</td><td class=\"right\"><input type=\"text\" class=\"defaultfocus\" name=\"username\" class=\"username\"></td></tr>"
 		print "<tr><td class=\"left\">Password:</td><td class=\"right\"><input type=\"password\" name=\"password\" class=\"password\"></td></tr>"
