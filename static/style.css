@@ -482,6 +482,14 @@ img.user, img.project, img.sprint {
 	white-space: nowrap;
 }
 
+#sprint-warnings .header {
+	cursor: pointer;
+}
+
+#sprint-warnings ul {
+	display: none;
+}
+
 table.tasks td {
 	vertical-align: top;
 }

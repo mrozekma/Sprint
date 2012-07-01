@@ -8,6 +8,7 @@ $(document).ready(function() {
 	setup_group_arrows();
 	setup_bugzilla($('tr.task'));
 	setup_indexes();
+	setup_warnings();
 
 	$('#post-status').hide();
 	$('.saving').css('visibility', 'hidden');
@@ -233,6 +234,20 @@ function update_indexes() {
 	i = 0;
 	$('.task:visible .task-index').each(function() {
 		$(this).text(++i);
+	});
+}
+
+function setup_warnings() {
+	$('#sprint-warnings .header').click(function() {
+		box = $('#sprint-warnings');
+		box.toggleClass('expanded');
+		if(box.hasClass('expanded')) {
+			$('.header img', box).attr('src', '/static/images/collapse.png');
+			$('ul', box).show();
+		} else {
+			$('.header img', box).attr('src', '/static/images/expand.png');
+			$('ul', box).hide();
+		}
 	});
 }
 

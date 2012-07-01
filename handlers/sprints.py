@@ -188,6 +188,16 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 		else:
 			daysTillPlanning = (tsToDate(sprint.start) - getNow()).days + 1
 			print InfoBox("The sprint has <b>not begun</b> &mdash; planning is %s. All changes are considered to have been made midnight of plan day" % ('tomorrow' if daysTillPlanning == 1 else "in %d days" % daysTillPlanning))
+
+		warnings = sprint.getWarnings()
+		if warnings:
+			print "<div id=\"sprint-warnings\" class=\"alert-message warning\">"
+			print "<span class=\"header\"><img class=\"bumpdown\" src=\"/static/images/expand.png\"> %s</span>" % pluralize(len(warnings), 'planning warning', 'planning warnings')
+			print "<ul>"
+			for warning in warnings:
+				print "<li>%s</li>" % warning
+			print "</ul>"
+			print "</div>"
 	elif sprint.isReview():
 		print InfoBox("Today is <b>sprint review</b> &mdash; this is the last day to make changes to the backlog")
 
