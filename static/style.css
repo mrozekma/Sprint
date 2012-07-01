@@ -799,7 +799,7 @@ div.notes .new-note #preview {
 }
 
 .markdown p {
-	margin: 0px;
+	margin: 0 0 10px 0;
 }
 
 .markdown blockquote {
@@ -1352,4 +1352,6 @@ table#task-edit-values td.right > * {
 
 table#task-edit-values td.right button {
 	width: 49%;
+	float: left;
+	margin-right: 2px;
 }
