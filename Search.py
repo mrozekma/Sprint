@@ -54,23 +54,46 @@ class Highlight(Filter):
 class Hours(Filter):
 	def __init__(self, search, value):
 		try:
-			if '-' in value:
+			if len(value) > 2 and value[0:2] == '<=':
+				self.min, self.max = None, int(value[2:])
+			elif len(value) > 2 and value[0:2] == '>=':
+				self.min, self.max = int(value[2:]), None
+			elif value[0] == '<':
+				self.min, self.max = None, int(value[1:]) - 1
+			elif value[0] == '>':
+				self.min, self.max = int(value[1:]) + 1, None
+			elif value[0] == '-':
+				self.min, self.max = None, int(value[1:])
+			elif value[-1] == '-':
+				self.min, self.max = int(value[:-1]), None
+			elif '-' in value:
 				self.min, self.max = map(int, value.split('-', 1))
 			else:
 				self.min = self.max = int(value)
-		except ValueError:
+		except (ValueError, IndexError):
 			self.min = self.max = None
 
 	def included(self, task):
-		return self.min == None or self.max == None or self.min <= task.hours <= self.max
+		# Check if the filter spec was broken; include all tasks if so
+		if self.min == self.max == None:
+			return True
+
+		# Check the actual hours
+		min = task.hours if self.min is None else self.min
+		max = task.hours if self.max is None else self.max
+		return min <= task.hours <= max
 
 	def description(self):
-		if self.min == None or self.max == None:
+		if self.min == None and self.max == None:
 			return None
+		elif self.min == None:
+			return "with at most %s remaining" % pluralize(self.max, 'hour', 'hours')
+		elif self.max == None:
+			return "with at least %s remaining" % pluralize(self.min, 'hour', 'hours')
 		elif self.min == self.max:
-			return "%s remaining" % pluralize(self.min, 'hour', 'hours')
+			return "with %s remaining" % pluralize(self.min, 'hour', 'hours')
 		else:
-			return "%d-%d hours remaining" % (self.min, self.max)
+			return "with %d-%d hours remaining" % (self.min, self.max)
 
 class GoalFilter(Filter):
 	def __init__(self, search, value):

@@ -9,8 +9,7 @@ def helpSearch(handler, request):
 
 	print "Searching is a combination of miscellaneous filters and a free-form task name fuzzy search. The search operators are:<br>"
 
-	#TODO
-	operators = [('assigned', "Comma-separated list of usernames the task is assigned to"), ('status', "Comma-separated list of the task's current status"), ('hours', "The tasks current hours (or a range of valid hours, e.g. <code>4-8</code>)"), ('goal', "Comma-separated list of goal colors"), ('created', "YYYYMMDD date (or range of dates) the task was created in"), ('modified', "YYYYMMDD date (or range of dates) the task was modified in")]
+	operators = [('assigned', "Comma-separated list of usernames the task is assigned to"), ('status', "Comma-separated list of the task's current status"), ('hours', "The task's current hours. Also accepts several forms of range: <code>4-8</code>, <code>4-</code>, <code>&gt;4</code>, <code>&gt;=4</code>, etc."), ('goal', "Comma-separated list of goal colors"), ('created', "YYYYMMDD date (or range of dates) the task was created in"), ('modified', "YYYYMMDD date (or range of dates) the task was modified in")]
 
 	print "<ul>"
 	for (name, desc) in operators:
