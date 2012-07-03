@@ -693,9 +693,13 @@ table.availability tr.dateline td {
 	font-weight: bold;
 }
 
-table.availability tr.userline td.username {
-	text-align: right;
+table.availability tr td:nth-child(1) {
 	padding-right: 20px;
+}
+
+table.availability tr.userline td.username {
+	white-space: nowrap;
+	text-align: right;
 }
 
 table.availability tr.userline td input {
@@ -707,16 +711,22 @@ table.availability tr td {
 	width: 35px;
 }
 
+table.availability tr td.spacer {
+	width: 50px;
+}
+
 table.availability tr td.spacer:nth-last-of-type(2) { /* If the sprint ends on a friday, this matches the last spacer so we can hide it */
 	display: none;
 }
 
-table.availability tr td.buttons {
-	width: 120px;
+table.availability tr td.buttons img {
+	width: 24px;
+	cursor: pointer;
 }
 
-table.availability tr td button {
-	width: 80%;
+table.availability button {
+	width: 100%;
+	text-align: center;
 }
 
 ul#goal-menu {

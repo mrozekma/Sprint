@@ -743,13 +743,22 @@ def showAvailability(handler, request, id):
 		print "<td>%s<br>%s</td>" % (day.strftime('%d'), day.strftime('%a'))
 		if day.weekday() == 4:
 			print "<td class=\"spacer\">&nbsp;</td>"
-	if editable:
-		print "<td class=\"buttons\">%s</td>" % Button('set all 8', id = 'set-all-8', type = 'button').info()
 	print "</tr>"
+	if editable:
+		print "<tr class=\"dateline\">"
+		print "<td class=\"buttons\">"
+		if editable:
+			print Button('set all 8', id = 'set-all-8', type = 'button').info()
+		print "</td>"
+		for day in sprint.getDays():
+			print "<td class=\"buttons\"><img src=\"/static/images/clipboard.png\" title=\"Copy first down\"></td>"
+			if day.weekday() == 4:
+				print "<td class=\"spacer\">&nbsp;</td>"
+		print "</tr>"
 
 	for user in sorted(sprint.members):
 		print "<tr class=\"userline\">"
-		print "<td class=\"username\">%s</td>" % user.safe.username
+		print "<td class=\"username\">%s&nbsp;<img src=\"%s\"></td>" % (user.safe.username, user.getAvatar(16))
 		for day in sprint.getDays():
 			if editable:
 				print "<td><input type=\"text\" name=\"hours[%d,%d]\" value=\"%d\"></td>" % (user.id, dateToTs(day), avail.get(user, day))
@@ -759,12 +768,12 @@ def showAvailability(handler, request, id):
 			if day.weekday() == 4:
 				print "<td class=\"spacer\">&nbsp;</td>"
 		if editable:
-			print "<td class=\"buttons\">%s</td>" % Button('copy first', id = 'copy-first', type = 'button').info()
+			print "<td class=\"buttons\"><img src=\"/static/images/clipboard.png\" title=\"Copy first right\"></td>"
 		print "</tr>"
 
-	print "</table>"
 	if editable:
-		print Button('Save', id = 'save-button', type = 'button').positive()
+		print "<tr><td>%s</td></tr>" % Button('Save', id = 'save-button', type = 'button').positive()
+	print "</table>"
 	print "</form>"
 
 @post('sprints/(?P<id>[0-9]+)/availability')

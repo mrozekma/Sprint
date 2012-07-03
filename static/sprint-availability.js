@@ -4,10 +4,21 @@ $(document).ready(function() {
 		return false;
 	});
 
-	$('table.availability tr.userline button').click(function() {
+	copyDown = $('table.availability tr.dateline td.buttons img');
+	copyDown.click(function() {
+		index = copyDown.index($(this));
+		hours = $('tr.userline:eq(0) input:eq(' + index + ')').val();
+		$('tr.userline').each(function() {
+			$('input:eq(' + index + ')', this).val(hours);
+		});
+		return false;
+	});
+
+	copyRight = $('table.availability tr.userline td.buttons img');
+	copyRight.click(function() {
 		row = $(this).parents('tr');
-		hours = $('td:eq(1) input', row).val();
-		$('td:gt(1) input', row).val(hours);
+		hours = $('input:eq(0)', row).val();
+		$('input', row).val(hours);
 		return false;
 	});
 
