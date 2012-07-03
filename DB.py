@@ -2,7 +2,9 @@ from sqlite3 import connect, Row
 from inspect import getargspec, getmembers
 from os import listdir
 from os.path import isdir, isfile, splitext
-from threading import Timer
+from threading import Thread
+from datetime import datetime, timedelta
+from time import sleep
 from StringIO import StringIO
 
 from LoadValues import brick
@@ -15,68 +17,48 @@ class DBError(Exception): pass
 class TooManyRecordsError(DBError): pass
 class ArgumentMismatchError(DBError): pass
 
-class DiskQueue:
+class DiskQueue(Thread):
 	PERIOD = 30 # commit every __ seconds
 	SIZE   = 10 # commit every __ updates
 
 	def __init__(self, conn):
+		Thread.__init__(self)
 		self.conn = conn
 		self.cursor = None
 		self.size = 0
-		self.timer = None
-		self.schedule()
+		self.lastFlush = datetime.now()
+
+		self.name = 'db disk queue'
+		self.daemon = True
+		self.start()
+
+	def run(self):
+		diff = timedelta(seconds = DiskQueue.PERIOD)
+		while True:
+			if self.size >= DiskQueue.SIZE or datetime.now() - self.lastFlush >= diff:
+				self.flush()
+
+			sleep(1)
 
 	def update(self, expr, *args):
 		try:
 			if not self.cursor:
 				self.cursor = self.conn.cursor()
 			self.cursor.execute(expr, args)
+			self.size += 1
 		except Exception, e:
-			self.handleException(e)
+			brick("An unrecoverable problem was encountered while commiting queued database updates to disk: \"%s\". Recent changes may be permanently lost, and the tool must be restarted to correct the memory mapped database" % e)
 			raise
-
-		self.size += 1
-		if self.size >= DiskQueue.SIZE:
-			self.trigger()
-
-	def schedule(self, wait = None):
-		if self.timer:
-			self.timer.cancel()
-		self.timer = Timer(DiskQueue.PERIOD if wait is None else wait, self.tick)
-		self.timer.name = 'db disk queue'
-		self.timer.daemon = True
-		self.timer.start()
 
 	def flush(self):
-		if self.timer:
-			self.timer.cancel()
 		if self.size > 0:
 			with getLock('global'):
-				# Make sure another thread hasn't already flushed the DB
-				if self.size > 0:
-					from Log import console
-					console('db', "Writing %d %s to disk", self.size, 'entry' if self.size == 1 else 'entries')
-					db().counts['flush'] += 1
-					self.conn.commit()
-					self.cursor.close()
-					self.cursor, self.size = None, 0
-
-	def trigger(self):
-		self.schedule(0)
-
-	# This runs in the DiskQueue thread
-	# If the main thread needs to call this, it should use DiskQueue.trigger()
-	def tick(self):
-		try:
-			with getLock('global'):
-				self.flush()
-				self.schedule()
-		except Exception, e:
-			self.handleException(e)
-			raise
-
-	def handleException(self, e):
-		brick("An unrecoverable problem was encountered while commiting queued database updates to disk: \"%s\". Recent changes may be permanently lost, and the tool must be restarted to correct the memory mapped database" % e)
+				from Log import console
+				console('db', "Writing %d %s to disk", self.size, 'entry' if self.size == 1 else 'entries')
+				db().counts['flush'] += 1
+				self.conn.commit()
+				self.cursor.close()
+		self.cursor, self.size, self.lastFlush = None, 0, datetime.now()
 
 class DB:
 	def __init__(self):

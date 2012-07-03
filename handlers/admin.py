@@ -6,7 +6,7 @@ import random
 from pprint import pformat
 from json import loads as fromJS, dumps as toJS
 from cgi import escape
-from datetime import time
+from datetime import datetime, time
 from threading import enumerate as threads
 
 from rorn.Box import ErrorBox, SuccessBox
@@ -73,6 +73,7 @@ table tr td.center {
 	print "<h3>Database</h3>"
 	print "Writing to memory; mirroring to disk every %d seconds / %d writes<br>" % (DiskQueue.PERIOD, DiskQueue.SIZE)
 	print "Current queue size: %d<br>" % db().diskQueue.size
+	print "Last sync: %s (%s ago)<br>" % (db().diskQueue.lastFlush, pluralize(int((datetime.now() - db().diskQueue.lastFlush).total_seconds()), 'second', 'seconds'))
 	print "Disk writes: %d<br>" % db().counts['flush']
 	print "Total requests: %d" % db().counts['total']
 
