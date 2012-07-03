@@ -368,24 +368,24 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 					for part in parts:
 						part = part.strip()
 						# Hours
-						if not hours:
+						if hours is None:
 							try:
 								hours = int(part)
 								continue
 							except ValueError: pass
 
 						# Status
-						if not status and part.lower() in statuses:
+						if status is None and part.lower() in statuses:
 							status = part.lower()
 							continue
 
 						# Assigned
-						if not assigned and part in map(lambda u: u.username, sprint.members):
+						if assigned is None and part in map(lambda u: u.username, sprint.members):
 							assigned = User.load(username = part)
 							continue
 
 						# Name
-						if not name:
+						if name is None:
 							name = part
 							continue
 
@@ -395,7 +395,8 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 					print "<i>Unable to parse (field count mismatch): %s</i><br>" % stripTags(line)
 					break
 				break
-			if all([name, assigned, status, hours]):
+
+			if not any(v is None for v in (name, assigned, status, hours)):
 				tasks[group].append((name, assigned, status, hours))
 
 	if dryrun:
@@ -784,7 +785,7 @@ def taskEditPost(handler, request, ids, p_assigned, p_hours, p_status, p_goal):
 	changed = set()
 	for task in tasks:
 		for field, value in changes.iteritems():
-			if value and getattr(task, field) != value:
+			if value is not None and getattr(task, field) != value:
 				setattr(task, field, value)
 				changed.add(task)
 				Event.taskUpdate(handler, task, field, value)
