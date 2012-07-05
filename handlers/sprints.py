@@ -287,7 +287,7 @@ def printTask(handler, task, days, group = None, highlight = False, editable = T
 	print "<img id=\"status_%d\" class=\"status\" src=\"%s\" title=\"%s\">" % (task.id, task.stat.icon, task.stat.text)
 	print "</td>"
 
-	print "<td class=\"name\"><span id=\"name_span_%d\">%s</span></td>" % (task.id, task.name)
+	print "<td class=\"name\"><span id=\"name_span_%d\">%s</span></td>" % (task.id, task.safe.name)
 	# print "<td class=\"assigned\">%s</td>" % task.assigned.str('member')
 	print "<td class=\"assigned\"><span>%s</span></td>" % (task.assigned.str('member', False, "assigned_span_%d" % task.id))
 	for lbl, day in days:

@@ -75,7 +75,7 @@ $.fn.editable = function(options){
 						?$.editableFactory[opts.type].getValue($this,opts)
 						:$this.data('editable.current')
 					)
-			 .html(
+			 .text(
 				    opts.type=='password'
 				   		?'*****'
 						:$this.data('editable.current')
