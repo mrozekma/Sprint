@@ -482,6 +482,19 @@ img.user, img.project, img.sprint {
 	white-space: nowrap;
 }
 
+#filter-assigned .away {
+	background-color: #999;
+}
+
+#filter-assigned .away:hover {
+	color: #fff;
+	border: 1px solid #dedede;
+}
+
+#filter-assigned .away:active, #filter-assigned .away.selected {
+	background-color:#6299c5;
+}
+
 #sprint-warnings .header {
 	cursor: pointer;
 }
