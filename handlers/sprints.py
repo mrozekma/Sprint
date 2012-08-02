@@ -169,12 +169,12 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print InfoBox('Loading...', id = 'post-status', close = True)
 
 	avail = Availability(sprint) if sprint.isActive() else None
-	dayStart = getNow().date()
+	dayStart = Weekday.today().date()
 	print "<div id=\"filter-assigned\">"
 	print "<a class=\"fancy danger\" href=\"#\"><img src=\"/static/images/cross.png\">&nbsp;None</a>"
 	for member in sorted(sprint.members):
 		cls = ['fancy']
-		if avail and avail.get(member, dayStart) == 0:
+		if not sprint.isPlanning() and avail and avail.get(member, dayStart) == 0:
 			cls.append('away')
 		print "<a class=\"%s\" assigned=\"%s\" href=\"/sprints/%d?search=assigned:%s\"><img src=\"%s\">&nbsp;%s</a>" % (' '.join(cls), member.username, id, member.username, member.getAvatar(16), member.username)
 	print "</div><br>"
