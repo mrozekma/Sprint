@@ -254,8 +254,10 @@ function setup_warnings() {
 function apply_filters() {
 	assigned = $('#filter-assigned a.selected');
 	statuses = $('#filter-status a.selected');
+	groups = $('tr.group');
 	tasks = $('tr.task');
 
+	groups.show();
 	tasks.show();
 
 	if(assigned.length > 0) {
@@ -274,6 +276,20 @@ function apply_filters() {
 		groupid=$(this).parents('tr').attr('groupid');
 		$('tr.task[groupid=' + groupid + ']').hide();
 	});
+
+	if(assigned.length > 0 || statuses.length > 0) {
+		groups.each(function(e) {
+			seek = $(this);
+			while(seek = seek.next()) {
+				if(seek.is('.task:visible')) {
+					return;
+				} else if(seek.length == 0 || seek.hasClass('group')) {
+					$(this).hide();
+					return;
+				}
+			}
+		});
+	}
 
 	update_task_count();
 	update_indexes();
