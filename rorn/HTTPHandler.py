@@ -46,6 +46,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		try: # raise DoneRendering; starts here to catch self.error calls
 			path = self.path
 			query = {}
+			queryStr = None
 
 			# Add GET params to query
 			if '?' in path:
@@ -99,6 +100,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 			request['path'] = '/' + path
 			self.replace('{{path}}', path)
+			self.replace('{{get-args}}', queryStr or '')
 
 			self.invokeHandler(fn, request, query)
 		except DoneRendering: pass
