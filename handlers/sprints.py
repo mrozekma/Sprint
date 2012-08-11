@@ -164,6 +164,11 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 			print "<li><a href=\"#%s\" style=\"background-image:url('/static/images/tag-%s.png');\">%s</a></li>" % (goal.id, goal.color, goal.safe.name if len(goal.safe.name) <= 40 else "%s..." % goal.safe.name[:37])
 	print "</ul>"
 
+	print "<ul id=\"assigned-menu\" class=\"contextMenu\">"
+	for user in sorted(sprint.members):
+		print "<li><a href=\"#%s\" style=\"background-image:url('%s');\">%s</a></li>" % (user.username, user.getAvatar(16), user.username)
+	print "</ul>"
+
 	print InfoBox('Loading...', id = 'post-status', close = True)
 
 	avail = Availability(sprint) if sprint.isActive() else None

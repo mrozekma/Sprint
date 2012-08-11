@@ -615,7 +615,7 @@ table.tasks tr.task.selected:hover td.flags span.task-index {
 	background-color: #953b39;
 }
 
-table.tasks.editable tr.task img.status, table.tasks.editable tr.task img.goal {
+table.tasks.editable tr.task img.status, table.tasks.editable tr.task img.goal, table.tasks.editable tr.task .assigned {
 	cursor: pointer;
 }
 

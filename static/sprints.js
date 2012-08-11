@@ -373,19 +373,19 @@ function fancy_cells(table_selector) {
 
 	$('td.name > span', $(table_selector)).click(editFn);
 
-	$('td.assigned > span', $(table_selector)).click(function() {
-		task = $(this).parents('tr.task');
-		sel = $('<select/>');
-		for(i in usernames) {
-			opt = $("<option>").text(usernames[i]).attr('selected', usernames[i] == task.attr('assigned'));
-			sel.append(opt);
+	$('td.assigned > span', $(table_selector)).contextMenu({
+		menu: 'assigned-menu'
+	}, function(action, el, pos) {
+		sp = $('span.username', el);
+		if(sp.attr('username') == action) {
+			return;
 		}
-		$(this).replaceWith(sel);
-		// sel.chosen();
-		sel.change(function() {
-			task.attr('assigned', $(this).val());
-			save_task(task, 'assigned', $(this).val());
-		});
+
+		sp.attr('username', action);
+		sp.text(action);
+		task = $(el).parents('tr.task');
+		task.attr('assigned', action);
+		save_task(task, 'assigned', action);
 	});
 
 	$('tr.task img.status', $(table_selector)).contextMenu({
