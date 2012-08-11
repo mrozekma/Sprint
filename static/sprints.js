@@ -340,20 +340,38 @@ function fancy_cells(table_selector) {
 		},
 	});
 
-	// $(table_selector).tableDnD({onDragClass: 'dragging'});
-	// return;
-	$('td.name > span', $(table_selector)).editable({
-		onSubmit: function(c) {
-			id = $(this).attr('id').replace('name_span_', '');
-			$('[name="name[' + id + ']"]').val(c.current);
-			if(c.previous != c.current) {
-				task = $(this).parents('tr.task');
-				// dirty($(this));
-				setup_bugzilla(task);
-				save_task(task, 'name', c.current);
+	editFn = function() {
+		oldValue = $(this).text();
+		field = $('<input>').attr('type', 'text').attr('id', $(this).attr('id')).val(oldValue);
+		$(this).replaceWith(field);
+		field.select();
+		uneditFn = function(text) {
+				if($(this).val() != oldValue) {
+					save_task($(this).parents('tr.task'), 'name', $(this).val());
+				}
+
+				span = $('<span>').text(text);
+				$(this).replaceWith(span);
+				span.click(editFn);
+		};
+
+		field.keyup(function(e) {
+			switch(e.keyCode) {
+			case 13:
+				uneditFn.call(this, $(this).val());
+				break;
+			case 27:
+				uneditFn.call(this, oldValue);
+				break;
 			}
-		}
-	});
+		});
+
+		field.blur(function() {
+			uneditFn.call(this, $(this).val());
+		});
+	};
+
+	$('td.name > span', $(table_selector)).click(editFn);
 
 	$('td.assigned > span', $(table_selector)).click(function() {
 		task = $(this).parents('tr.task');
