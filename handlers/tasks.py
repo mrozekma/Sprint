@@ -499,7 +499,7 @@ def newTaskImport(handler, request, group, source = None):
 		print "</form>"
 
 @post('tasks/new/import')
-def newTaskImportPost(handler, request, group, source, p_include, p_group, p_name, p_hours, p_assigned):
+def newTaskImportPost(handler, request, group, source, p_group, p_name, p_hours, p_assigned, p_include = {}):
 	handler.title("Import Tasks")
 	requirePriv(handler, 'User')
 
@@ -741,12 +741,12 @@ def taskEdit(handler, request, ids):
 	print Button('Cancel', url = "/sprints/%d" % sprint.id, type = 'button').negative()
 	print "</td></tr>"
 	print "</table>"
-	print "</form><br>"
+	print "<br>"
 
 	print "<h3>Current values</h3>"
 	print "<table border=0 cellspacing=0 cellpadding=2 class=\"task-edit\">"
 	for task in tasks:
-		print "<tr><td class=\"task-name\" colspan=\"4\">%s</td></tr>" % task.safe.name
+		print "<tr><td class=\"task-name\" colspan=\"4\"><input type=\"checkbox\" id=\"task%d\" name=\"include[%d]\" checked=\"true\">&nbsp;<label for=\"task%d\">%s</label></td></tr>" % (task.id, task.id, task.id, task.safe.name)
 		print "<tr class=\"task-fields\">"
 		print "<td class=\"task-assigned\">%s</td>" % task.assigned
 		print "<td class=\"task-hours\"><img src=\"/static/images/time-icon.png\">&nbsp;%d %s</td>" % (task.hours, 'hour' if task.hours == 1 else 'hours')
@@ -754,13 +754,18 @@ def taskEdit(handler, request, ids):
 		print "<td class=\"task-goal\"><img class=\"goal\" src=\"/static/images/tag-%s.png\">&nbsp;%s</td>" % ((task.goal.color, task.goal.safe.name) if task.goal else ('none', 'None'))
 		print "</tr>"
 	print "</table>"
+	print "</form>"
 
 @post('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)/edit')
-def taskEditPost(handler, request, ids, p_assigned, p_hours, p_status, p_goal):
+def taskEditPost(handler, request, ids, p_assigned, p_hours, p_status, p_goal, p_include = {}):
 	handler.title("Edit tasks")
 	requirePriv(handler, 'User')
 
-	ids = map(int, uniq(ids.split(',')))
+	allIDs = map(int, uniq(ids.split(',')))
+	ids = map(int, p_include.keys())
+	if not set(ids) <= set(allIDs):
+		ErrorBox.die("Included tasks don't match query arguments")
+
 	tasks = dict((id, Task.load(id)) for id in ids)
 	if not all(tasks.values()):
 		ids = [str(id) for (id, task) in tasks.iteritems() if not task]
@@ -768,7 +773,7 @@ def taskEditPost(handler, request, ids, p_assigned, p_hours, p_status, p_goal):
 	tasks = [tasks[id] for id in ids]
 	if len(set(task.sprint for task in tasks)) > 1:
 		ErrorBox.die("All tasks must be in the same sprint")
-	sprint = tasks[0].sprint
+	sprint = (tasks[0] if len(tasks) > 0 else Task.load(allIDs[0])).sprint
 
 	changes = {
 		'assigned': None if p_assigned == '' else User.load(int(p_assigned)),
