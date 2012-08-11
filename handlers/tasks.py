@@ -703,7 +703,7 @@ def tasksMine(handler, request):
 @get('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)/edit')
 def taskEdit(handler, request, ids):
 	handler.title("Edit tasks")
-	requirePriv(handler, 'User')
+	requirePriv(handler, 'Write')
 
 	ids = map(int, uniq(ids.split(',')))
 	tasks = dict((id, Task.load(id)) for id in ids)
@@ -714,6 +714,10 @@ def taskEdit(handler, request, ids):
 	if len(set(task.sprint for task in tasks)) > 1:
 		ErrorBox.die("All tasks must be in the same sprint")
 	sprint = tasks[0].sprint
+	if not sprint.isActive():
+		ErrorBox.die("You can't mass-edit tasks from an inactive sprint")
+	elif not sprint.canEdit(handler.session['user']):
+		ErrorBox.die("You don't have permission to modify this sprint")
 
 	print "<h3>New values</h3>"
 	print "<form method=\"post\" action=\"/tasks/%s/edit\">" % ','.join(map(str, ids))
@@ -759,7 +763,7 @@ def taskEdit(handler, request, ids):
 @post('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)/edit')
 def taskEditPost(handler, request, ids, p_assigned, p_hours, p_status, p_goal, p_include = {}):
 	handler.title("Edit tasks")
-	requirePriv(handler, 'User')
+	requirePriv(handler, 'Write')
 
 	allIDs = map(int, uniq(ids.split(',')))
 	ids = map(int, p_include.keys())
@@ -774,6 +778,8 @@ def taskEditPost(handler, request, ids, p_assigned, p_hours, p_status, p_goal, p
 	if len(set(task.sprint for task in tasks)) > 1:
 		ErrorBox.die("All tasks must be in the same sprint")
 	sprint = (tasks[0] if len(tasks) > 0 else Task.load(allIDs[0])).sprint
+	if not sprint.canEdit(handler.session['user']):
+		ErrorBox.die("You don't have permission to modify this sprint")
 
 	changes = {
 		'assigned': None if p_assigned == '' else User.load(int(p_assigned)),
