@@ -80,7 +80,7 @@ $(document).ready(function() {
 	print "/sprints/%d#group%d" % (group.sprint.id, group.id)
 	Event.newGroup(handler, group)
 
-@get('groups/edit/(?P<id>[0-9]+)')
+@get('groups/(?P<id>[0-9]+)')
 def editGroup(handler, request, id):
 	requirePriv(handler, 'User')
 	handler.title('Manage Group')
@@ -102,7 +102,7 @@ def editGroup(handler, request, id):
 	print "</style>"
 
 	print "<h2>Edit Group</h2>"
-	print "<form method=\"post\" action=\"/groups/edit/%d/rename\">" % id
+	print "<form method=\"post\" action=\"/groups/%d/rename\">" % id
 	print "<table class=\"list\">"
 	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\" value=\"%s\">" % (group.safe.name)
 	print "<tr><td class=\"left\">Predecessor:</td><td class=\"right\">"
@@ -127,7 +127,7 @@ def editGroup(handler, request, id):
 	# The default is whichever goal currently has the most occurrences
 	defaultGoal = max((sum(task.goal == goal or False for task in tasks), goal) for goal in group.sprint.getGoals() + [None])[1]
 
-	print "<form method=\"post\" action=\"/groups/edit/%d/goal\">" % id
+	print "<form method=\"post\" action=\"/groups/%d/goal\">" % id
 	for goal in group.sprint.getGoals():
 		if goal.name:
 			print "<input type=\"radio\" id=\"goal%d\" name=\"goal\" value=\"%d\"%s>&nbsp;<label for=\"goal%d\"><img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;%s</label><br>" % (goal.id, goal.id, ' checked' if goal == defaultGoal else '', goal.id, goal.color, goal.name)
@@ -141,7 +141,7 @@ def editGroup(handler, request, id):
 	elif not group.deletable:
 		print "This group is undeletable"
 	else:
-		print "<form method=\"post\" action=\"/groups/edit/%d/delete\">" % id
+		print "<form method=\"post\" action=\"/groups/%d/delete\">" % id
 		if len(tasks):
 			print "This group has %d %s. Move %s to the <select name=\"newGroup\">" % (len(tasks), 'task' if len(tasks) == 1 else 'tasks', 'it' if len(tasks) == 1 else 'them')
 			for thisGroup in group.sprint.getGroups('name'):
@@ -152,7 +152,7 @@ def editGroup(handler, request, id):
 		print Button('Delete', type = 'submit')
 		print "</form>"
 
-@post('groups/edit/(?P<id>[0-9]+)/rename')
+@post('groups/(?P<id>[0-9]+)/rename')
 def renameGroupPost(handler, request, id, p_name):
 	def die(msg):
 		print msg
@@ -172,7 +172,7 @@ def renameGroupPost(handler, request, id, p_name):
 	Event.renameGroup(handler, group, oldName)
 	redirect("/sprints/%d#group%d" % (group.sprintid, group.id))
 
-@post('groups/edit/(?P<id>[0-9]+)/goal')
+@post('groups/(?P<id>[0-9]+)/goal')
 def assignGroupGoalPost(handler, request, id, p_goal):
 	def die(msg):
 		print msg
@@ -206,7 +206,7 @@ def assignGroupGoalPost(handler, request, id, p_goal):
 
 	redirect("/sprints/%d#group%d" % (group.sprintid, group.id))
 
-@post('groups/edit/(?P<id>[0-9]+)/delete')
+@post('groups/(?P<id>[0-9]+)/delete')
 def deleteGroupPost(handler, request, id, p_newGroup = None):
 	def die(msg):
 		print msg

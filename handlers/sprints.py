@@ -263,7 +263,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 		print "<td class=\"actions\">"
 		if editable:
 			print "<a href=\"/groups/new?after=%d\"><img src=\"/static/images/group-new.png\" title=\"New Group\"></a>" % group.id
-			print "<a href=\"/groups/edit/%d\"><img src=\"/static/images/group-edit.png\" title=\"Edit Group\"></a>" % group.id
+			print "<a href=\"/groups/%d\"><img src=\"/static/images/group-edit.png\" title=\"Edit Group\"></a>" % group.id
 			print "<a href=\"/tasks/new?group=%d\"><img src=\"/static/images/task-new.png\" title=\"New Task\"></a>" % group.id
 		print "</td>"
 		print "</tr>"
