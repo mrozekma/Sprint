@@ -86,7 +86,17 @@ def task(handler, request, ids):
 		print "Last changed %s ago<br><br>" % timesince(tsToDate(task.timestamp))
 		hours, total, lbl = task.hours, startRev.hours, "<b>%s</b>" % statuses[task.status].text
 		if task.deleted:
-			print "Deleted<br>"
+			if task.sprint.canEdit(handler.session['user']):
+				print "<form method=\"post\" action=\"/sprints/%d\">" % task.sprint.id
+				print "<input type=\"hidden\" name=\"id\" value=\"%d\">" % task.id
+				print "<input type=\"hidden\" name=\"rev_id\" value=\"%d\">" % task.revision
+				print "<input type=\"hidden\" name=\"field\" value=\"deleted\">"
+				print "<input type=\"hidden\" name=\"value\"value=\"0\">"
+				print "Deleted (%s)" % Button('undelete', id = 'undelete').mini().positive()
+				print "</form>"
+			else:
+				print "Deleted"
+			print "<br>"
 		elif task.status == 'complete':
 			print ProgressBar(lbl, total-hours, total, zeroDivZero = True, style = 'progress-current-green')
 		elif task.status in ('blocked', 'canceled', 'deferred', 'split'):
