@@ -52,7 +52,8 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			if '?' in path:
 				path, queryStr = path.split('?', 1)
 				queryStr = urllib.unquote(queryStr)
-				query = self.parseQueryString([item.split('=', 1) for item in queryStr.split('&')])
+				if queryStr != '':
+					query = self.parseQueryString([item.split('=', 1) for item in queryStr.split('&')])
 
 			# Check GET params for a p_ prefix collision
 			for key in query:
