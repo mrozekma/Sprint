@@ -70,7 +70,7 @@ def init():
 
 	print "Creating database"
 	open(dbFilename, 'w').close()
-	applyTemplates(templates, lambda: remove(dbFilename))
+	index = applyTemplates(templates, lambda: remove(dbFilename))
 
 	try:
 		settings.dbVersion = index
@@ -115,6 +115,7 @@ def applyTemplates(templates, failFn):
 	try:
 		for index in templates:
 			map(db().update, open("db-templates/%d.sql" % index).readlines())
+		return index
 	except Exception, e:
 		print "Unable to apply template %d: %s" % (index, e)
 		failFn()

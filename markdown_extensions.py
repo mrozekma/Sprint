@@ -3,7 +3,6 @@ from markdown.inlinepatterns import Pattern
 from markdown.util import etree, AtomicString
 
 from User import User
-from Settings import settings
 
 class SVNPattern(Pattern):
 	def handleMatch(self, m):
@@ -21,6 +20,7 @@ class SVNExtension(Extension):
 
 class BugzillaPattern(Pattern):
 	def handleMatch(self, m):
+		from Settings import settings
 		url = settings.bugzillaURL
 		if url == '':
 			return None
