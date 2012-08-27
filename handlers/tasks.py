@@ -589,6 +589,11 @@ def distribute(handler, request, sprint):
 	print "var sprintid = %d;" % sprint.id
 	print "</script>"
 
+	print "<div id=\"distribution-title-buttons\"><div>"
+	print Button('Backlog', "/sprints/%d" % sprint.id)
+	print Button('Metrics', "/sprints/%d/metrics" % sprint.id)
+	print "</div></div>"
+
 	print InfoBox('Loading...', id = 'post-status', close = True)
 
 	print "<div id=\"distribution-range\">"
@@ -597,20 +602,28 @@ def distribute(handler, request, sprint):
 	print "<div id=\"distribution-range-slider\"></div>"
 	print "<div class=\"clear\"></div>"
 
-	for user in sorted(sprint.members):
-		print "<div class=\"task-distribution\" userid=\"%d\">" % user.id
-		print "<img class=\"user-gravatar\" src=\"%s\">" % user.getAvatar(64)
+	for col in ('left', 'right'):
+		print "<div class=\"distribution %s\">" % col
+		for user in sorted(sprint.members):
+			print "<img class=\"user-gravatar\" src=\"%s\" userid=\"%d\" title=\"%s\">" % (user.getAvatar(64), user.id, user.safe.username)
+		print "<br><br>"
+
+		print "<div class=\"selected\">"
+		print "<img style=\"visibility: hidden\" class=\"user-gravatar\" src=\"%s\">" % User.getBlankAvatar(64)
 		print "<div class=\"info\">"
-		print "<div class=\"username\">%s</div>" % user.safe.username
-		print "<div class=\"hours\">Loading...</div>"
+		print "<div class=\"username\"></div>"
+		print "<div class=\"hours\"></div>"
 		print "<div class=\"task-progress-total\"><div class=\"progress-current\" style=\"visibility: hidden;\"></div></div>"
 		print "</div>"
-		print "<select class=\"tasks\" size=\"5\" multiple><option>Loading...</option></select>"
 		print "</div>"
 		print "<div class=\"clear\"></div>"
+		print "<div class=\"tasks\"></div>"
+		print "</div>"
+
+	print "<div class=\"clear\"></div><br><br>"
 
 @post('tasks/distribute/update')
-def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_tasks = None):
+def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_task = None):
 	def die(msg):
 		print toJS({'error': msg})
 		done()
@@ -628,19 +641,21 @@ def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_tasks = 
 		die("Unable to edit sprint")
 
 	# Make changes
-	if p_targetUser != None and p_tasks != None:
+	if p_targetUser != None and p_task != None:
 		userid = int(p_targetUser)
 		user = User.load(userid)
 		if not user:
 			die("No user with ID %d" % userid)
-		tasks = [Task.load(int(id)) for id in p_tasks.split(',')]
-		if not all(tasks):
+		task = Task.load(int(p_task))
+		if not task:
 			die("Invalid task ID")
 
-		for task in tasks:
-			task.assigned = user
+		task.assigned = user
+		if task.creator == handler.session['user'] and (dateToTs(getNow()) - task.timestamp) < 5*60:
 			task.save()
-			Event.taskUpdate(handler, task, 'assigned', user)
+		else:
+			task.saveRevision(handler.session['user'])
+		Event.taskUpdate(handler, task, 'assigned', user)
 
 	# Return current info
 	tasks = filter(lambda task: task.stillOpen(), sprint.getTasks())
@@ -649,9 +664,20 @@ def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_tasks = 
 	for user in sprint.members:
 		userTasks = filter(lambda task: task.assigned == user, tasks)
 		m[user.id] = {
+			'username': user.username,
 			'hours': sum(task.hours for task in userTasks),
 			'availability': avail.getAllForward(getNow().date(), user),
-			'tasks': [{'id': task.id, 'text': "(%d) %s" % (task.hours, task.name)} for task in userTasks]
+			'groups': [{
+				'id': group.id,
+				'name': group.name
+			} for group in sorted((group for group in set(task.group for task in userTasks)), key = lambda group: group.seq)],
+			'tasks': [{
+				'id': task.id,
+				'groupid': task.group.id,
+				'hours': task.hours,
+				'text': "(%d) %s" % (task.hours, task.name),
+				'important': task.hours > 8
+			} for task in userTasks]
 		}
 	print toJS(m)
 

@@ -1076,6 +1076,16 @@ div.clear {
 	width: 135px;
 }
 
+#distribution-title-buttons {
+	position: relative;
+}
+
+#distribution-title-buttons div {
+	position: absolute;
+	top: -50px;
+	right: 25px;
+}
+
 #distribution-range {
 	float: left;
 }
@@ -1100,36 +1110,73 @@ div.clear {
 	background: #4a95ff;
 }
 
-.task-distribution+.clear {
-	padding-bottom: 10px;
+.distribution {
+	width: 49%;
+	float: left;
+	position: relative;
 }
 
-.task-distribution > * {
+.distribution-transfer {
+	border: 1px solid #000;
+}
+
+.distribution.left {
+	margin-right: 10px;
+}
+
+.distribution img.user-gravatar {
+	cursor: pointer;
+	width: 32px;
+	filter: grayscale(100%);
+	-webkit-filter: grayscale(100%);
+	-moz-filter: grayscale(100%);
+}
+
+.distribution img.user-gravatar:hover, .distribution .selected img.user-gravatar, .distribution img.user-gravatar.overcommitted {
+	filter: none;
+	-webkit-filter: none;
+	-moz-filter: none;
+}
+
+.distribution .selected img.user-gravatar {
+	width: 64px;
+}
+
+.distribution .info {
+	display: none;
+}
+
+.distribution .selected > * {
 	float: left;
 	padding: 0 5px 10px 0;
 }
 
-.task-distribution img.user-gravatar {
-	cursor: pointer;
-}
-
-.task-distribution .info {
-	margin-top: 5px;
-}
-
-.task-distribution .username {
+.distribution .selected .username {
 	font-weight: bold;
 }
 
-.task-distribution .task-progress-total {
+.distribution .selected .task-progress-total {
 	width: 250px;
 	margin-left: 0px;
 	margin-top: 5px;
 }
 
-.task-distribution .tasks {
-	margin-left: 30px;
-	width: 50%;
+.distribution .tasks .group {
+	font-weight: bold;
+	margin-top: 15px;
+}
+
+.distribution .tasks .task {
+	font-weight: normal;
+	padding-left: 10px;
+	cursor: pointer;
+}
+
+.distribution .tasks .task.important {
+	-webkit-animation-name: pulse-red;
+	-webkit-animation-duration: 2s;
+	-webkit-animation-timing-function: ease-in-out;
+	-webkit-animation-iteration-count: infinite;
 }
 
 img.admin-icon {
