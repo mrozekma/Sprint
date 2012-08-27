@@ -2,6 +2,7 @@ var distMin = 40, distMax = 80;
 var distData = undefined;
 var errorMessage = undefined;
 var userLeft = undefined, userRight = undefined;
+var chart = undefined;
 
 $(document).ready(function() {
 	$('#distribution-range-slider').slider({
@@ -53,7 +54,6 @@ function update(target_userid, taskid) {
 		data: data,
 		success: function(data, text, request) {
 			distData = data;
-			console.log(distData);
 			errorMessage = distData.error;
 			process();
 		},
@@ -84,6 +84,7 @@ function process() {
 		user = distData[userid];
 		pcnt = user.availability == 0 ? (user.hours > 0 ? 101 : 100) : Math.floor(user.hours * 100 / user.availability);
 		$('.distribution img.user-gravatar[userid=' + userid + ']').toggleClass('overcommitted', pcnt < distMin || pcnt > distMax);
+		$('.distribution div.user[userid=' + userid + '] .hours div').text(user.hours);
 	}
 
 	['left', 'right'].forEach(function(side) {
@@ -119,4 +120,78 @@ function process() {
 			}
 		}
 	});
+
+	showChart();
+}
+
+function showChart() {
+	categories = []
+	data = []
+	usernames = []
+	nameToID = {}
+	for(userid in distData) {
+		user = distData[userid];
+		usernames.push(user.username);
+		nameToID[user.username] = userid;
+	}
+	usernames.sort();
+	for(i in usernames) {
+		userid = nameToID[usernames[i]];
+		user = distData[userid];
+		pcnt = user.availability == 0 ? 100 : Math.min(Math.floor(user.hours * 100 / user.availability), 100);
+
+		categories.push(user.username);
+		data.push({
+			y: pcnt,
+			color: (pcnt < distMin) ? '#4572A7' : (pcnt > distMax) ? '#AA4643' : '#4BB24D'
+		});
+	}
+
+	if(chart == undefined) {
+		chart = new Highcharts.Chart({
+			chart: {
+				renderTo: 'distribution-chart',
+				animation: false,
+				polar: true
+			},
+
+			title: {
+				text: ''
+			},
+
+			credits: {
+				enabled: false
+			},
+
+			legend: {
+				enabled: false
+			},
+
+			tooltip: {
+				enabled: false
+			},
+
+			xAxis: {
+				categories: categories
+			},
+
+			yAxis: {
+				min: 0,
+				max: 100,
+				tickInterval: 50,
+				minorTickInterval: 10,
+				labels: {
+					enabled: false
+				}
+			},
+
+			series: [{
+				type: 'column',
+				name: 'Column',
+				data: data
+			}]
+		});
+	} else {
+		chart.series[0].setData(data);
+	}
 }

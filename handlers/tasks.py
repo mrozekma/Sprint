@@ -584,7 +584,9 @@ def distribute(handler, request, sprint):
 	if not sprint.canEdit(handler.session['user']):
 		ErrorBox.die("Permission Denied", "You don't have permission to modify this sprint")
 
-	print "<script src=\"/static/tasks-distribute.js\" type=\"text/javascript\"></script>"
+	print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts.js\"></script>"
+	print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts-more.js\"></script>"
+	print "<script type=\"text/javascript\" src=\"/static/tasks-distribute.js\"></script>"
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % sprint.id
 	print "</script>"
@@ -601,6 +603,8 @@ def distribute(handler, request, sprint):
 	print "</div>"
 	print "<div id=\"distribution-range-slider\"></div>"
 	print "<div class=\"clear\"></div>"
+
+	print "<div id=\"distribution-chart\"></div>"
 
 	for col in ('left', 'right'):
 		print "<div class=\"distribution %s\">" % col
