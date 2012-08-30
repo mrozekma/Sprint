@@ -13,6 +13,12 @@ class DBLogger(EventHandler):
 	def passwordReset(self, handler, user):
 		log(handler, 'user.password.reset', "%s password reset" % user)
 
+	def tfa(self, handler, user):
+		if user.hotpKey == '':
+			log(handler, 'user.tfa', "Two-factor authentication disabled")
+		else:
+			log(handler, 'user.tfa', "Two-factor authentication enabled: %s" % user.hotpKey)
+
 	def prefs(self, handler):
 		log(handler, 'user.prefs', handler.session['user'].getPrefs().getLogString())
 

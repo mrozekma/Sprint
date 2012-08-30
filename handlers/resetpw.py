@@ -59,6 +59,7 @@ def resetUserPasswordPost(handler, request, username, key, p_newPassword, p_newP
 		ErrorBox.die('Password', "New password mismatch")
 
 	user.password = User.crypt(user.username, p_newPassword)
+	user.hotpKey = ''
 	user.resetkey = None
 	user.save()
 

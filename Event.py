@@ -2,7 +2,7 @@ from utils import *
 
 TYPES = [
 	'pageHandle',
-	'login', 'passwordReset', 'prefs',
+	'login', 'passwordReset', 'tfa', 'prefs',
 	'newSprint', 'sprintInfoUpdate', 'sprintAvailUpdate',
 	'newGroup', 'renameGroup', 'deleteGroup',
 	'newTask', 'taskUpdate',
@@ -50,6 +50,7 @@ class EventHandlerTemplate(EventHandler):
 	def pageHandle(self, handler, fn):
 	def login(self, handler, user, success, text = None):
 	def passwordReset(self, handler, user):
+	def tfa(self, handler, user):
 	def prefs(self, handler):
 	def newSprint(self, handler, sprint):
 	def sprintInfoUpdate(self, handler, sprint, changes):

@@ -6,11 +6,12 @@ from Settings import settings
 from utils import md5
 
 class User(ActiveRecord):
-	def __init__(self, username, password, lastseen = 0, resetkey = 0, id = None):
+	def __init__(self, username, password, hotpKey = '', lastseen = 0, resetkey = 0, id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.username = username
 		self.password = password
+		self.hotpKey = hotpKey
 		self.lastseen = lastseen
 		self.resetkey = resetkey
 

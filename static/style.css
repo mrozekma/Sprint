@@ -335,6 +335,11 @@ table.list td.right input.password {
 	padding-left: 24px;
 }
 
+table.list td.right input.code {
+	background: url(/static/images/lock.png) no-repeat 2px;
+	padding-left: 24px;
+}
+
 table.list td.left {
 	position: relative;
 	top: 2px;

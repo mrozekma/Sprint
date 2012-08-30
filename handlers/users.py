@@ -54,7 +54,18 @@ def user(handler, request, username):
 		print "Your avatar can be changed at <a href=\"http://gravatar.com/\" target=\"_new\">http://gravatar.com/</a>. It must be associated with the e-mail <b>%s</b>, and be rated PG" % user.getEmail()
 
 		print "<h3>Authentication</h3>"
-		print "Your password can be changed <a href=\"/resetpw\">here</a><br>"
+		print "Your password can be changed <a href=\"/resetpw\">here</a><br><br>"
+		if user.hotpKey == '':
+			print "You also have the option to use two-factor authentication via <a href=\"http://en.wikipedia.org/wiki/HOTP\">HOTP</a>. You can use <a href=\"http://support.google.com/a/bin/answer.py?hl=en&answer=1037451\">Google Authenticator</a> to generate verification codes<br><br>"
+			print "<form method=\"post\" action=\"/security/two-factor\">"
+			print "<button type=\"submit\" class=\"btn danger\" name=\"action\" value=\"enable\">Enable two-factor authentication</button>"
+			print "</form>"
+		else:
+			print "You are currently using two-factor authentication<br><br>"
+			print "<form method=\"post\" action=\"/security/two-factor\">"
+			print "<button type=\"submit\" class=\"btn danger\" name=\"action\" value=\"enable\">Reset HOTP key</button>"
+			print "<button type=\"submit\" class=\"btn danger\" name=\"action\" value=\"disable\">Disable two-factor authentication</button>"
+			print "</form>"
 
 		print "<h3>Messages</h3>"
 		print "Your inbox and sent messages can be viewed <a href=\"/messages/inbox\">here</a><br>"
