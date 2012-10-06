@@ -1,14 +1,23 @@
-from redis import StrictRedis
 import re
 from json import dumps as toJS
 
 from Event import EventHandler
 from User import User
+from Log import console
+
+try:
+	from redis import StrictRedis
+except ImportError:
+	StrictRedis = None
 
 class EventPublisher(EventHandler):
 	def __init__(self, host, port):
-		self.conn = StrictRedis(host = host, port = port)
-		self.conn.pubsub()
+		if StrictRedis:
+			self.conn = StrictRedis(host = host, port = port)
+			self.conn.pubsub()
+		else:
+			console('events', 'Unable to load redis python module; event publishing disabled')
+			self.conn = None
 
 	def publish(self, handler, sprint, type, **extraArgs):
 		data = {'type': type, 'user': handler.session['user'].username}
