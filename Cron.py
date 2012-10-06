@@ -42,8 +42,12 @@ class CronJob:
 
 	def run(self):
 		writer = ResponseWriter()
-		self.fn()
-		self.log = writer.done()
+		try:
+			self.fn()
+			self.log = writer.done()
+		except Exception, e:
+			writer.done()
+			self.log = "<div style=\"font-weight: bold; color: #f00\">%s</div>" % stripTags(str(e))
 		self.lastrun = getNow()
 
 	def __str__(self):
