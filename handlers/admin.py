@@ -129,6 +129,7 @@ def adminSettings(handler, request):
 	print "<tr><td class=\"left\">System message:</td><td class=\"right\"><input type=\"text\" name=\"systemMessage\" value=\"%s\"></td></tr>" % (settings.systemMessage or '')
 	print "<tr><td class=\"left\">Bugzilla URL:</td><td class=\"right\"><input type=\"text\" name=\"bugzillaURL\" value=\"%s\"></td></tr>" % (settings.bugzillaURL or '')
 	print "<tr><td class=\"left\">Redis host:</td><td class=\"right\"><input type=\"text\" name=\"redis\" value=\"%s\"></td></tr>" % (settings.redis or '')
+	print "<tr><td class=\"left\">Kerberos realm:</td><td class=\"right\"><input type=\"text\" name=\"kerberosRealm\" value=\"%s\"></td></tr>" % (settings.kerberosRealm or '')
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
 	print Button('Save', id = 'save-button', type = 'submit').positive()
 	print Button('Cancel', type = 'button', url = '/admin').negative()
@@ -143,7 +144,7 @@ def adminSettings(handler, request):
 	print "</table>"
 
 @post('admin/settings')
-def adminSettingsPost(handler, request, p_emailDomain, p_systemMessage, p_bugzillaURL, p_redis):
+def adminSettingsPost(handler, request, p_emailDomain, p_systemMessage, p_bugzillaURL, p_redis, p_kerberosRealm):
 	handler.title('Settings')
 	requireAdmin(handler)
 
@@ -174,6 +175,12 @@ def adminSettingsPost(handler, request, p_emailDomain, p_systemMessage, p_bugzil
 			port = 6379
 
 		settings.redis = "%s:%d" % (host, port)
+
+	if p_kerberosRealm == '':
+		if settings.kerberosRealm:
+			del settings['kerberosRealm']
+	else:
+		settings.kerberosRealm = p_kerberosRealm
 
 	delay(handler, SuccessBox("Updated settings", close = True))
 	Event.adminSettings(handler, settings)
