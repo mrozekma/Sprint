@@ -8,6 +8,7 @@ import signal
 from Log import console
 from DB import db
 from Cron import Cron
+from Options import option, parse as parseOptions
 from Settings import PORT, settings
 from Update import check
 from Event import addEventHandler
@@ -15,6 +16,7 @@ from event_handlers import *
 
 currentThread().name = 'main'
 
+parseOptions()
 check()
 
 try:

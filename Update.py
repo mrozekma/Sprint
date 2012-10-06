@@ -8,11 +8,12 @@ from shutil import copy
 from DB import DB, DBError, db, filename as dbFilename
 from User import User
 from Privilege import Privilege
+from Options import option
 from Settings import settings, PORT
 from utils import *
 
 def check():
-	if '--init' in sys.argv:
+	if option('mode') == 'init':
 		init()
 		exit(0)
 
@@ -24,7 +25,7 @@ def check():
 		exit(1)
 
 	dbVersion = DB.getTemplates()[-1]
-	if '--update' in sys.argv:
+	if option('mode') == 'update':
 		if int(settings.dbVersion) < dbVersion:
 			update()
 			exit(0)

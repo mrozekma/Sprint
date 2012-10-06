@@ -1,11 +1,11 @@
 from datetime import datetime
 from random import randint
-import sys
 import os
 
 import HTTPHandler
 import menu
 from DB import db
+from Options import option
 from LoadValues import getRevisionInfo, isDevMode
 from Settings import settings
 from User import User
@@ -70,7 +70,7 @@ def header(handler, path):
 		print "<a href=\"/login\">Not logged in</a>"
 	print "</div>"
 
-	if ('--dev' in sys.argv or isDevMode(handler)) and handler.session['user'] and handler.session['user'].hasPrivilege('Dev'):
+	if (option('dev') or isDevMode(handler)) and handler.session['user'] and handler.session['user'].hasPrivilege('Dev'):
 		if isDevMode(handler):
 			print "<div class=\"devwarning\" onClick=\"buildmode('production')\">"
 			print "Development"

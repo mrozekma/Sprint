@@ -1,3 +1,4 @@
+from Options import option
 from utils import *
 
 import sys
@@ -5,7 +6,7 @@ import os
 from datetime import datetime
 
 loadTime = datetime.now()
-devMode = ('--dev' in sys.argv) # Also checked in wrappers
+devMode = None # Also checked in wrappers
 brickMessage = False
 
 def getRevisionInfo():
@@ -18,6 +19,8 @@ def getLoadtime():
 	return loadTime
 
 def isDevMode(handler = None):
+	if devMode is None:
+		setDevMode(option('dev'))
 	return devMode and ((handler.session['user'] and handler.session['user'].hasPrivilege('Dev')) if handler else True)
 
 def setDevMode(dev):
