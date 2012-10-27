@@ -78,7 +78,9 @@ class DBLogger(EventHandler):
 		log(handler, 'task.new', "\n".join(lines))
 
 	def taskUpdate(self, handler, task, field, value):
-		log(handler, 'task.update', "Task %d\n%s: %s" % (task.id, field, stripTags(str(value))))
+		if field == 'name':
+			value = stripTags(str(value))
+		log(handler, 'task.update', "Task %d\n%s: %s" % (task.id, field, value))
 
 	def newNote(self, handler, note):
 		lines = [
