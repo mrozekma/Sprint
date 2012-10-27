@@ -20,7 +20,7 @@ def helpSearch(handler, request):
 
 	print "Any non-search operator is assumed to be part of the free-form task name search. For example, <code>foo hours:4 bar</code> shows all 4 hour tasks matching the string \"foo bar\". Task names must be at least %d%% similar to the free-form search to match<br><br>" % Search.minMatchPercent()
 
-	print "The number of matching tasks is shown on the backlog dateline. The <img class=\"bumpdown\" src=\"/static/images/cross.png\"> icon cancels the search and shows all tasks"
+	print "The number of matching tasks is shown on the backlog dateline. The <img class=\"bumpdown\" src=\"/static/images/save.png\"> icon saves the search for future use, while the <img class=\"bumpdown\" src=\"/static/images/cross.png\"> icon cancels the search and shows all tasks"
 
 @get('help/markdown')
 def helpMarkdown(handler, request):

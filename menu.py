@@ -5,6 +5,7 @@ menu = [
 	('Home', '/', []),
 	('Users', '/users', []),
 	('Prefs', '/prefs', ['User']),
+	('Search', '#', ['User']),
 	('Admin', '/admin', ['Dev']),
 	('Logout', '/logout', ['User'])
 ]

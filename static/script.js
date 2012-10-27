@@ -8,6 +8,68 @@ $(document).ready(function () {
 	$('.alert-message .close').click(function() {
 		hidebox($(this).parents('.alert-message'), 0);
 	});
+
+	closeSearchBox = function() {
+		$('#saved-searches').remove();
+	}
+
+	$('.topmenu a:contains("Search")').click(function(e) {
+		e.preventDefault();
+		e.stopImmediatePropagation();
+
+		if($('#saved-searches').length > 0) {
+			$('#saved-searches').remove();
+			$(document).unbind('click', closeSearchBox);
+		} else {
+			box = $('<div/>')
+				.attr('id', 'saved-searches')
+				.css({
+					left: $(this).position().left,
+					top: $(this).position().top + 30,
+				})
+				.append($('<img/>').attr('src', '/static/images/loading.gif'))
+				.appendTo($('.topmenu'));
+
+			$.get('/search/saved/menubox', function(data) {
+				sprintArg = (typeof sprintid === 'undefined') ? '' : '/' + sprintid;
+
+				box.empty();
+
+				$('<h1>Your saved searches</h1>')
+					.append($('<a />').attr('class', 'right').attr('href', '/search/saved').text('(edit)'))
+					.appendTo(box);
+				if(data['yours'].length == 0) {
+					box.append($('<i>None</i>'));
+				} else {
+					for(i in data['yours']) {
+						search = data['yours'][i];
+						box.append($('<a />').attr('href', '/search/saved/' + search['id'] + '/run' + sprintArg).text(search['name']).attr('title', search['query']));
+						box.append($('<br />'));
+					}
+				}
+
+				$("<h1>Other users' saved searches</h1>")
+					.append($('<a />').attr('class', 'right').attr('href', '/search/saved/others').text('(edit)'))
+					.appendTo(box);
+				if(data['others'].length == 0) {
+					box.append($('<i>None followed (' + data['otherTotal'] + ' available)</i>'));
+				} else {
+					for(i in data['others']) {
+						search = data['others'][i];
+						box.append($('<a />').attr('href', '/search/saved/' + search['id'] + '/run' + sprintArg).text(search['name']).attr('title', search['query']));
+						box.append($('<img />').attr('class', 'gravatar').attr('src', search['gravatar']).attr('title', search['username']));
+						box.append($('<br />'));
+					}
+				}
+			}, 'json');
+
+			// $('#saved-searches').html('<h1>Your saved searches</h1><a href="#">Saved search number one</a><br><a href="#">Saved search number two</a><br><h1>Other users\' saved searches</h1><a href="#">Test</a><img src="http://www.gravatar.com/avatar/d574ce53d0c3bc71efa0a73c9a197759?s=16&d=wavatar&r=pg" class="gravatar"><br><a href="#">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer eget enim ut metus bibendum vestibulum sed tempor orci. Cras dignissim molestie accumsan</a><img src="http://www.gravatar.com/avatar/d574ce53d0c3bc71efa0a73c9a197759?s=16&d=wavatar&r=pg" class="gravatar"><br><a href="#">Test</a><img src="http://www.gravatar.com/avatar/d574ce53d0c3bc71efa0a73c9a197759?s=16&d=wavatar&r=pg" class="gravatar"><br>');
+			
+			$(document).click(closeSearchBox);
+		}
+	});
+
+	// console.log($('.topmenu a:contains("Search")').position());
 });
 
 $.expr[":"].econtains = function(obj, index, meta, stack) {
@@ -82,8 +144,6 @@ function showbox(box) {
 
 function hidebox(box, timeout) {
 	if(timeout == 0) {
-		console.log(box);
-		console.log($(box));
 		if($(box).hasClass('fixed')) {
 			$(box).animate({opacity: 0});
 		} else {

@@ -83,7 +83,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 		if filt.description():
 			print "    search.push('%s');" % filt.description().replace("'", "\\'").replace('"', '\\"')
 	print
-	print "    $('.cancel-search').css('display', search.length > 0 ? 'inline' : 'none');"
+	print "    $('.save-search, .cancel-search').css('display', search.length > 0 ? 'inline' : 'none');"
 	print "    if(search.length > 0) {txt += ' ' + search.join(', ');}"
 	print "    $('#task-count').text(txt);"
 	print "}"
@@ -244,7 +244,8 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print "<tr class=\"dateline2 nodrop nodrag\">"
 	print "<td colspan=\"3\">"
 	print "<span id=\"task-count\"></span>"
-	print "<a href=\"/sprints/%d\"><img class=\"cancel-search\" src=\"/static/images/cross.png\"></a>" % id
+	print "<a href=\"/search/saved/new?sprintid=%d&query=%s\"><img class=\"save-search\" src=\"/static/images/save.png\" title=\"Save search\"></a>" % (id, search.getFullString().replace('"', '&quot;'))
+	print "<a href=\"/sprints/%d\"><img class=\"cancel-search\" src=\"/static/images/cross.png\" title=\"Clear search\"></a>" % id
 	print "</td>"
 	for (x, y) in days:
 		print "<td class=\"%s\">%s<br>Day %s of %s</td>" % (x, formatDate(y), sprintDays.index(y.date())+1 if y.date() in sprintDays else 0, len(sprintDays))
@@ -446,7 +447,7 @@ def findActiveSprint(handler, request, project = None, search = None):
 		if case():
 			print "You are active in multiple sprints%s:<br><br>" % (" in the %s project" % project.safe.name if project else '')
 			for sprint in sprints:
-				print "<a href=\"/%s\">%s</a><br>" % (url % sprint.id, sprint.safe.name)
+				print "<a href=\"%s\">%s</a><br>" % (url % sprint.id, sprint.safe.name)
 			break
 
 @get('sprints/(?P<id>[0-9]+)/info')
