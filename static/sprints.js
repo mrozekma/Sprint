@@ -486,6 +486,9 @@ function delete_task(task_id) {
 	row = $('tr.task[taskid=' + task_id + ']');
 	if(row) {
 		save_task(row, 'deleted', 1);
+		if(row.hasClass('selected')) {
+			$('.task-index', row).click();
+		}
 		row.fadeOut();
 		row.hide();
 		totalTasks--;
