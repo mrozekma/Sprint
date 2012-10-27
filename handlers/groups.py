@@ -66,6 +66,8 @@ def newGroupPost(handler, request, p_group, p_name):
 	pred = Group.load(predid)
 	if not pred:
 		die("No group with ID <b>%d</b>" % predid)
+	elif p_name.strip() == '':
+		die("Group must have a non-empty name")
 
 	group = Group(pred.sprint.id, p_name, pred.seq + 1)
 	group.save()
@@ -160,11 +162,12 @@ def renameGroupPost(handler, request, id, p_name):
 
 	handler.title('Manage Group')
 	requirePriv(handler, 'User')
-	request['wrappers'] = False
 
 	group = Group.load(id)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+	elif p_name.strip() == '':
+		ErrorBox.die('Invalid Name', "Group must have a non-empty name")
 
 	oldName = group.name
 	group.name = p_name

@@ -251,6 +251,9 @@ def newTaskPost(handler, request, p_group, p_name, p_goal, p_status, p_assigned,
 	elif not sprint.canEdit(handler.session['user']):
 		die("You don't have permission to modify this sprint")
 
+	if p_name.strip() == '':
+		die("Task must have a non-empty name")
+
 	assignedid = to_int(p_assigned, 'assigned', die)
 	assigned = User.load(assignedid)
 	if not assigned:
@@ -400,6 +403,9 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 							continue
 
 						print "<i>Unable to parse (no field match on '%s'): %s</i><br>" % (stripTags(part), stripTags(line))
+					if name == '':
+						name = None
+						print "<i>Unable to parse (empty name): %s</i><br>" % stripTags(line)
 					break
 				if case():
 					print "<i>Unable to parse (field count mismatch): %s</i><br>" % stripTags(line)

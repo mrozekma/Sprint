@@ -351,8 +351,7 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 	sprint = Sprint.load(sprintid)
 	if not sprint:
 		die("There is no sprint with ID %d" % sprintid)
-
-	if not (sprint.isActive() or sprint.isPlanning()):
+	elif not (sprint.isActive() or sprint.isPlanning()):
 		die("Unable to modify inactive sprint")
 	elif not sprint.canEdit(handler.session['user']):
 		die("You don't have permission to modify this sprint")
@@ -364,6 +363,9 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 	# hours, taskmove, name, assigned, status
 	if task.revision != p_rev_id: #TODO Implement collision support
 		die("Collision with %s detected. Changes not saved" % task.creator)
+
+	if p_value.strip() == '':
+		die("Task name cannot be empty")
 
 	if p_field in ['status', 'name', 'goal', 'assigned', 'hours', 'deleted']:
 		for case in switch(p_field):
