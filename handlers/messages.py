@@ -40,6 +40,8 @@ def sent(handler, request):
 	print tabs << 'sent'
 	undelay(handler)
 
+	Markdown.head('div.message .body pre code')
+
 	messages = Message.loadAll(senderid = handler.session['user'].id, orderby = 'timestamp DESC')
 	for message in messages:
 		printMessage(message, False)
@@ -70,8 +72,10 @@ def printMessage(message, inbox):
 
 
 @post('messages/send')
-def send(handler, request, p_userid, p_body):
+def send(handler, request, p_userid, p_body, dryrun = False):
 	handler.title('Send message')
+	if dryrun:
+		request['wrappers'] = False
 	requirePriv(handler, 'User')
 
 	targetID = int(p_userid)
@@ -79,9 +83,15 @@ def send(handler, request, p_userid, p_body):
 	if not target:
 		ErrorBox.die("No user with ID %d" % targetID)
 
-	Message(target.id, handler.session['user'].id, "Direct message", p_body, 'markdown').save()
-	delay(handler, SuccessBox("Message dispatched to %s" % target, close = 3))
-	redirect('/messages/sent')
+	message = Message(target.id, handler.session['user'].id, "Direct message", p_body, 'markdown')
+	if dryrun:
+		print message.render()
+	else:
+		if p_body == '':
+			ErrorBox.die('Empty Body', "No message provided")
+		message.save()
+		delay(handler, SuccessBox("Message dispatched to %s" % target, close = 3))
+		redirect('/messages/sent')
 
 @post('messages/(?P<id>[0-9]+)/delete')
 def deleteMessage(handler, request, id, p_x = None, p_y = None):

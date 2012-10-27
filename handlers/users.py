@@ -11,6 +11,7 @@ from Task import Task
 from Availability import Availability
 from Button import Button
 from Chart import Chart
+from Markdown import Markdown
 from relativeDates import timesince
 from utils import *
 
@@ -30,6 +31,9 @@ def user(handler, request, username):
 	if not user:
 		ErrorBox.die('User', "No user named <b>%s</b>" % stripTags(username))
 
+	Markdown.head('form#message-form .body pre code')
+	print "<script src=\"/static/jquery.typing-0.2.0.min.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/users.js\" type=\"text/javascript\"></script>"
 	Chart.include()
 	undelay(handler)
 
@@ -84,6 +88,7 @@ def user(handler, request, username):
 		print "<form id=\"message-form\" method=\"post\" action=\"/messages/send\">"
 		print "<input type=\"hidden\" name=\"userid\" value=\"%d\">" % user.id
 		print "<textarea name=\"body\" class=\"large\"></textarea>"
+		print "<div class=\"body markdown\"><div id=\"preview\"></div></div>"
 		print Button('Send').post().positive()
 		print "</form>"
 
