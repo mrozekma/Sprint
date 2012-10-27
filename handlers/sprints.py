@@ -89,7 +89,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print "}"
 	print "$('document').ready(function() {"
 	if search.has('assigned'):
-		print "    $('%s').addClass('selected');" % ', '.join("#filter-assigned a[assigned=\"%s\"]" % user.username for user in search.get('assigned').users)
+		print "    $('%s').addClass('selected');" % ', '.join("#filter-assigned a[assigned=\"%s\"]" % user.username for user in search.get('assigned').users + ([handler.session['user']] if search.get('assigned').currentUser else []))
 	if search.has('status'):
 		print "    $('%s').addClass('selected');" % ', '.join("#filter-status a[status=\"%s\"]" % status.name for status in search.get('status').statuses)
 	print "    apply_filters();"

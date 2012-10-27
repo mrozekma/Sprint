@@ -42,7 +42,9 @@ class Filter(object):
 # These are handled specially in the sprints handler, so they doesn't need any implementations
 class Assigned(Filter):
 	def __init__(self, search, value):
-		self.users = filter(None, (User.load(username = username) for username in value.split(',')))
+		usernames = value.split(',')
+		self.users = filter(None, (User.load(username = username) for username in usernames))
+		self.currentUser = ('me' in usernames) and (not User.load(username = 'me'))
 class Status(Filter):
 	def __init__(self, search ,value):
 		value = value.replace('-', ' ').replace('_', ' ')
