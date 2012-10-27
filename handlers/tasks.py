@@ -688,21 +688,22 @@ def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_task = N
 @post('tasks/(?P<taskid>[0-9]+)/notes/new')
 def newNotePost(handler, request, taskid, p_body, dryrun = False):
 	handler.title('New Note')
+	if dryrun:
+		request['wrappers'] = False
 	requirePriv(handler, 'User')
 
 	taskid = int(taskid)
 	task = Task.load(taskid)
 	if not task:
 		ErrorBox.die('Invalid Task', "No task with ID <b>%d</b>" % taskid)
-	if p_body == '':
-		ErrorBox.die('Empty Body', "No note provided")
 
 	note = Note(task.id, handler.session['user'].id, p_body)
 
 	if dryrun:
-		request['wrappers'] = False
 		print note.render()
 	else:
+		if p_body == '':
+			ErrorBox.die('Empty Body', "No note provided")
 		note.save()
 		Event.newNote(handler, note)
 		redirect("/tasks/%d#note%d" % (task.id, note.id))
