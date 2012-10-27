@@ -280,6 +280,9 @@ function apply_filters() {
 	if(assigned.length > 0 || statuses.length > 0) {
 		groups.each(function(e) {
 			seek = $(this);
+			if(seek.hasClass('fixed')) {
+				return;
+			}
 			while(seek = seek.next()) {
 				if(seek.is('.task:visible')) {
 					return;

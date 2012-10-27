@@ -255,7 +255,10 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 
 	print "<tbody>"
 	for group in groups:
-		print "<tr class=\"group\" id=\"group%d\" groupid=\"%d\">" % (group.id, group.id)
+		cls = ['group']
+		if not group.deletable:
+			cls.append('fixed')
+		print "<tr class=\"%s\" id=\"group%d\" groupid=\"%d\">" % (' '.join(cls), group.id, group.id)
 		print "<td colspan=\"6\">"
 		if isDevMode(handler):
 			print "<small class=\"debugtext\">(%d, %d)</small>&nbsp;" % (group.id, group.seq)
