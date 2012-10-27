@@ -67,7 +67,7 @@ class EventHandlerTemplate(EventHandler):
 	def impersonate(self, handler, user):
 	def newUser(self, handler, user):
 	def newProject(self, handler, project):
-	def grantPrivilege(self, handler, user, priv):
+	def grantPrivilege(self, handler, user, priv, isNewUser):
 	def revokePrivilege(self, handler, user, priv):
 	def shell(self, handler, code):
 	def mockTime(self, handler, effectiveTime, delta):

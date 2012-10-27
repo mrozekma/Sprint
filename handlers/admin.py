@@ -272,7 +272,7 @@ def adminUsersPost(handler, request, p_action, p_username, p_privileges = []):
 			Event.newUser(handler, user)
 			for priv in privileges:
 				db().update("INSERT INTO grants(userid, privid) VALUES(?, ?)", user.id, priv.id)
-				Event.grantPrivilege(handler, user, priv)
+				Event.grantPrivilege(handler, user, priv, True)
 
 			delay(handler, SuccessBox("Added user <b>%s</b>" % stripTags(p_username), close = True))
 			redirect("/users/%s" % user.username)
@@ -450,7 +450,7 @@ def adminPrivilegesPost(handler, request, p_grant):
 			elif not has and name in privs:
 				print "Granting %s to %s<br>" % (name, username)
 				db().update("INSERT INTO grants(userid, privid) VALUES(?, ?)", user.id, priv.id)
-				Event.grantPrivilege(handler, user, priv)
+				Event.grantPrivilege(handler, user, priv, False)
 	print "Done"
 
 shells = {}

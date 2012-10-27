@@ -110,7 +110,7 @@ class DBLogger(EventHandler):
 	def newProject(self, handler, project):
 		log(handler, 'admin.project.new', project.name)
 
-	def grantPrivilege(self, handler, user, priv):
+	def grantPrivilege(self, handler, user, priv, isNewUser):
 		log(handler, 'admin.user.privilege.grant', "Granted %s to %s" % (priv, user))
 
 	def revokePrivilege(self, handler, user, priv):

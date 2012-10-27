@@ -64,5 +64,6 @@ class MessageDispatcher(EventHandler):
 				usersContacted.append(note.user)
 				self.sendMessage(handler, note.user, 'noteRelated', "<a href=\"/tasks/%d#note%d\">%s</a>" % (note.task.id, note.id, note.task.safe.name), "a task you've also commented on")
 
-	def grantPrivilege(self, handler, user, priv):
-		self.sendMessage(handler, user, 'priv', priv.name, priv.description)
+	def grantPrivilege(self, handler, user, priv, isNewUser):
+		if not isNewUser:
+			self.sendMessage(handler, user, 'priv', priv.name, priv.description)
