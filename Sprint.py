@@ -124,4 +124,8 @@ class Sprint(ActiveRecord):
 		if len(filter(lambda task: (task.status == 'deferred' or task.status == 'split') and task.hours > 0, tasks)) > 0:
 			rtn.append("There are <a href=\"/sprints/%d?search=status:deferred,split hours:>0\">deferred tasks with hours</a>. These hours are counted as part of the sprint commitment" % self.id)
 
+		# Tasks with too many hours
+		if len(filter(lambda task: task.hours > 24, tasks)) > 0:
+			rtn.append("There are <a href=\"/sprints/%d?search=hours:>24\">tasks with too many hours</a>" % self.id)
+
 		return rtn
