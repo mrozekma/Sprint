@@ -480,6 +480,21 @@ img.user, img.project, img.sprint {
 	padding-right: 20px;
 }
 
+#sprint-nav {
+	position: relative;
+}
+
+#sprint-nav > div {
+	position: absolute;
+	top: -60px;
+	right: 0px;
+}
+
+#sprint-nav img {
+	width: 8px;
+	padding-left: 8px;
+}
+
 #filter-assigned .fancy, #filter-status .fancy {
 	display: inline-block;
 	margin-bottom: 4px;

@@ -54,6 +54,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 		redirect('/help/search')
 
 	handler.title(sprint.safe.name)
+	drawNavArrows(sprint, '')
 
 	tasks = sprint.getTasks()
 	groups = sprint.getGroups()
@@ -335,6 +336,17 @@ def printTask(handler, task, days, group = None, highlight = False, editable = T
 	print "</td>"
 	print "</tr>"
 
+def drawNavArrows(sprint, tab):
+	print "<div id=\"sprint-nav\"><div>"
+	sprints = sprint.project.getSprints()
+	thisIdx = sprints.index(sprint)
+	if thisIdx > 0:
+		print "<a href=\"/sprints/%d/%s\"><img src=\"/static/images/prev.png\" title=\"%s\"></a>" % (sprints[thisIdx - 1].id, tab, sprints[thisIdx - 1].safe.name.replace('"', '&quot;'))
+	if thisIdx < len(sprints) - 1:
+		print "<a href=\"/sprints/%d/%s\"><img src=\"/static/images/next.png\" title=\"%s\"></a>" % (sprints[thisIdx + 1].id, tab, sprints[thisIdx + 1].safe.name.replace('"', '&quot;'))
+	print "</div></div>"
+
+
 @post('sprints/(?P<sprintid>[0-9]+)')
 def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 	def die(msg):
@@ -466,6 +478,7 @@ def showInfo(handler, request, id):
 	editable = sprint.owner == handler.session['user'] # Info can be edited even after the sprint closes
 
 	handler.title(sprint.safe.name)
+	drawNavArrows(sprint, 'info')
 
 	print "<style type=\"text/css\">"
 	print "input.goal {"
@@ -654,6 +667,7 @@ def showMetrics(handler, request, id):
 	tasks = sprint.getTasks()
 
 	handler.title(sprint.safe.name)
+	drawNavArrows(sprint, 'metrics')
 
 	print "<style type=\"text/css\">"
 	print "h2 a {color: #000;}"
@@ -713,6 +727,8 @@ def showSprintHistory(handler, request, id):
 	tasks = sprint.getTasks(includeDeleted = True)
 
 	handler.title(sprint.safe.name)
+	drawNavArrows(sprint, 'history')
+
 	Chart.include()
 	chart = TaskChart('chart', sprint.getTasks())
 	chart.js()
@@ -735,6 +751,7 @@ def showAvailability(handler, request, id):
 	tasks = sprint.getTasks()
 
 	handler.title(sprint.safe.name)
+	drawNavArrows(sprint, 'availability')
 	print (tabs << 'availability') % id
 
 	print "<script src=\"/static/sprint-availability.js\" type=\"text/javascript\"></script>"
