@@ -54,13 +54,13 @@ class HoursChart(Chart):
 		self.series = seriesList = []
 
 		series = {
-			'name': 'Hours needed',
+			'name': 'Tasking',
 			'data': [],
 			'zIndex': 2
 		}
 		seriesList.append(series)
 
-		for day in days:
+		for day in days[:futureIndex]:
 			series['data'].append(sum(t.hours if t and not t.deleted else 0 for t in [t.getRevisionAt(day) for t in tasks]))
 
 		series = {
@@ -74,32 +74,45 @@ class HoursChart(Chart):
 		for day in days:
 			series['data'].append(avail.getAllForward(day))
 
-		setupTimeline(self, sprint, ['Projected hours'])
+		setupTimeline(self, sprint, ['Projected tasking'])
 
 		# Add commitment percentage to the axis label
 		labels = self.xAxis.categories.get()
 		for i in range(len(labels)):
-			needed = seriesList[0]['data'][i][1]
-			avail = seriesList[1]['data'][i][1]
-			pcnt = "%d" % (needed * 100 / avail) if avail > 0 else "inf"
+			# For future percentages, use today's hours (i.e. don't use the projected hours)
+			needed = seriesList[0]['data'][min(i, futureIndex - 1) if futureIndex else i][1]
+			thisAvail = seriesList[1]['data'][i][1]
+			pcnt = "%d" % (needed * 100 / thisAvail) if thisAvail > 0 else "inf"
 			labels[i] += "<br>%s%%" % pcnt
 		self.xAxis.categories = labels
 		self.xAxis.labels.formatter = "function() {return this.value.replace('inf', '\u221e');}"
 
 		# Trendline
-		TREND_DAYS = 3
-		if futureIndex >= TREND_DAYS - 1:
-			data = self.series[0].data.get()
-			startPoint = [futureIndex - TREND_DAYS, data[futureIndex - TREND_DAYS][1]]
-			midPoint = [futureIndex - 1, data[futureIndex - 1][1]]
-			slope = (midPoint[1] - startPoint[1]) / (TREND_DAYS - 1)
-			endPoint = [len(days) - 1, int(ceil(startPoint[1] + (slope * ((len(days) - 1) - (startPoint[0])))))]
+		data = self.series[0].data.get()
+		dailyAvail = dict((day, avail.getAll(day)) for day in days)
+		totalAvail = 0
+		for daysBack in range(1, (futureIndex or 0) + 1):
+			midPoint = [futureIndex - daysBack, data[futureIndex - daysBack][1]]
+			if dailyAvail[days[midPoint[0]]] > 0:
+				daysBack = min(daysBack + 2, futureIndex)
+				startPoint = [futureIndex - daysBack, data[futureIndex - daysBack][1]]
+				totalAvail = sum(dailyAvail[day] for day in days[startPoint[0] : midPoint[0]])
+				break
+
+		if totalAvail > 0 and startPoint[0] != midPoint[0]:
+			slope = (midPoint[1] - startPoint[1]) / (midPoint[0] - startPoint[0])
+			slopePerAvail = slope * (midPoint[0] - startPoint[0]) / totalAvail
+			points, total = [], midPoint[1]
+			total = seriesList[0]['data'][futureIndex - 1][1]
+			points.append([futureIndex - 1, total])
+			for i in range(futureIndex, len(days)):
+				total += slopePerAvail * dailyAvail[days[i]]
+				points.append([i, total])
 			self.series.get().append({
-				'name': 'Projected hours',
-				'data': [midPoint, endPoint],
+				'name': 'Projected tasking',
+				'data': points,
 				'color': '#666',
-				# 'showInLegend': False,
-				'dataLabels': {'formatter': "function() {return (this.point.x == %d) ? this.y : null;}" % endPoint[0]},
+				'dataLabels': {'formatter': "function() {return (this.point.x == %d) ? parseInt(this.y, 10) : null;}" % (len(days) - 1)},
 				'marker': {'symbol': 'circle'},
 				'zIndex': 1
 			})

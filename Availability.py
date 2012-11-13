@@ -13,6 +13,11 @@ class Availability:
 		rows = list(rows)
 		return int(rows[0]['hours']) if len(rows) > 0 else 0
 
+	def getAll(self, timestamp):
+		rows = db().select("SELECT COALESCE(SUM(hours), 0) FROM availability WHERE sprintid = ? AND timestamp = ?", self.sprint.id, dateToTs(timestamp))
+		rows = list(rows)
+		return int(rows[0]['COALESCE(SUM(hours), 0)']) if len(rows) > 0 else 0
+
 	def set(self, user, timestamp, hours):
 		db().update("INSERT OR REPLACE INTO availability(sprintid, userid, timestamp, hours) VALUES(?, ?, ?, ?)", self.sprint.id, user.id, dateToTs(timestamp), hours)
 
