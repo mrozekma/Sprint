@@ -141,6 +141,7 @@ a {
 .box {
 	margin: 5px 0px 5px 0px;
 	border: 1px solid #000;
+	color: #000;
 	background: #fff url(/static/images/corner2.png) no-repeat right bottom;
 }
 
