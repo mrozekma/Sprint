@@ -18,7 +18,7 @@ class SprintExport:
 							break
 					else:
 						raise Exception("Unable to find a valid separator for %s" % task.name)
-				print sep.join([task.assigned.username, str(task.hours), task.status, task.name])
+				print sep.join([' '.join(user.username for user in task.assigned), str(task.hours), task.status, task.name])
 
 class ExcelExport:
 	def getName(self): return 'excel'

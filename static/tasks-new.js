@@ -5,6 +5,7 @@ $(document).ready(function() {
 
 	get_preview = function() {
 		$.post($('form').attr('action') + '&dryrun=true', $('form').serialize(), function(data, text, request) {
+			$('#post-status').hide();
 			$('#preview').html(data);
 		});
 	};

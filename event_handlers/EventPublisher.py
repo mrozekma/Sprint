@@ -49,11 +49,11 @@ class EventPublisher(EventHandler):
 		self.publish(handler, sprint, 'sprintAvailUpdate')
 
 	def newTask(self, handler, task):
-		self.publish(handler, task.sprint, 'newTask', name = task.name, assigned = task.assigned.username, hours = task.hours)
+		self.publish(handler, task.sprint, 'newTask', name = task.name, assigned = [user.username for user in task.assigned], hours = task.hours)
 
 	def taskUpdate(self, handler, task, field, value):
-		if isinstance(value, User):
-			value = value.username
+		if isinstance(value, list) and len(value) > 0 and isinstance(value[0], User):
+			value = [user.username for user in value]
 		self.publish(handler, task.sprint, 'taskUpdate', id = task.id, name = task.name, field = field, value = value)
 
 	def newNote(self, handler, note):

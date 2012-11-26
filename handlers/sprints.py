@@ -289,7 +289,7 @@ def printTask(handler, task, days, group = None, highlight = False, editable = T
 	if getNow() - tsToDate(task.timestamp) < timedelta(hours = 23):
 		classes.append('changed-today')
 
-	print "<tr class=\"%s\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" goalid=\"%d\" status=\"%s\" assigned=\"%s\">" % (' '.join(classes), task.id, task.id, task.revision, group.id if group else 0, task.goal.id if task.goal else 0, task.stat.name, task.assigned.username)
+	print "<tr class=\"%s\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" goalid=\"%d\" status=\"%s\" assigned=\"%s\">" % (' '.join(classes), task.id, task.id, task.revision, group.id if group else 0, task.goal.id if task.goal else 0, task.stat.name, ' '.join(sorted(user.username for user in task.assigned)))
 
 	print "<td class=\"flags\">"
 	if isDevMode(handler):
@@ -301,8 +301,14 @@ def printTask(handler, task, days, group = None, highlight = False, editable = T
 	print "</td>"
 
 	print "<td class=\"name\"><span id=\"name_span_%d\">%s</span></td>" % (task.id, task.safe.name)
-	# print "<td class=\"assigned\">%s</td>" % task.assigned.str('member')
-	print "<td class=\"assigned\"><span>%s</span></td>" % (task.assigned.str('member', False, "assigned_span_%d" % task.id))
+	print "<td class=\"assigned\"><span>"
+	if len(task.assigned) == 1:
+		print task.assigned[0].str('member', False, "assigned_span_%d" % task.id)
+	else:
+		assignedStr = ' '.join(sorted(user.username for user in task.assigned))
+		print "<img src=\"/static/images/team.png\" class=\"user\">"
+		print "<span id=\"assigned_span_%d\" class=\"username\" username=\"%s\" title=\"%s\">team (%d)</span>" % (task.id, assignedStr, assignedStr, len(task.assigned))
+	print "</span></td>"
 	for lbl, day in days:
 		dayTask = task.getRevisionAt(day)
 		previousTask = task.getRevisionAt(Weekday.shift(-1, day))
@@ -394,9 +400,9 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 						die("Attempting to use goal outside the specified sprint")
 				break
 			elif case('assigned'):
-				parsedValue = User.load(username = p_value)
-				if not parsedValue:
-					die("Unknown user: <b>%s</b>" % stripTags(p_value))
+				parsedValue = [User.load(username = username) for username in p_value.split(' ')]
+				if not all(parsedValue):
+					die("Unknown user(s): <b>%s</b>" % stripTags(p_value))
 				break
 			elif case('hours'):
 				parsedValue = int(p_value)
@@ -608,8 +614,10 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 	addMembers = list(set(members) - set(sprint.members))
 	delMembers = list(set(sprint.members) - set(members))
 	for user in delMembers:
-		for task in filter(lambda task: task.assigned == user, sprint.getTasks()):
-			task.assigned = sprint.owner
+		for task in filter(lambda task: user in task.assigned, sprint.getTasks()):
+			task.assigned.remove(user)
+			if task.assigned.length == 0:
+				task.assigned = [sprint.owner]
 			task.saveRevision(handler.session['user'])
 		avail.delete(user)
 		sprint.members.remove(user)
@@ -698,7 +706,7 @@ def showMetrics(handler, request, id):
 	print "</div>"
 	avail = Availability(sprint)
 	for user in sorted(sprint.members):
-		hours = sum(t.hours for t in tasks if t.assigned == user)
+		hours = sum(t.hours for t in tasks if user in t.assigned)
 		total = avail.getAllForward(getNow().date(), user)
 		print ProgressBar("<a style=\"color: #000\" href=\"/sprints/%d?search=assigned:%s\">%s</a>" % (sprint.id, user.safe.username, user.safe.username), hours, total, zeroDivZero = True, style = {100.01: 'progress-current-red'})
 
@@ -709,8 +717,8 @@ def showMetrics(handler, request, id):
 	for goal in sprint.getGoals() + [None]:
 		if goal and goal.name == '':
 			continue
-		start = sum(t.hours for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
-		now = sum(t.hours for t in tasks if t.goalid == (goal.id if goal else 0))
+		start = sum(t.hours * len(t.assigned) for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
+		now = sum(t.manHours() for t in tasks if t.goalid == (goal.id if goal else 0))
 		if not goal and start == now == 0:
 			continue
 		print ProgressBar("<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;<a style=\"color: #000\" href=\"/sprints/%d?search=goal:%s\">%s</a>" % (goal.color if goal else 'none', sprint.id, goal.color if goal else 'none', goal.safe.name if goal else 'Other'), start - now, start, zeroDivZero = False, style = {100: 'progress-current-green'})

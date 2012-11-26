@@ -20,13 +20,13 @@ def showHistory(tasks, describeTask):
 	revMap = dict([((rev.id, rev.revision), rev) for rev in revs]) # Map (id, revision #) to the revision
 
 	print "<div class=\"revision-history\">"
-	fields = set(Task.fields()) - set(['creatorid', 'timestamp', 'revision', 'hours'])
+	fields = (set(Task.fields()) | set(['assigned'])) - set(['creatorid', 'timestamp', 'revision', 'hours'])
 	prevDay = None
 	strings = {
 		'status': ("revision-%(status)s", "%(statusRevVerb)s by %(editor)s"),
 		'name': ("revision-renamed", "Renamed <b>%(name)s</b> by %(editor)s"),
 		'deleted': ("revision-%(deleted)s", "%(deleted)s by %(editor)s"),
-		'assignedid': ("revision-assigned", "Assigned to %(assignee)s by %(editor)s"),
+		'assigned': ("revision-assigned", "Assigned to %(assignee)s by %(editor)s"),
 		'goalid': ("tag-blue", "Set sprint goal <b>%(goal)s</b> by %(editor)s"),
 		'groupid': None
 	}
@@ -34,7 +34,7 @@ def showHistory(tasks, describeTask):
 	for rev in revs:
 		entries = []
 		if rev.revision == 1:
-			entries.append(('revision-create', "<b>%s</b> created by %s. Assigned to %s, %s, %d %s remain" % (rev.safe.name, userStr(rev), userStr(rev, rev.assigned), rev.getStatus().text.lower(), rev.hours, 'hour' if rev.hours == 1 else 'hours')))
+			entries.append(('revision-create', "<b>%s</b> created by %s. Assigned to %s, %s, %d %s remain" % (rev.safe.name, userStr(rev), ' '.join(userStr(rev, user) for user in rev.assigned), rev.getStatus().text.lower(), rev.hours, 'hour' if rev.hours == 1 else 'hours')))
 			if rev.deleted:
 				entries.append(('revision-deleted', strings['deleted'][1] % {'deleted': 'Deleted', 'editor': userStr(rev)}))
 		else:
@@ -44,7 +44,7 @@ def showHistory(tasks, describeTask):
 				'status': rev.getStatus().name,
 				'statusRevVerb': rev.getStatus().revisionVerb,
 				'editor': userStr(rev),
-				'assignee': userStr(rev, rev.assigned),
+				'assignee': ' '.join(userStr(rev, user) for user in rev.assigned),
 				'name': rev.safe.name,
 				'deleted': 'Deleted' if rev.deleted else 'Undeleted',
 				'goal': rev.goal.safe.name if rev.goal else None

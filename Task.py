@@ -38,7 +38,6 @@ def getStatuses(tag = None):
 class Task(ActiveRecord):
 	sprint = ActiveRecord.idObjLink(Sprint, 'sprintid')
 	creator = ActiveRecord.idObjLink(User, 'creatorid')
-	assigned = ActiveRecord.idObjLink(User, 'assignedid')
 	group = ActiveRecord.idObjLink(Group, 'groupid')
 	goal = ActiveRecord.idObjLink(Goal, 'goalid')
 
@@ -46,14 +45,13 @@ class Task(ActiveRecord):
 	def setStatus(self, stat): self.status = stat.name
 	stat = property(getStatus, setStatus)
 
-	def __init__(self, groupid, sprintid, creatorid, assignedid, goalid, name, status, hours, seq = None, timestamp = None, deleted = 0, revision = 1, id = None):
+	def __init__(self, groupid, sprintid, creatorid, goalid, name, status, hours, seq = None, timestamp = None, deleted = 0, revision = 1, id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.revision = revision
 		self.groupid = groupid
 		self.sprintid = sprintid
 		self.creatorid = creatorid
-		self.assignedid = assignedid
 		self.goalid = goalid
 		self.name = name
 		self.status = status
@@ -61,6 +59,7 @@ class Task(ActiveRecord):
 		self.timestamp = timestamp if timestamp else max(dateToTs(getNow()), self.sprint.start)
 		self.seq = seq if seq else maxOr(task.seq for task in self.group.getTasks())+1
 		self.deleted = deleted
+		self.assigned = ActiveRecord.loadLink(self, 'assigned', [('taskid', self.id), ('revision', self.revision)], User, 'userid')
 
 	def __str__(self):
 		return self.safe.name
@@ -88,12 +87,15 @@ class Task(ActiveRecord):
 		from Note import Note
 		return Note.loadAll(taskid = self.id, orderby = 'timestamp ASC')
 
+	def manHours(self):
+		return self.hours * len(self.assigned)
+
 	### Data that depends on task status/history
 
 	def earnedValueHours(self):
 		if self.status != 'complete': return 0
 		tOrig = self.getRevisionAt(tsToDate(self.sprint.start))
-		return tOrig.hours if tOrig else 0
+		return tOrig.hours * min(len(tOrig.assigned), len(self.assigned)) if tOrig else 0
 
 	def historyEndsOn(self):
 		return self.sprint.end if self.stillOpen() else self.timestamp
@@ -137,11 +139,12 @@ class Task(ActiveRecord):
 			rows = db().select("SELECT MAX(id) FROM tasks");
 			rows = [x for x in rows]
 			self.id = (rows[0]['MAX(id)'] or 0) + 1
-			db().update("INSERT INTO tasks(id, revision) VALUES(?, ?)", self.id, 1)
+			db().update("INSERT INTO tasks(id, revision, seq) VALUES(?, ?, ?)", self.id, 1, self.seq)
 
 			# Shift everything after this sequence
 			db().update("UPDATE tasks SET seq = seq + 1 WHERE groupid = ? AND seq >= ?", self.groupid, self.seq)
-		return ActiveRecord.save(self, pks = ['id', 'revision'])
+		ActiveRecord.save(self, pks = ['id', 'revision'])
+		ActiveRecord.saveLink(self, self.assigned, 'assigned', [('taskid', self.id), ('revision', self.revision)], User, 'userid')
 
 	def move(self, newPred, newGroup):
 		# newPred = None means move to the top of newGroup
@@ -190,6 +193,7 @@ class Task(ActiveRecord):
 
 		placeholders = ', '.join(map(lambda x: "?", fields))
 		db().update("INSERT INTO %s(%s) VALUES(%s)" % (cls.table(), ', '.join(fields), placeholders), *boundArgs)
+		ActiveRecord.saveLink(self, self.assigned, 'assigned', [('taskid', self.id), ('revision', self.revision)], User, 'userid')
 
 	def saveRevision(self, author):
 		self.creator = author

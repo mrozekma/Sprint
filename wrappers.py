@@ -39,7 +39,7 @@ def header(handler, path):
 	print "    background-color: $headerbg$;"
 	print "}"
 	if handler.session['user']:
-		print ".username[username=\"%s\"] {" % handler.session['user'].username
+		print ".username[username~=\"%s\"] {" % handler.session['user'].username
 		print "    color: #C00;"
 		print "    font-weight: bold;"
 		print "}"

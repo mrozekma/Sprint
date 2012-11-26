@@ -524,6 +524,10 @@ img.user, img.project, img.sprint {
 	display: none;
 }
 
+#assigned-menu.contextMenu li a {
+	height: auto;
+}
+
 table.tasks td {
 	vertical-align: top;
 }
@@ -649,6 +653,10 @@ table.tasks tr.task td.assigned > img {
 	position: relative;
 	top: 2px;
 	left: 2px;
+}
+
+table.tasks tr.task td.assigned span span.username[username*=" "] {
+	font-style: italic;
 }
 
 table.tasks tr.task td.hours {
@@ -940,6 +948,10 @@ table.task-import td.group select {
 	max-width: 300px;
 }
 
+table.task-import td.assigned > * {
+	width: 200px;
+}
+
 table.task-import td.hours input {
 	width: 32px;
 }
@@ -1198,6 +1210,10 @@ div.clear {
 	-webkit-animation-duration: 2s;
 	-webkit-animation-timing-function: ease-in-out;
 	-webkit-animation-iteration-count: infinite;
+}
+
+.distribution .tasks .task.team {
+	font-style: italic;
 }
 
 img.admin-icon {
@@ -1510,4 +1526,8 @@ table#task-edit-values td.right button {
 	top: 0px;
 	right: 0px;
 	padding-right: 0px;
+}
+
+.contextMenu li.selected {
+	font-weight: bold;
 }

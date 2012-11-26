@@ -61,7 +61,7 @@ class HoursChart(Chart):
 		seriesList.append(series)
 
 		for day in days[:futureIndex]:
-			series['data'].append(sum(t.hours if t and not t.deleted else 0 for t in [t.getRevisionAt(day) for t in tasks]))
+			series['data'].append(sum(t.manHours() if t and not t.deleted else 0 for t in [t.getRevisionAt(day) for t in tasks]))
 
 		series = {
 			'name': 'Availability',
@@ -208,7 +208,7 @@ class HoursByUserChart(Chart):
 			seriesList.append(series)
 
 			for day in days:
-				series['data'].append(sum(t.hours if t and t.assigned == user and not t.deleted else 0 for t in [t.getRevisionAt(day) for t in tasks]))
+				series['data'].append(sum(t.hours if t and user in t.assigned and not t.deleted else 0 for t in [t.getRevisionAt(day) for t in tasks]))
 
 		setupTimeline(self, sprint)
 
@@ -242,7 +242,7 @@ class CommitmentChart(Chart):
 		clrGen = cycle(clrs)
 		total = sum(t.hours for t in originalTasks)
 		for user in sorted(sprint.members):
-			hours = sum(t.hours for t in originalTasks if t.assignedid == user.id)
+			hours = sum(t.hours for t in originalTasks if user in t.assigned)
 			series['data'].append({
 				'name': user.username,
 				'x': hours,
@@ -262,7 +262,7 @@ class CommitmentChart(Chart):
 		clrGen = cycle(clrs)
 		total = sum(t.hours for t in tasks)
 		for user in sorted(sprint.members):
-			hours = sum(t.hours for t in tasks if t.assignedid == user.id)
+			hours = sum(t.hours for t in tasks if user in t.assigned)
 			series['data'].append({
 				'name': user.username,
 				'x': hours,

@@ -44,6 +44,7 @@ if(jQuery)( function() {
 							var menu = $('#' + o.menu);
 							
 							if( $(el).hasClass('disabled') ) return false;
+							if( o.preShow != undefined ) o.preShow(menu, $(srcElement));
 							
 							// Detect mouse position
 							var d = {}, x, y;
@@ -108,11 +109,11 @@ if(jQuery)( function() {
 							
 							// When items are selected
 							$('#' + o.menu).find('A').unbind('click');
-							$('#' + o.menu).find('LI:not(.disabled) A').click( function() {
+							$('#' + o.menu).find('LI:not(.disabled) A').click( function(e) {
 								$(document).unbind('click').unbind('keypress');
 								$(".contextMenu").hide();
 								// Callback
-								if( callback ) callback( $(this).attr('href').substr(1), $(srcElement), {x: x - offset.left, y: y - offset.top, docX: x, docY: y} );
+								if( callback ) callback( $(this).attr('href').substr(1), $(srcElement), {x: x - offset.left, y: y - offset.top, docX: x, docY: y}, e );
 								return false;
 							});
 							

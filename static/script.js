@@ -63,13 +63,9 @@ $(document).ready(function () {
 				}
 			}, 'json');
 
-			// $('#saved-searches').html('<h1>Your saved searches</h1><a href="#">Saved search number one</a><br><a href="#">Saved search number two</a><br><h1>Other users\' saved searches</h1><a href="#">Test</a><img src="http://www.gravatar.com/avatar/d574ce53d0c3bc71efa0a73c9a197759?s=16&d=wavatar&r=pg" class="gravatar"><br><a href="#">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer eget enim ut metus bibendum vestibulum sed tempor orci. Cras dignissim molestie accumsan</a><img src="http://www.gravatar.com/avatar/d574ce53d0c3bc71efa0a73c9a197759?s=16&d=wavatar&r=pg" class="gravatar"><br><a href="#">Test</a><img src="http://www.gravatar.com/avatar/d574ce53d0c3bc71efa0a73c9a197759?s=16&d=wavatar&r=pg" class="gravatar"><br>');
-			
 			$(document).click(closeSearchBox);
 		}
 	});
-
-	// console.log($('.topmenu a:contains("Search")').position());
 });
 
 $.expr[":"].econtains = function(obj, index, meta, stack) {

@@ -31,6 +31,7 @@ def check():
 			exit(0)
 		elif int(settings.dbVersion) == dbVersion:
 			print "Unable to update -- already at database version %d" % dbVersion
+			exit(1)
 	if int(settings.dbVersion) < dbVersion:
 		print "The database is %s behind. Run %s --update to update it" % (pluralize(dbVersion - int(settings.dbVersion), 'version', 'versions'), sys.argv[0])
 		exit(1)

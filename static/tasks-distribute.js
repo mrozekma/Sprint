@@ -109,7 +109,7 @@ function process() {
 			}
 			for(i in user.tasks) {
 				task = user.tasks[i];
-				row = $('<div/>').addClass('task').toggleClass('important', task.important).attr('taskid', task.id).text(task.text)
+				row = $('<div/>').addClass('task').toggleClass('important', task.important).toggleClass('team', task.team).attr('taskid', task.id).text(task.text)
 				$('.group[groupid=' + task.groupid + ']', tasks).append(row);
 				row.click(function() {
 					targetUser = (side == 'left' ? userRight : userLeft);

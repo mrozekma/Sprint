@@ -82,7 +82,7 @@ def task(handler, request, ids):
 		if task.goal:
 			print "to meet the goal&nbsp;&nbsp;<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;<a href=\"/sprints/%d?search=goal:%s\">%s</a>" % (task.goal.color, task.sprintid, task.goal.color, task.goal.safe.name),
 		print "<br>"
-		print "Assigned to %s<br>" % task.assigned
+		print "Assigned to %s<br>" % ', '.join(map(str, task.assigned))
 		print "Last changed %s ago<br><br>" % timesince(tsToDate(task.timestamp))
 		hours, total, lbl = task.hours, startRev.hours, "<b>%s</b>" % statuses[task.status].text
 		if task.deleted:
@@ -181,7 +181,7 @@ def newTaskSingle(handler, request, group):
 	# name, assigned, hours, status, sprint, group
 
 	print "<style type=\"text/css\">"
-	print "table.list td.right * {width: 400px;}"
+	print "table.list td.right > * {width: 400px;}"
 	print "table.list td.right button {width: 200px;}" # Half of the above value
 	print "</style>"
 	print "<script type=\"text/javascript\">"
@@ -218,9 +218,9 @@ def newTaskSingle(handler, request, group):
 	print "</status>"
 	print "</td></tr>"
 	print "<tr><td class=\"left\">Assigned:</td><td class=\"right\">"
-	print "<select id=\"select-assigned\" name=\"assigned\" size=\"10\">"
+	print "<select id=\"select-assigned\" name=\"assigned[]\" data-placeholder=\"Choose assignees (or leave blank to self-assign)\" size=\"10\" multiple>"
 	for user in sorted(group.sprint.members):
-		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user == handler.session['user'] else '', user.safe.username)
+		print "<option value=\"%d\">%s</option>" % (user.id, user.safe.username)
 	print "</select>"
 	print "</td></tr>"
 	print "<tr><td class=\"left\">Hours:</td><td class=\"right\"><input type=\"text\" name=\"hours\" value=\"8\"></td></tr>"
@@ -232,7 +232,7 @@ def newTaskSingle(handler, request, group):
 	print "</form>"
 
 @post('tasks/new/single')
-def newTaskPost(handler, request, p_group, p_name, p_goal, p_status, p_assigned, p_hours):
+def newTaskPost(handler, request, p_group, p_name, p_goal, p_status, p_hours, p_assigned = []):
 	def die(msg):
 		print msg
 		done()
@@ -254,10 +254,12 @@ def newTaskPost(handler, request, p_group, p_name, p_goal, p_status, p_assigned,
 	if p_name.strip() == '':
 		die("Task must have a non-empty name")
 
-	assignedid = to_int(p_assigned, 'assigned', die)
-	assigned = User.load(assignedid)
-	if not assigned:
-		die("No user with ID <b>%d</b>" % assignedid)
+	assignedids = map(lambda i: to_int(i, 'assigned', die), p_assigned)
+	assigned = [User.load(assignedid) for assignedid in assignedids]
+	if assigned == []:
+		assigned = [handler.session['user']]
+	if not all(assigned):
+		die("Invalid assignee")
 
 	goalid = to_int(p_goal, 'goal', die)
 	if goalid != 0:
@@ -269,7 +271,8 @@ def newTaskPost(handler, request, p_group, p_name, p_goal, p_status, p_assigned,
 
 	hours = to_int(p_hours, 'hours', die)
 
-	task = Task(groupid, group.sprintid, handler.session['user'].id, assignedid, goalid, p_name, p_status, hours)
+	task = Task(groupid, group.sprintid, handler.session['user'].id, goalid, p_name, p_status, hours)
+	task.assigned += assigned
 	task.save()
 
 	request['code'] = 299
@@ -312,7 +315,7 @@ def newTaskMany(handler, request, group):
 	print "<li><b>X</b> &mdash; A single character changes the field separator to that character. The default field separator is |, so that's used in the examples here</li>"
 	print "<li><b>X...X:</b> &mdash; A line ending in a colon is a group name. All tasks after that line will be added to that group. If no group of that name exists, it will be created (the preview will label that group as \"(NEW)\"). A blank line switches back to the default group, which is the group you clicked the new task button on, %s" % defaultGroup.safe.name
 	print "<li><b>X...X|X...X|X...X[|X...X]</b> &mdash; 3 or 4 fields are a new task. The fields can appear in any order:<ul>"
-	print "<li><b>assignee</b> &mdash; The person assigned to this task</li>"
+	print "<li><b>assignee</b> &mdash; The person assigned to this task. If multiple people, separate usernames with spaces</li>"
 	print "<li><b>hours</b> &mdash; The number of hours this task will take</li>"
 	print "<li><b>status</b> &mdash; The initial status of the task. This field is optional; it defaults to \"not started\"</li>"
 	print "<li><b>name</b> &mdash; The name of the task</li>"
@@ -326,6 +329,7 @@ def newTaskMany(handler, request, group):
 	print "<textarea id=\"many-body\" name=\"body\" class=\"defaultfocus\"></textarea>"
 
 	print "<div id=\"preview\"></div>"
+	print InfoBox('Loading...', id = 'post-status', close = True)
 	print "<div id=\"new-task-many-buttons\">"
 	print Button('Save All', id = 'save-button', type = 'button').positive()
 	print Button('Cancel', id = 'cancel-button', type = 'button').negative()
@@ -393,8 +397,8 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 							continue
 
 						# Assigned
-						if assigned is None and part in map(lambda u: u.username, sprint.members):
-							assigned = User.load(username = part)
+						if assigned is None and set(part.split(' ')) <= set(u.username for u in sprint.members):
+							assigned = [User.load(username = username) for username in part.split(' ')]
 							continue
 
 						# Name
@@ -421,7 +425,7 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 			print "<br>"
 			print "<b>%s%s</b><br>" % (group.safe.name, ' (NEW)' if group in newGroups else '')
 			for name, assigned, status, hours in tasks[group]:
-				print "%s (assigned to %s, %s, %d %s)<br>" % (stripTags(name), assigned, status, hours, 'hour remains' if hours == 1 else 'hours remain')
+				print "%s (assigned to %s, %s, %d %s)<br>" % (stripTags(name), ' '.join(map(str, assigned)), status, hours, 'hour remains' if hours == 1 else 'hours remain')
 	else:
 		for group in groups:
 			# Changing a group's ID will change its hash, so this pulls from tasks before saving the group in case it's new
@@ -430,7 +434,8 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 				group.id = 0
 			group.save()
 			for name, assigned, status, hours in groupTasks:
-				task = Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, status, hours)
+				task = Task(group.id, group.sprint.id, handler.session['user'].id, 0, name, status, hours)
+				task.assigned += assigned
 				task.save()
 				Event.newTask(handler, task)
 
@@ -483,7 +488,7 @@ def newTaskImport(handler, request, group, source = None):
 			ErrorBox.die('Invalid Sprint', "No sprint with ID <b>%d</b>" % id)
 		print "<b>Source sprint</b>: <a href=\"/sprints/%d\">%s</a><br>" % (source.id, source.name)
 		print "<b>Target sprint</b>: <a href=\"/sprints/%d\">%s</a><br><br>" % (sprint.id, sprint.name)
-		print "All incomplete tasks are listed here, with their current values from the source sprint. You can change any of the fields before importing.<br><br>"
+		print "All incomplete tasks are listed here, with their current values from the source sprint. You can change any of the fields before importing. Unassigned tasks will be assigned to the scrummaster<br><br>"
 
 		groups = source.getGroups()
 		names = [g.name for g in groups]
@@ -503,10 +508,10 @@ def newTaskImport(handler, request, group, source = None):
 			for g in groups:
 				print "<option value=\"%d\"%s>%s</option>" % (g.id, ' selected' if g == task.group else '', g.name + ('' if g.name in existingNames else ' (NEW)'))
 			print "</select></td>"
-			print "<td><select name=\"assigned[%d]\">" % task.id
-			assigned = task.assigned if task.assigned in sprint.members else sprint.owner
+			print "<td class=\"assigned\"><select name=\"assigned[%d][]\" data-placeholder=\"Previously %s\" multiple>" % (task.id, ' '.join(user.username for user in task.assigned))
+			assigned = filter(lambda user: user in sprint.members, task.assigned)
 			for member in sprint.members:
-				print "<option value=\"%s\"%s>%s</option>" % (member.id, ' selected' if member == assigned else '', member.username)
+				print "<option value=\"%s\"%s>%s</option>" % (member.id, ' selected' if member in assigned else '', member.username)
 			print "</select></td>"
 			print "<td class=\"hours\"><input type=\"text\" name=\"hours[%d]\" value=\"%d\"></td>" % (task.id, task.hours)
 			print "</tr>"
@@ -536,13 +541,12 @@ def newTaskImportPost(handler, request, group, source, p_group, p_name, p_hours,
 		ErrorBox.die('Invalid Sprint', "No sprint with ID <b>%d</b>" % id)
 
 	ids = p_include.keys()
-	if not all(map(lambda id: id in p_group and id in p_name and id in p_hours and id in p_assigned, ids)):
+	if not all(map(lambda id: id in p_group and id in p_name and id in p_hours, ids)):
 		ErrorBox.die('Malformed Request', 'Incomplete form data')
 
 	groups, numGroups = {}, 0
-	# Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, status, hours).save()
 	for id in ids:
-		groupID, name, hours, assignedID = int(p_group[id]), p_name[id], int(p_hours[id]), int(p_assigned[id])
+		groupID, name, hours = int(p_group[id]), p_name[id], int(p_hours[id])
 		if not groupID in groups:
 			groups[groupID] = Group.load(groupID)
 			if not groups[groupID]:
@@ -557,11 +561,12 @@ def newTaskImportPost(handler, request, group, source, p_group, p_name, p_hours,
 					groups[groupID].save()
 		group = groups[groupID]
 
-		assigned = User.load(assignedID)
-		if not assigned:
-			ErrorBox.die('Malformed Request', "Invalid user ID %d" % assignedID)
+		assigned = [User.load(int(assignedID)) for assignedID in p_assigned[id]] if id in p_assigned else [sprint.owner]
+		if not all(assigned):
+			ErrorBox.die('Malformed Request', "Invalid user ID(s): %s" % ', '.join(map(stripTags, assignedID)))
 
-		task = Task(group.id, group.sprint.id, handler.session['user'].id, assigned.id, 0, name, 'not started', hours)
+		task = Task(group.id, group.sprint.id, handler.session['user'].id, 0, name, 'not started', hours)
+		task.assigned += assigned
 		task.save()
 		Event.newTask(handler, task)
 
@@ -660,19 +665,19 @@ def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_task = N
 		if not task:
 			die("Invalid task ID")
 
-		task.assigned = user
+		task.assigned = [user]
 		if task.creator == handler.session['user'] and (dateToTs(getNow()) - task.timestamp) < 5*60:
 			task.save()
 		else:
 			task.saveRevision(handler.session['user'])
-		Event.taskUpdate(handler, task, 'assigned', user)
+		Event.taskUpdate(handler, task, 'assigned', task.assigned)
 
 	# Return current info
 	tasks = filter(lambda task: task.stillOpen(), sprint.getTasks())
 	avail = Availability(sprint)
 	m = {}
 	for user in sprint.members:
-		userTasks = filter(lambda task: task.assigned == user, tasks)
+		userTasks = filter(lambda task: user in task.assigned, tasks)
 		m[user.id] = {
 			'username': user.username,
 			'hours': sum(task.hours for task in userTasks),
@@ -686,7 +691,8 @@ def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_task = N
 				'groupid': task.group.id,
 				'hours': task.hours,
 				'text': "(%d) %s" % (task.hours, task.name),
-				'important': task.hours > 8
+				'important': task.hours > 8,
+				'team': len(task.assigned) > 1
 			} for task in userTasks]
 		}
 	print toJS(m)
@@ -799,7 +805,7 @@ def taskEdit(handler, request, ids):
 	for task in tasks:
 		print "<tr><td class=\"task-name\" colspan=\"4\"><input type=\"checkbox\" id=\"task%d\" name=\"include[%d]\" checked=\"true\">&nbsp;<label for=\"task%d\">%s</label></td></tr>" % (task.id, task.id, task.id, task.safe.name)
 		print "<tr class=\"task-fields\">"
-		print "<td class=\"task-assigned\">%s</td>" % task.assigned
+		print "<td class=\"task-assigned\">%s</td>" % ', '.join(map(str, task.assigned))
 		print "<td class=\"task-hours\"><img src=\"/static/images/time-icon.png\">&nbsp;%d %s</td>" % (task.hours, 'hour' if task.hours == 1 else 'hours')
 		print "<td class=\"task-status\"><img class=\"status\" src=\"%s\">&nbsp;%s</td>" % (task.stat.icon, task.stat.text)
 		print "<td class=\"task-goal\"><img class=\"goal\" src=\"/static/images/tag-%s.png\">&nbsp;%s</td>" % ((task.goal.color, task.goal.safe.name) if task.goal else ('none', 'None'))

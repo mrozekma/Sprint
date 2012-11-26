@@ -41,11 +41,13 @@ class MessageDispatcher(EventHandler):
 			self.sendMessage(handler, member, 'sprintMembership', sprint.link(member))
 
 	def newTask(self, handler, task):
-		self.sendMessage(handler, task.assigned, 'taskAssigned', task.link())
+		for user in task.assigned:
+			self.sendMessage(handler, user, 'taskAssigned', task.link())
 
 	def taskUpdate(self, handler, task, field, value):
 		if field == 'assigned':
-			self.sendMessage(handler, task.assigned, 'taskAssigned', task.link())
+			for user in task.assigned:
+				self.sendMessage(handler, user, 'taskAssigned', task.link())
 
 	def newNote(self, handler, note):
 		usersContacted = []
@@ -55,9 +57,10 @@ class MessageDispatcher(EventHandler):
 				usersContacted.append(user)
 				self.sendMessage(handler, user, 'noteMention', "<a href=\"/tasks/%d#note%d\">%s</a>" % (note.task.id, note.id, note.task.safe.name))
 
-		if note.task.assigned not in usersContacted:
-			usersContacted.append(note.task.assigned)
-			self.sendMessage(handler, note.task.assigned, 'noteRelated', "<a href=\"/tasks/%d#note%d\">%s</a>" % (note.task.id, note.id, note.task.safe.name), "a task assigned to you")
+		for user in note.task.assigned:
+			if user not in usersContacted:
+				usersContacted.append(user)
+				self.sendMessage(handler, user, 'noteRelated', "<a href=\"/tasks/%d#note%d\">%s</a>" % (note.task.id, note.id, note.task.safe.name), "a task assigned to you")
 
 		for note in Note.loadAll(taskid = note.task.id):
 			if note.user not in usersContacted:

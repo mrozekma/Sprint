@@ -264,6 +264,17 @@ function apply_filters() {
 		$('#filter-assigned a:not(.selected)').each(function() {
 			tasks.filter('[assigned="' + $(this).attr('assigned') + '"]').hide();
 		});
+
+		// Special-case many-assigned tasks; hide if all of the assignees are unselected
+		tasks.filter('[assigned*=" "]').each(function() {
+			assigned = $(this).attr('assigned').split(' ');
+			for(i in assigned) {
+				if($('#filter-assigned a[assigned=' + assigned[i] + ']').hasClass('selected')) {
+					return;
+				}
+			}
+			$(this).hide();
+		});
 	}
 
 	if(statuses.length > 0) {
@@ -377,18 +388,76 @@ function fancy_cells(table_selector) {
 	$('td.name > span', $(table_selector)).click(editFn);
 
 	$('td.assigned > span', $(table_selector)).contextMenu({
-		menu: 'assigned-menu'
-	}, function(action, el, pos) {
-		sp = $('span.username', el);
-		if(sp.attr('username') == action) {
+		menu: 'assigned-menu',
+		preShow: function(menu, el) {
+			// Mark the right users as already assigned
+			$('li.selected', menu).removeClass('selected');
+			assigned = $(el).parents('tr.task').attr('assigned').split(' ');
+			for(i in assigned) {
+				$('li a[href="#' + assigned[i] + '"]', menu).parents('li').addClass('selected');
+			}
+
+			// Find list of current teams
+			teams = {}
+			$('[assigned*=" "]', $(table_selector)).each(function() {
+				teams[$(this).attr('assigned')] = 1;
+			});
+
+			// Add links for current teams
+			$('li.team', menu).remove();
+			for(team in teams) {
+				if(team == assigned.join(' ')) {
+					continue;
+				}
+
+				node = $('<li/>');
+				node.addClass('team separator');
+				node.append($('<a href="#' + team + '"/>').text(team));
+				menu.append(node);
+			}
+		}
+	}, function(action, el, pos, e) {
+		task = $(el).parents('tr.task');
+
+		if(action.indexOf(' ') >= 0) {
+			assigned = action.split(' ');
+		} else if(e.ctrlKey) {
+			assigned = task.attr('assigned').split(' ');
+			idx = assigned.indexOf(action);
+			if(idx >= 0) {
+				if(assigned.length == 1) {
+					return;
+				}
+				assigned.splice(idx, 1);
+			} else {
+				assigned.push(action);
+			}
+		} else {
+			assigned = [action];
+		}
+
+		assigned.sort();
+		assigned_str = assigned.join(' ');
+		if(task.attr('assigned') == assigned_str) {
 			return;
 		}
 
-		sp.attr('username', action);
-		sp.text(action);
-		task = $(el).parents('tr.task');
-		task.attr('assigned', action);
-		save_task(task, 'assigned', action);
+		task.attr('assigned', assigned_str);
+		if(assigned.length > 1) {
+			$('td.assigned span img', task).attr('src', '/static/images/team.png');
+			$('td.assigned span span.username', task)
+				.attr('username', assigned_str)
+				.attr('title', assigned_str)
+				.text("team (" + assigned.length + ")");
+		} else {
+			$('td.assigned span img', task).attr('src', '/static/images/member.png');
+			$('td.assigned span span.username', task)
+				.attr('username', assigned[0])
+				.attr('title', '')
+				.text(assigned[0]);
+		}
+
+		save_task(task, 'assigned', assigned_str);
 	});
 
 	$('tr.task img.status', $(table_selector)).contextMenu({

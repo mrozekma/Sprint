@@ -18,7 +18,7 @@ class Sprint(ActiveRecord):
 		self.ownerid = ownerid
 		self.start = start
 		self.end = end
-		self.members = ActiveRecord.loadLink(self, 'members', 'sprintid', User, 'userid')
+		self.members = ActiveRecord.loadLink(self, 'members', [('sprintid', self.id)], User, 'userid')
 
 	@classmethod
 	def loadAllActive(cls):
@@ -26,7 +26,7 @@ class Sprint(ActiveRecord):
 
 	def save(self):
 		ActiveRecord.save(self)
-		ActiveRecord.saveLink(self, self.members, 'members', 'sprintid', User, 'userid')
+		ActiveRecord.saveLink(self, self.members, 'members', [('sprintid', self.id)], User, 'userid')
 
 	def getStartStr(self):
 		return formatDate(tsToDate(self.start))
@@ -103,7 +103,7 @@ class Sprint(ActiveRecord):
 			rtn.append("%d members have no <a href=\"/sprints/%d/availability\">availability</a>" % (len(zeroes), self.id))
 
 		# Users with >100% commitment
-		overcommitted = filter(lambda user: userAvails[user] < sum(task.hours for task in tasks if task.assigned == user), self.members)
+		overcommitted = filter(lambda user: userAvails[user] < sum(task.hours for task in tasks if user in task.assigned), self.members)
 		if len(overcommitted) == 1:
 			rtn.append("%s is <a href=\"/sprints/%d/metrics#commitment-by-user\">overcommitted</a>" % (overcommitted[0], self.id))
 		elif len(overcommitted) > 0:

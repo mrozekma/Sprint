@@ -282,20 +282,22 @@ class ActiveRecord(object):
 	def idObjLink(cls, field):
 		return property(ActiveRecord.idToObj(cls, field), ActiveRecord.objToId(field), None)
 
-	def loadLink(self, table, col, otherCls, otherCol):
-		if not self.id: return []
+	def loadLink(self, table, cols, otherCls, otherCol):
+		if not all(v for k, v in cols): return []
 
-		rows = db().select("SELECT %s FROM %s WHERE %s = ?" % (otherCol, table, col), self.id)
+		placeholders = ' AND '.join("%s = ?" % k for k, v in cols)
+		rows = db().select("SELECT %s FROM %s WHERE %s" % (otherCol, table, placeholders), *[v for k, v in cols])
 		return map(lambda x: otherCls.load(x[otherCol]), rows)
 
-	def saveLink(self, link, table, col, otherCls, otherCol):
-		if not self.id: raise ValueError("Attempted to save link before saving object")
+	def saveLink(self, link, table, cols, otherCls, otherCol):
+		if not all(v for k, v in cols): raise ValueError("Attempted to save link before saving object")
+		placeholders = ', '.join('?' for k, v in cols)
 		for i in link:
-			db().update("INSERT OR REPLACE INTO %s(%s, %s) VALUES(?, ?)" % (table, col, otherCol), self.id, i.id)
+			db().update("INSERT OR REPLACE INTO %s(%s, %s) VALUES(?, %s)" % (table, otherCol, ', '.join(k for k, v in cols), placeholders), i.id, *[v for k, v in cols])
 
-		placeholders = ' AND '.join("%s != ?" % otherCol for i in link)
-		vals = [i.id for i in link]
-		db().update("DELETE FROM %s WHERE %s = ? AND %s" % (table, col, placeholders), self.id, *vals)
+		placeholders = ' AND '.join("%s = ?" % k for k, v in cols) + ' '.join("AND %s != ?" % otherCol for i in link)
+		vals = [v for k, v in cols] + [i.id for i in link]
+		db().update("DELETE FROM %s WHERE %s" % (table, placeholders), *vals)
 
 	def __eq__(self, other):
 		return self and other and self.id == other.id

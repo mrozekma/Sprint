@@ -69,7 +69,7 @@ class DBLogger(EventHandler):
 			"sprint: %s" % task.sprint.link(None),
 			"group: %s" % task.group.safe.name,
 			"creator: %s" % task.creator,
-			"assigned: %s" % task.assigned,
+			"assigned: %s" % ' '.join(map(str, task.assigned)),
 			"status: %s" % task.getStatus().text,
 			"hours: %d" % task.hours,
 			"seq: %d" % task.seq
@@ -80,6 +80,8 @@ class DBLogger(EventHandler):
 	def taskUpdate(self, handler, task, field, value):
 		if field == 'name':
 			value = stripTags(str(value))
+		elif field == 'assigned':
+			value = ', '.join(map(str, value))
 		log(handler, 'task.update', "Task %d\n%s: %s" % (task.id, field, value))
 
 	def newNote(self, handler, note):

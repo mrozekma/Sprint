@@ -236,7 +236,7 @@ $(document).ready(function() {
 		print "pointStart: %d," % (sprint.start * 1000)
 		print "pointInterval: 24 * 3600 * 1000,"
 		print "data: [",
-		userTasks = filter(lambda t: t.assigned == user, tasks)
+		userTasks = filter(lambda t: user in t.assigned, tasks)
 		seek = start
 		while seek <= end:
 			print "%d," % sum(t.hours if t else 0 for t in [t.getRevisionAt(seek) for t in userTasks]),
@@ -545,7 +545,7 @@ def test(handler, request, id):
 		# print "%s<br>" % task.revision
 		# print "%s<br>" % task.sprint
 		# print "%s<br>" % task.creator
-		# print "%s<br>" % task.assigned
+		# print "%s<br>" % ', '.join(map(str, task.assigned))
 		# print "%s<br>" % task.name
 		# print "%s<br>" % task.timestamp
 		# print "<hr>"
