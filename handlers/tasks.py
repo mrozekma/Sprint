@@ -757,6 +757,7 @@ def tasksMine(handler, request):
 def taskEdit(handler, request, ids):
 	handler.title("Edit tasks")
 	requirePriv(handler, 'Write')
+	print "<script src=\"/static/tasks-edit.js\" type=\"text/javascript\"></script>"
 
 	ids = map(int, uniq(ids.split(',')))
 	tasks = dict((id, Task.load(id)) for id in ids)
