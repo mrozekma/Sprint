@@ -61,25 +61,30 @@ function setup_hours_events() {
 	$("td.hours input").focus(function(event) {
 		hours_cache = parseInt($('input', $(this).parents('.hours')).val(), 10);
 	}).blur(function(event) {
-		hours_blur($(this));
+		hours_blur($(this), true);
 	}).keypress(function(event) {
 		field = $(this);
 		clearTimeout(hours_timer);
 		hours_timer = setTimeout(function() {
 			hours_timer = null;
-			hours_blur(field);
+			hours_blur(field, false);
 		}, 750);
 	});
 }
 
-function hours_blur(field) {
+function hours_blur(field, done) {
 	clearTimeout(hours_timer);
 	task = field.parents('tr.task');
 	field = $('input', field.parents('.hours'));
 	val = parseInt(field.val(), 10);
 	if(hours_cache < 0) {
 		console.log("Problem blurring hours field; hours cache is unset");
+	} else if(isNaN(val)) {
+		if(done) {
+			field.val(hours_cache);
+		}
 	} else if(val != hours_cache) {
+		hours_cache = val;
 		save_task(task, 'hours', val);
 		if(!isPlanning) {
 			set_status(task, val == 0 ? 'complete' : 'in progress');
