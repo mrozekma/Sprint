@@ -3,7 +3,6 @@
 }
 
 body {
-	text-align: center;
 	background-color: #EEE;
 }
 
@@ -52,6 +51,7 @@ code {
 }
 
 .footer_timestamp {
+	text-align: center;
 	font-size: 70%;
 }
 

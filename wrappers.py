@@ -21,11 +21,10 @@ def header(handler, path):
 	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/bootstrap.css\">"
 	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/syntax-highlighting.css\">"
 	print "<link rel=\"shortcut icon\" href=\"/static/images/favicon.ico\">"
-	print "<script src=\"/static/jquery.js\" type=\"text/javascript\"></script>"
 
+	print "<script src=\"/static/jquery.js\" type=\"text/javascript\"></script>"
 	print "<link rel=\"stylesheet\" href=\"/static/jquery-ui-1.8.14.custom.css\">"
 	print "<script src=\"/static/jquery-ui-1.8.14.custom.min.js\" type=\"text/javascript\"></script>"
-
 	print "<link href=\"/static/jquery.contextMenu.css\" rel=\"stylesheet\" type=\"text/css\" />"
 	print "<script src=\"/static/jquery.contextMenu.js\"></script>"
 

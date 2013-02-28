@@ -24,6 +24,7 @@ def users(handler, request):
 	for user in users:
 		print "<div class=\"user-list-entry\"><a href=\"/users/%s\"><img src=\"%s\"></a><br>%s</div>" % (user.username, user.getAvatar(64), user.safe.username)
 	print "</div>"
+	print "<div class=\"clear\"></div>"
 
 @get('users/(?P<username>[^/]+)')
 def user(handler, request, username):
