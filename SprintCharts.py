@@ -1,15 +1,19 @@
 from __future__ import division
 from itertools import cycle
 from math import ceil
+from string import uppercase as alphabet
 
 from Chart import Chart
-from Task import Task
+from Task import Task, statuses
 from Availability import Availability
 from utils import *
 
 def setupTimeline(chart, sprint, skippedSeries = []):
 	chart.tooltip.formatter = """
 function() {
+	if(this.point != undefined) { // flag
+		return this.point.text;
+	}
 	rtn = '<span style="font-size: 7pt">' + this.points[0].point.name + '</span><br>';
 	this.points.forEach(function(point) {
 		if(%s) {return;}
@@ -20,7 +24,8 @@ function() {
 """ % ('false' if skippedSeries == [] else ' || '.join("point.series.name == '%s'" % series for series in skippedSeries))
 	chart.xAxis.categories = [day.strftime('%a') for day in sprint.getDays()]
 	for series in chart.series.get():
-		series['data'] = [[a, b] for (a, b) in zip([day.strftime('%A, %b %d, %Y') for day in sprint.getDays()], series['data'])]
+		if series.get('type', '') != 'flags':
+			series['data'] = [[a, b] for (a, b) in zip([day.strftime('%A, %b %d, %Y') for day in sprint.getDays()], series['data'])]
 
 class HoursChart(Chart):
 	def __init__(self, placeholder, sprint):
@@ -53,26 +58,60 @@ class HoursChart(Chart):
 		self.yAxis.title.text = 'Hours'
 		self.series = seriesList = []
 
-		series = {
+		taskSeries = {
+			'id': 'taskSeries',
 			'name': 'Tasking',
 			'data': [],
 			'zIndex': 2
 		}
-		seriesList.append(series)
+		seriesList.append(taskSeries)
 
-		for day in days[:futureIndex]:
-			series['data'].append(sum(t.manHours() if t and not t.deleted else 0 for t in [t.getRevisionAt(day) for t in tasks]))
-
-		series = {
+		availSeries = {
 			'name': 'Availability',
 			'data': [],
 			'zIndex': 2
 		}
-		seriesList.append(series)
+		seriesList.append(availSeries)
+
+		flagSeries = {
+			'type': 'flags',
+			'data': [],
+			'shape': 'flag',
+			'onSeries': 'taskSeries',
+			'showInLegend': False,
+			'y': 16
+		}
+		seriesList.append(flagSeries)
+
+		hoursToday = None
+		for day in days[:futureIndex]:
+			tasksToday = [t.getRevisionAt(day) for t in tasks]
+			hoursYesterday = hoursToday
+			hoursToday = {t: t.manHours() for t in tasksToday if t and not t.deleted}
+			taskSeries['data'].append(sum(hoursToday.values()))
+
+			if hoursYesterday:
+				hoursDiff = {t: hoursToday.get(t, 0) - hoursYesterday.get(t, 0) for t in hoursToday}
+				largeChanges = [t for t, h in hoursDiff.iteritems() if abs(h) >= 16]
+				if largeChanges:
+					texts = []
+					for t in largeChanges:
+						if t not in hoursYesterday:
+							texts.append("<span style=\"color: #f00\">(New +%d)</span> %s" % (t.hours, t.name))
+						elif hoursDiff[t] > 0:
+							texts.append("<span style=\"color: #f00\">(+%d)</span> %s" % (hoursDiff[t], t.name))
+						else:
+							if t.status in ('in progress', 'not started'):
+								texts.append("<span style=\"color: #0a0\">(%d)</span> %s" % (hoursDiff[t], t.name))
+							elif t.status == 'complete':
+								texts.append("<span style=\"color: #0a0\">(Complete %d)</span> %s" % (hoursDiff[t], t.name))
+							else:
+								texts.append("<span style=\"color: #999\">(%s %d)</span> %s" % (statuses[t.status].revisionVerb, hoursDiff[t], t.name))
+					flagSeries['data'].append({'x': days.index(day), 'title': alphabet[len(flagSeries['data']) % len(alphabet)], 'text': '<br>'.join(texts)})
 
 		avail = Availability(sprint)
 		for day in days:
-			series['data'].append(avail.getAllForward(day))
+			availSeries['data'].append(avail.getAllForward(day))
 
 		setupTimeline(self, sprint, ['Projected tasking'])
 
@@ -80,8 +119,8 @@ class HoursChart(Chart):
 		labels = self.xAxis.categories.get()
 		for i in range(len(labels)):
 			# For future percentages, use today's hours (i.e. don't use the projected hours)
-			needed = seriesList[0]['data'][min(i, futureIndex - 1) if futureIndex else i][1]
-			thisAvail = seriesList[1]['data'][i][1]
+			needed = taskSeries['data'][min(i, futureIndex - 1) if futureIndex else i][1]
+			thisAvail = availSeries['data'][i][1]
 			pcnt = "%d" % (needed * 100 / thisAvail) if thisAvail > 0 else "inf"
 			labels[i] += "<br>%s%%" % pcnt
 		self.xAxis.categories = labels
@@ -103,12 +142,12 @@ class HoursChart(Chart):
 			slope = (midPoint[1] - startPoint[1]) / (midPoint[0] - startPoint[0])
 			slopePerAvail = slope * (midPoint[0] - startPoint[0]) / totalAvail
 			points, total = [], midPoint[1]
-			total = seriesList[0]['data'][futureIndex - 1][1]
+			total = taskSeries['data'][futureIndex - 1][1]
 			points.append([futureIndex - 1, total])
 			for i in range(futureIndex, len(days)):
 				total += slopePerAvail * dailyAvail[days[i]]
 				points.append([i, total])
-			self.series.get().append({
+			seriesList.append({
 				'name': 'Projected tasking',
 				'data': points,
 				'color': '#666',
