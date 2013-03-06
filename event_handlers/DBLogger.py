@@ -120,8 +120,8 @@ class DBLogger(EventHandler):
 	def revokePrivilege(self, handler, user, priv):
 		log(handler, 'admin.user.privilege.revoke', "Revoked %s from %s" % (priv, user))
 
-	def shell(self, handler, code):
-		log(handler, 'admin.shell', code)
+	def repl(self, handler, code):
+		log(handler, 'admin.repl', code)
 
 	def mockTime(self, handler, effectiveTime, delta):
 		log(handler, 'admin.mocktime', "%s (%s)" % (effectiveTime, delta))

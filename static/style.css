@@ -1221,14 +1221,14 @@ img.admin-icon {
 	border: 0px;
 }
 
-div.shell-box {
+div.repl-box {
 	float: left;
 	width: 49%;
 	margin-right: 5px;
 	border: 1px solid #000;
 }
 
-div.shell-box span.title {
+div.repl-box span.title {
 	display: block;
 	width: 100%;
 	padding: 2px 0px 2px 4px;
@@ -1236,7 +1236,7 @@ div.shell-box span.title {
 	color: #fff;
 }
 
-div.shell-box .box-wrapper {
+div.repl-box .box-wrapper {
 	display: block;
 	height: 600px;
 	margin: 0px;
@@ -1245,65 +1245,65 @@ div.shell-box .box-wrapper {
 	word-wrap: break-word;
 }
 
-div.shell-box#console pre div.shell-code {}
-div.shell-box#console pre div.shell-stdout {
+div.repl-box#console pre div.repl-code {}
+div.repl-box#console pre div.repl-stdout {
 	color: #00f;
 }
-div.shell-box#console pre div.shell-stderr {
+div.repl-box#console pre div.repl-stderr {
 	color: #f00;
 }
 
-div.shell-box {
+div.repl-box {
 	overflow: hidden;
 	width: 49%;
 }
 
 /* nth-of-type(4n) is a <div class="clear"> put before each row */
 
-div.shell-box div.elem:nth-of-type(4n+1) {
+div.repl-box div.elem:nth-of-type(4n+1) {
 	width: 20%;
 	float: left;
 	padding-right: 5px;
 }
 
-div.shell-box div.elem:nth-of-type(4n+2) {
+div.repl-box div.elem:nth-of-type(4n+2) {
 	width: 38%;
 	float: left;
 	padding-right: 5px;
 }
 
-div.shell-box div.elem:nth-of-type(4n+3) {
+div.repl-box div.elem:nth-of-type(4n+3) {
 	width: 38%;
 	float: left;
 }
 
-div.shell-box div.elem.header {
+div.repl-box div.elem.header {
 	font-weight: bold;
 }
 
-div.shell-box ul {
+div.repl-box ul {
 	margin: 0px;
 	-webkit-padding-start: 16px;
 }
 
 /*
-div.shell-box table thead tr {
+div.repl-box table thead tr {
 	display: block
 }
 
-div.shell-box table tbody {
+div.repl-box table tbody {
 	display: block;
 	height: 574px;
 	overflow: auto;
 	width: 100%
 }
 
-div.shell-box table thead th, div.shell-box table tbody td {
+div.repl-box table thead th, div.repl-box table tbody td {
 	width: 100px;
 	word-wrap: break-word;
 }
 
-div.shell-box table tbody td + td {
+div.repl-box table tbody td + td {
 	position: relative;
 	padding-left: 20px;
 }

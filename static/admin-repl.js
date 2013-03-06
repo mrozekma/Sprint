@@ -9,7 +9,7 @@ $(document).ready(function() {
 		switch(e.keyCode) {
 		case 13: // Enter
 			hist_index = -1;
-			$.post('/admin/shell', {code: $(this).val()}, function(dataL, text, request) {
+			$.post('/admin/repl', {code: $(this).val()}, function(dataL, text, request) {
 				if(!(dataL instanceof Array)) {
 					dataL = [dataL];
 				}
@@ -28,12 +28,12 @@ $(document).ready(function() {
 					});
 
 					c = $('#console > pre');
-					c.append($('<div>').addClass('shell-code').html("&gt;&nbsp;" + data.code));
+					c.append($('<div>').addClass('repl-code').html("&gt;&nbsp;" + data.code));
 					if(data.stdout != '') {
-						c.append($('<div>').addClass('shell-stdout').text(data.stdout));
+						c.append($('<div>').addClass('repl-stdout').text(data.stdout));
 					}
 					if(data.stderr != '') {
-						c.append($('<div>').addClass('shell-stderr').append($("<b>").text(data.stderr[0])).append($("<span>").text(": " + data.stderr[1])));
+						c.append($('<div>').addClass('repl-stderr').append($("<b>").text(data.stderr[0])).append($("<span>").text(": " + data.stderr[1])));
 					}
 					c[0].scrollTop = c[0].scrollHeight;
 				});

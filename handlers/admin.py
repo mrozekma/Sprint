@@ -456,29 +456,24 @@ def adminPrivilegesPost(handler, request, p_grant):
 				Event.grantPrivilege(handler, user, priv, False)
 	print "Done"
 
-@admin('admin/shell', 'Shell', 'shell')
-def adminShell(handler, request):
-	handler.title('Shell')
+@admin('admin/repl', 'REPL', 'repl')
+def adminRepl(handler, request):
+	handler.title('Python REPL')
 	requireAdmin(handler)
-	print "<script src=\"/static/admin-shell.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/admin-repl.js\" type=\"text/javascript\"></script>"
 
-	handler.session['admin-shell'] = {'handler': handler}
+	handler.session['admin-repl'] = {'handler': handler}
 
-	# print "<table border=1 cellspacing=0 cellpadding=4>"
-	# print "<thead><tr><th>Name</th><th>Value</th><th>String</th></tr></thead>"
-	# print "<tbody></tbody>"
-	# print "</table>"
-
-	print "<div id=\"variables\" class=\"shell-box\"><span class=\"title\">Variables</span>"
+	print "<div id=\"variables\" class=\"repl-box\"><span class=\"title\">Variables</span>"
 	print "<div class=\"box-wrapper\">"
 	for col in ['Name', 'Value', 'Rendered']:
 		print "<div class=\"elem header\">%s</div>" % col
 	print "</div></div>"
-	print "<div id=\"console\" class=\"shell-box\"><span class=\"title\">Console</span><pre class=\"box-wrapper code_default light\"></pre></div>"
+	print "<div id=\"console\" class=\"repl-box\"><span class=\"title\">Console</span><pre class=\"box-wrapper code_default light\"></pre></div>"
 	print "<input type=\"text\" id=\"input\" class=\"defaultfocus\">"
 
-@post('admin/shell')
-def adminShellPost(handler, request, p_code):
+@post('admin/repl')
+def adminReplPost(handler, request, p_code):
 	def makeStr(v):
 		if isinstance(v, list):
 			return "<ul>%s</ul>" % ''.join("<li>%s</li>" % item for item in v)
@@ -493,25 +488,25 @@ def adminShellPost(handler, request, p_code):
 		res = []
 		for part in parts:
 			w = ResponseWriter()
-			adminShellPost(handler, request, "!%s" % part)
+			adminReplPost(handler, request, "!%s" % part)
 			res.append(fromJS(w.done()))
 		print toJS(res)
 		done()
 
-	if 'admin-shell' not in handler.session:
-		print toJS({'code': highlightCode(p_code), 'stdout': '', 'stderr': ['Session Expired', 'Shell session no longer exists'], 'vars': {}})
+	if 'admin-repl' not in handler.session:
+		print toJS({'code': highlightCode(p_code), 'stdout': '', 'stderr': ['Session Expired', 'REPL session no longer exists'], 'vars': {}})
 		done()
 
 	writer = ResponseWriter()
 	try:
-		Event.shell(handler, p_code)
-		exec compile(p_code, '<admin shell>', 'single') in handler.session['admin-shell']
+		Event.repl(handler, p_code)
+		exec compile(p_code, '<admin repl>', 'single') in handler.session['admin-repl']
 		stderr = ''
 	except:
 		stderr = map(str, [sys.exc_info()[0].__name__, sys.exc_info()[1]])
 	stdout = writer.done()
 
-	vars = sorted([(k, pformat(v), makeStr(v)) for (k, v) in handler.session['admin-shell'].items() if k != '__builtins__'], lambda (k1, v1, vs1), (k2, v2, vs2): cmp(k1, k2))
+	vars = sorted([(k, pformat(v), makeStr(v)) for (k, v) in handler.session['admin-repl'].items() if k != '__builtins__'], lambda (k1, v1, vs1), (k2, v2, vs2): cmp(k1, k2))
 	print toJS({'code': highlightCode(p_code), 'stdout': stdout, 'stderr': stderr, 'vars': vars})
 
 @admin('admin/time', 'Mock time', 'time')
