@@ -27,11 +27,15 @@ def header(handler, path):
 	print "<script src=\"/static/jquery-ui-1.8.14.custom.min.js\" type=\"text/javascript\"></script>"
 	print "<link href=\"/static/jquery.contextMenu.css\" rel=\"stylesheet\" type=\"text/css\" />"
 	print "<script src=\"/static/jquery.contextMenu.js\"></script>"
+	print "<script src=\"/static/jquery.mousewheel-min.js\"></script>"
+	print "<script src=\"/static/jquery.terminal-0.4.23.js\"></script>"
+	print "<link href=\"/static/jquery.terminal.css\" rel=\"stylesheet\" type=\"text/css\" />"
 
 	print "<link rel=\"stylesheet\" href=\"/static/chosen/chosen.css\" />"
 	print "<script src=\"/static/chosen/chosen.jquery.js\" type=\"text/javascript\"></script>"
 
 	print "<script src=\"/static/script.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/shell.js\" type=\"text/javascript\"></script>"
 
 	print "<style type=\"text/css\">"
 	print "#main_a {"
@@ -46,6 +50,7 @@ def header(handler, path):
 
 	print "</head>"
 	print "<body>"
+	print "<div id=\"shell\"></div>"
 	print "<div id=\"frame\">"
 
 	print "<div id=\"main_a\">"

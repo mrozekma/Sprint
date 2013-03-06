@@ -8,6 +8,7 @@ from rorn.utils import *
 
 DATE_FMT = '%d %b %Y'
 UTC_OFFSET = (time.timezone / -3600) + time.daylight
+HTML_COLORS = {'red': '#f00', 'orange': '#ffa500', 'yellow': '#ff0', 'green': '#0f0', 'blue': '#00f', 'purple': '#f0f', 'status': '#33b5e5'}
 
 def tsToDate(timestamp): return datetime.fromtimestamp(timestamp)
 def dateToTs(d): return mktime(d.timetuple())

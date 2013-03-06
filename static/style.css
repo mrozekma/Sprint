@@ -39,6 +39,14 @@ code {
 	background-color: #FFF;
 }
 
+.terminal {
+	color: #fff !important;
+	position: absolute !important;
+	width: 95%;
+	z-index: 3;
+	bottom: 5px;
+}
+
 .sysmessage {
 	text-align: center;
 	padding: 5px 0px 5px 0px;
