@@ -252,6 +252,7 @@ def adminUsersPost(handler, request, p_action, p_username, p_privileges = []):
 
 			if not 'impersonator' in handler.session:
 				handler.session['impersonator'] = handler.session['user']
+				handler.session.remember('impersonator')
 			Event.impersonate(handler, user)
 			handler.session['user'] = user
 			redirect('/')
@@ -455,15 +456,13 @@ def adminPrivilegesPost(handler, request, p_grant):
 				Event.grantPrivilege(handler, user, priv, False)
 	print "Done"
 
-shells = {}
-
 @admin('admin/shell', 'Shell', 'shell')
 def adminShell(handler, request):
 	handler.title('Shell')
 	requireAdmin(handler)
 	print "<script src=\"/static/admin-shell.js\" type=\"text/javascript\"></script>"
 
-	shells[handler.session.key] = {'handler': handler}
+	handler.session['admin-shell'] = {'handler': handler}
 
 	# print "<table border=1 cellspacing=0 cellpadding=4>"
 	# print "<thead><tr><th>Name</th><th>Value</th><th>String</th></tr></thead>"
@@ -499,21 +498,20 @@ def adminShellPost(handler, request, p_code):
 		print toJS(res)
 		done()
 
-	if handler.session.key not in shells:
+	if 'admin-shell' not in handler.session:
 		print toJS({'code': highlightCode(p_code), 'stdout': '', 'stderr': ['Session Expired', 'Shell session no longer exists'], 'vars': {}})
 		done()
 
 	writer = ResponseWriter()
 	try:
 		Event.shell(handler, p_code)
-		exec compile(p_code, '<admin shell>', 'single') in shells[handler.session.key]
+		exec compile(p_code, '<admin shell>', 'single') in handler.session['admin-shell']
 		stderr = ''
 	except:
 		stderr = map(str, [sys.exc_info()[0].__name__, sys.exc_info()[1]])
 	stdout = writer.done()
 
-	# 'vars': pformat(dict(filter(lambda (k, v): k != '__builtins__', shells[handler.session.key].items())), width = 80)}
-	vars = sorted([(k, pformat(v), makeStr(v)) for (k, v) in shells[handler.session.key].items() if k != '__builtins__'], lambda (k1, v1, vs1), (k2, v2, vs2): cmp(k1, k2))
+	vars = sorted([(k, pformat(v), makeStr(v)) for (k, v) in handler.session['admin-shell'].items() if k != '__builtins__'], lambda (k1, v1, vs1), (k2, v2, vs2): cmp(k1, k2))
 	print toJS({'code': highlightCode(p_code), 'stdout': stdout, 'stderr': stderr, 'vars': vars})
 
 @admin('admin/time', 'Mock time', 'time')

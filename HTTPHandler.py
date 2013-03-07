@@ -63,6 +63,7 @@ class HTTPHandler(ParentHandler):
 
 		self.session['address'] = self.address_string()
 		self.session['timestamp'] = getNow()
+		self.session.remember('address', 'timestamp')
 
 		if self.session['user']:
 			self.session['user'] = User.load(self.session['user'].id) # Make sure the user isn't out of date

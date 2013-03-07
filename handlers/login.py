@@ -55,6 +55,7 @@ def loginPost(handler, request, p_username, p_password, p_verification, p_redir)
 		user.save()
 
 	handler.session['user'] = user
+	handler.session.remember('user')
 	Event.login(handler, user, True)
 	redirect(p_redir)
 

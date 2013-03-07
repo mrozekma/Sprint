@@ -9,10 +9,11 @@ import pickle
 
 sessions = {}
 
-class Session:
+class Session(object):
 	def __init__(self, key):
 		self.key = key
 		self.map = {}
+		self.persistent = set() # Only keys in this set are saved to disk
 
 	def keys(self):
 		return self.map.keys()
@@ -31,8 +32,22 @@ class Session:
 		del self.map[k]
 		Session.saveAll()
 
+	def remember(self, *keys):
+		self.persistent.update(keys)
+
+	def __contains__(self, k):
+		return k in self.map
+
 	def __iter__(self):
 		return self.map.__iter__()
+
+	def __getstate__(self):
+		return (self.key, {k: v for (k, v) in self.map.iteritems() if k in self.persistent})
+
+	def __setstate__(self, (key, map)):
+		self.key = key
+		self.map = map
+		self.persistent = set(map.keys())
 
 	@staticmethod
 	def determineKey(handler):
