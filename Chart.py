@@ -91,8 +91,9 @@ class Chart(object):
 
 	@staticmethod
 	def include():
-		print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts.js\"></script>"
+		# print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts.js\"></script>"
 		print "<script type=\"text/javascript\" src=\"/static/highcharts/highstock/js/highstock.js\"></script>"
+		print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts-more.js\"></script>"
 
 	def js(self):
 		print "<script type=\"text/javascript\">"

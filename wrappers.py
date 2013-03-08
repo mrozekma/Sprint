@@ -23,8 +23,9 @@ def header(handler, path):
 	print "<link rel=\"shortcut icon\" href=\"/static/images/favicon.ico\">"
 
 	print "<script src=\"/static/jquery.js\" type=\"text/javascript\"></script>"
-	print "<link rel=\"stylesheet\" href=\"/static/jquery-ui-1.8.14.custom.css\">"
-	print "<script src=\"/static/jquery-ui-1.8.14.custom.min.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/jquery-migrate-1.1.1.min.js\" type=\"text/javascript\"></script>"
+	print "<link rel=\"stylesheet\" href=\"/static/jquery-ui-1.10.1.custom.css\">"
+	print "<script src=\"/static/jquery-ui-1.10.1.custom.min.js\" type=\"text/javascript\"></script>"
 	print "<link href=\"/static/jquery.contextMenu.css\" rel=\"stylesheet\" type=\"text/css\" />"
 	print "<script src=\"/static/jquery.contextMenu.js\"></script>"
 	print "<script src=\"/static/jquery.mousewheel-min.js\"></script>"

@@ -62,7 +62,6 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	search = Search(sprint, search)
 
 	print "<link href=\"/prefs/backlog.css\" rel=\"stylesheet\" type=\"text/css\" />"
-	print "<script src=\"/static/jquery.tablednd_0_5.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/settings/sprints.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/sprints.js\" type=\"text/javascript\"></script>"
 
