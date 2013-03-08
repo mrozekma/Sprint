@@ -1,12 +1,24 @@
 from __future__ import division
+from collections import OrderedDict
 from itertools import cycle
 from math import ceil
 from string import uppercase as alphabet
 
 from Chart import Chart
-from Task import Task, statuses
+from Task import Task, statuses, statusMenu
 from Availability import Availability
 from utils import *
+
+colors = ['#4572a7', '#aa4643', '#89a54e', '#80699b', '#3d96ae', '#db843d', '#92a8cd', '#a47d7c', '#b5ca92']
+colorMap = { # Maps the pure colors from Status to chart colors
+	'#f00': '#aa4643',
+	'#ff0': '#b47c19',
+	'#0f0': '#89a54e',
+	'#00f': '#4572a7',
+	'#fff': '#000',
+	'#000': '#80699b',
+	'#ff7f00': '#db843d'
+}
 
 def setupTimeline(chart, sprint, skippedSeries = []):
 	chart.tooltip.formatter = """
@@ -24,7 +36,7 @@ function() {
 """ % ('false' if skippedSeries == [] else ' || '.join("point.series.name == '%s'" % series for series in skippedSeries))
 	chart.xAxis.categories = [day.strftime('%a') for day in sprint.getDays()]
 	for series in chart.series.get():
-		if series.get('type', '') != 'flags':
+		if series.get('type', '') not in ('flags', 'waterfall'):
 			series['data'] = [[a, b] for (a, b) in zip([day.strftime('%A, %b %d, %Y') for day in sprint.getDays()], series['data'])]
 
 class HoursChart(Chart):
@@ -62,6 +74,7 @@ class HoursChart(Chart):
 			'id': 'taskSeries',
 			'name': 'Tasking',
 			'data': [],
+			'color': '#4572a7',
 			'zIndex': 2
 		}
 		seriesList.append(taskSeries)
@@ -69,6 +82,7 @@ class HoursChart(Chart):
 		availSeries = {
 			'name': 'Availability',
 			'data': [],
+			'color': '#aa4643',
 			'zIndex': 2
 		}
 		seriesList.append(availSeries)
@@ -76,6 +90,7 @@ class HoursChart(Chart):
 		flagSeries = {
 			'type': 'flags',
 			'data': [],
+			'color': '#4572a7',
 			'shape': 'flag',
 			'onSeries': 'taskSeries',
 			'showInLegend': False,
@@ -156,6 +171,54 @@ class HoursChart(Chart):
 				'zIndex': 1
 			})
 
+class StatusChart(Chart):
+	def __init__(self, placeholder, sprint):
+		Chart.__init__(self, placeholder)
+		days = [day for day in sprint.getDays()]
+		now = getNow()
+		futureStarts = minOr(filter(lambda day: day > now, days), None)
+		futureIndex = days.index(futureStarts) if futureStarts else None
+
+		tasks = sprint.getTasks()
+
+		self.chart.type = 'area'
+		self.title.text = ''
+		self.plotOptions.area.stacking = 'percent'
+		self.plotOptions.area.marker.enabled = False
+		self.tooltip.shared = True
+		self.credits.enabled = False
+		with self.xAxis as xAxis:
+			xAxis.tickmarkPlacement = 'on'
+			xAxis.maxZoom = 1
+			xAxis.title.text = 'Day'
+			xAxis.categories = [day.strftime('%a') for day in sprint.getDays()]
+			# Future bar
+			if futureIndex:
+				xAxis.plotBands = [{
+					'color': '#DDD',
+					'from': futureIndex - 0.75,
+					'to': len(days) - 0.5,
+					# 'zIndex': 5
+				}]
+		self.yAxis.min = 0
+		self.yAxis.title.text = 'Percentage of tasks'
+		self.series = seriesList = []
+
+		counts = OrderedDict((name, []) for block in statusMenu for name in block)
+		self.colors = [colorMap.get(statuses[type].color, statuses[type].color) for type in counts]
+		for type, count in counts.iteritems():
+			seriesList.append({
+				'name': statuses[type].text,
+				'data': count
+			})
+
+		for day in days:
+			tasksToday = [t.getRevisionAt(day) for t in tasks]
+			for type, count in counts.iteritems():
+				count.append(len(filter(lambda task: task and task.status == type, tasksToday)))
+
+		setupTimeline(self, sprint)
+
 class EarnedValueChart(Chart):
 	def __init__(self, placeholder, sprint):
 		Chart.__init__(self, placeholder)
@@ -166,17 +229,35 @@ class EarnedValueChart(Chart):
 
 		tasks = sprint.getTasks()
 
-		self.chart.defaultSeriesType = 'line'
-		self.chart.zoomType = 'x'
-		self.colors = ['#89A54E', '#80699B']
+		self.chart.type = 'waterfall'
+		self.tooltip.enabled = False
 		self.title.text = ''
-		self.plotOptions.line.dataLabels.enabled = True
-		self.tooltip.shared = True
+		self.legend.enabled = False
 		self.credits.enabled = False
+		with self.plotOptions.series.dataLabels as labels:
+			labels.enabled = True
+			labels.formatter = """
+function() {
+	sum = 0;
+	max_x = this.point.x;
+	for(i in this.series.points) {
+		point = this.series.points[i];
+		sum += point.y;
+		if(point.x == max_x) {
+			break;
+		}
+	}
+	return sum;
+}
+"""
+			# labels.color = '#fff'
+			labels.verticalAlign = 'top'
+			labels.y = -20
+
 		with self.xAxis as xAxis:
+			xAxis.type = 'category'
 			xAxis.tickmarkPlacement = 'on'
-			xAxis.maxZoom = 1
-			xAxis.title.text = 'Day'
+			xAxis.categories = [day.strftime('%a') for day in sprint.getDays()]
 			# Future bar
 			if futureIndex:
 				xAxis.plotBands = [{
@@ -189,23 +270,20 @@ class EarnedValueChart(Chart):
 		self.series = seriesList = []
 
 		series = {
+			'type': 'waterfall',
 			'name': 'Earned value',
-			'data': []
+			'data': [],
+			'upColor': '#4572a7',
+			'color': '#aa4643'
 		}
 		seriesList.append(series)
 
+		yesterdaySum = 0
 		for day in days:
 			dayTasks = [t.getRevisionAt(day) for t in tasks]
-			series['data'].append(sum(t.earnedValueHours() for t in dayTasks if t))
-
-		series = {
-			'name': 'Deferred tasks',
-			'data': []
-		}
-		seriesList.append(series)
-
-		for day in days:
-			series['data'].append(sum((t.getRevision(t.revision - 1).hours if t.revision > 1 else 0) for t in [t2.getRevisionAt(day) for t2 in tasks] if t and t.status == 'deferred'))
+			todaySum = sum(t.earnedValueHours() for t in dayTasks if t)
+			series['data'].append(todaySum - yesterdaySum)
+			yesterdaySum = todaySum
 
 		setupTimeline(self, sprint)
 
@@ -258,9 +336,6 @@ class CommitmentChart(Chart):
 		tasks = sprint.getTasks()
 		start = tsToDate(sprint.start)
 
-		#TODO
-		clrs = ['#4572A7', '#AA4643', '#89A54E', '#80699B', '#3D96AE', '#DB843D', '#92A8CD', '#A47D7C', '#B5CA92']
-
 		self.title.text = ''
 		self.tooltip.formatter = "function() {return '<b>' + this.series.name + '</b><br>' + this.point.name + ': '+ this.point.x + ' (' + this.y + '%)';}"
 		self.credits.enabled = False
@@ -278,7 +353,7 @@ class CommitmentChart(Chart):
 		seriesList.append(series)
 
 		originalTasks = filter(None, (task.getStartRevision(False) for task in tasks))
-		clrGen = cycle(clrs)
+		clrGen = cycle(colors)
 		total = sum(t.hours for t in originalTasks)
 		for user in sorted(sprint.members):
 			hours = sum(t.hours for t in originalTasks if user in t.assigned)
@@ -298,7 +373,7 @@ class CommitmentChart(Chart):
 		}
 		seriesList.append(series)
 
-		clrGen = cycle(clrs)
+		clrGen = cycle(colors)
 		total = sum(t.hours for t in tasks)
 		for user in sorted(sprint.members):
 			hours = sum(t.hours for t in tasks if user in t.assigned)

@@ -19,13 +19,13 @@ class Status:
 		self.revisionVerb = revisionVerb
 
 statuses = [
-	Status('blocked', 'Blocked', '#000', 'Blocked'),
-	Status('canceled', 'Canceled', '#000', 'Canceled'),
-	Status('complete', 'Complete', '#0F0', 'Completed'),
+	Status('blocked', 'Blocked', '#00f', 'Blocked'),
+	Status('canceled', 'Canceled', '#fff', 'Canceled'),
+	Status('complete', 'Complete', '#0f0', 'Completed'),
 	Status('deferred', 'Deferred', '#000', 'Deferred'),
-	Status('in progress', 'In Progress', '#FF0', 'Started'),
-	Status('not started', 'Not Started', '#F00', 'Aborted'),
-	Status('split', 'Split', '#000', 'Split'),
+	Status('in progress', 'In Progress', '#ff0', 'Started'),
+	Status('not started', 'Not Started', '#f00', 'Aborted'),
+	Status('split', 'Split', '#ff7f00', 'Split'),
 ]
 statuses = dict([(s.name, s) for s in statuses])
 

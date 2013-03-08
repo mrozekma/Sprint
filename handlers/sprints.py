@@ -682,6 +682,7 @@ def showMetrics(handler, request, id):
 
 	charts = [
 		('general', 'Hours (general)', HoursChart('chart-general', sprint)),
+		('status', 'Task status', StatusChart('chart-status', sprint)),
 		('earned-value', 'Earned Value', EarnedValueChart('chart-earned-value', sprint)),
 		('by-user', 'Hours (by user)', HoursByUserChart('chart-by-user', sprint)),
 		('commitment', 'Total commitment', CommitmentChart('chart-commitment', sprint)),
