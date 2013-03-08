@@ -1,7 +1,10 @@
 from json import dumps as toJS
 
+from LoadValues import getLoadtime, getRevisionInfo, isDevMode, setDevMode
 from Project import Project
+from Settings import settings
 from Sprint import Sprint
+from relativeDates import timesince
 from utils import *
 
 from rorn.ResponseWriter import ResponseWriter
@@ -77,3 +80,37 @@ def helpCommand(context, command):
 			print "%s: %s" % (clr(match.group(1)), doc)
 			return
 	raise RuntimeError("No help available")
+
+@command('info|about')
+def info(context):
+	revisionHash, revisionDate, revisionRelative = getRevisionInfo()
+	print "Sprint tool, revision {{%s}{%s}}" % (revisionHash, settings.gitURL % {'hash': revisionHash})
+	if isDevMode():
+		print clr("Development mode", 'red')
+	else:
+		print clr("Production mode", 'green')
+	loadTime = getLoadtime()
+	print "Started %s" % clr(loadTime)
+	print "Up for %s" % clr(timesince(loadTime))
+
+@command('whoami')
+def whoami(context):
+	user = context['handler'].session['user']
+	# print "You are {{%s}{/users/%s}}" % (clr(user.username), user.username)
+	print "You are {{%s}{/users/%s}}" % (user.username, user.username)
+
+@command('su')
+def su(context):
+	if not context['handler'].session['user'].hasPrivilege('Dev'):
+		raise RuntimeError("You need the %s privilege" % clr('Dev'))
+	return ('admin', '#')
+
+@command('dev', mode = 'admin')
+def devMode(context):
+	setDevMode(True)
+	print "Switched to %s mode" % clr('development', 'red')
+
+@command('prod', mode = 'admin')
+def prodMode(context):
+	setDevMode(False)
+	print "Switched to %s mode" % clr('production', 'green')
