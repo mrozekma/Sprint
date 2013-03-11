@@ -237,7 +237,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 		self.wfile.write(self.response)
 
 	def do_POST(self):
-		form = cgi.FieldStorage(fp = self.rfile, headers = self.headers, environ={'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': self.headers['Content-Type']}, keep_blank_values = True)
+		form = cgi.FieldStorage(fp = self.rfile, headers = self.headers, environ = {'REQUEST_METHOD': 'POST'}, keep_blank_values = True)
 		data = {}
 		try:
 			items = []
