@@ -60,7 +60,7 @@ class HoursChart(Chart):
 			xAxis.maxZoom = 1
 			xAxis.title.text = 'Day'
 			# Future bar
-			if futureIndex:
+			if futureIndex is not None:
 				xAxis.plotBands = [{
 					'color': '#DDD',
 					'from': futureIndex - 0.75,
@@ -97,6 +97,9 @@ class HoursChart(Chart):
 			'y': 16
 		}
 		seriesList.append(flagSeries)
+
+		if futureIndex == 0:
+			futureIndex = 1
 
 		hoursToday = None
 		for day in days[:futureIndex]:
