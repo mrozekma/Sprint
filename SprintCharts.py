@@ -402,7 +402,7 @@ class TaskChart(Chart):
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
 		self.title.text = ''
-		self.tooltip.formatter = "function() {console.log(this);return '<small>' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</small><br><span style=\"color: ' + this.series.color + '\">' + this.series.name + '</span>: ' + this.y + (this.y == 1 ? ' hour' : ' hours')}"
+		self.tooltip.formatter = "function() {idx = this.series.name.indexOf(':'); return '<small>' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</small><br><span style=\"color: ' + this.series.color + '\">' + this.series.name.slice(idx + 1) + '</span>: ' + this.y + (this.y == 1 ? ' hour' : ' hours')}"
 		self.plotOptions.line.dataLabels.enabled = not many
 		self.plotOptions.line.dataLabels.x = -10
 		self.plotOptions.line.step = True
@@ -423,19 +423,20 @@ class TaskChart(Chart):
 			y.minorTickInterval = 1
 			y.title.text = 'Hours'
 
-		if not many:
-			self.series = seriesList = []
-			for task in tasks:
-				revs = task.getRevisions()
-				series = {
-					'name': task.safe.name,
-					'data': [],
+		self.series = seriesList = []
+		for task in tasks:
+			revs = task.getRevisions()
+			series = {
+				'name': "%d:%s" % (task.id, task.name) if many else 'Hours',
+				'data': [],
 				}
-				seriesList.append(series)
+			if many:
+				series['events'] = {'click': "function() {window.location = '/tasks/%d';}" % task.id}
+			seriesList.append(series)
 
-				hoursByDay = dict((tsStripHours(rev.timestamp), rev.hours) for rev in revs)
-				hoursByDay[tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))] = task.hours
-				series['data'] += [(utcToLocal(date) * 1000, hours) for (date, hours) in sorted(hoursByDay.items())]
+			hoursByDay = dict((tsStripHours(rev.timestamp), rev.hours) for rev in revs)
+			hoursByDay[tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))] = task.hours
+			series['data'] += [(utcToLocal(date) * 1000, hours) for (date, hours) in sorted(hoursByDay.items())]
 
 class GroupGoalsChart(Chart):
 	def __init__(self, group):

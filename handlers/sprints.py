@@ -742,6 +742,8 @@ def showSprintHistory(handler, request, id, assigned = None):
 	chart.js()
 	print "<script src=\"/static/sprint-history.js\" type=\"text/javascript\"></script>"
 	print "<script type=\"text/javascript\">"
+	tasksByAssigned = {member.username: [task.id for task in tasks if member in task.assigned] for member in sprint.members}
+	print "var tasks_by_assigned = %s;" % toJS(tasksByAssigned)
 	print "$(document).ready(function() {"
 	if assigned:
 		print "    $('%s').addClass('selected');" % ', '.join("#filter-assigned a[assigned=\"%s\"]" % username for username in assigned.split(','))
@@ -765,32 +767,6 @@ def showSprintHistory(handler, request, id, assigned = None):
 	chart.placeholder()
 	showHistory(tasks, True)
 	print "<br>"
-
-@get('sprints/(?P<id>[0-9]+)/history/chart-data')
-def getSprintHistoryData(handler, request, id, assigned = None):
-	requirePriv(handler, 'User')
-	id = int(id)
-	sprint = Sprint.load(id)
-	if not sprint:
-		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
-	tasks = sprint.getTasks(includeDeleted = True)
-
-	if assigned:
-		assigned = filter(None, [User.load(username = username) for username in assigned.split(',')])
-
-	data = []
-	for task in tasks:
-		revs = task.getRevisions()
-		if assigned:
-			revs = filter(lambda rev: any(user in assigned for user in rev.assigned), revs)
-		if len(revs) == 0:
-			continue
-		hoursByDay = {tsStripHours(rev.timestamp): rev.hours for rev in revs}
-		hoursByDay[tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))] = task.hours
-		data.append({'name': task.name, 'data': [(utcToLocal(date) * 1000, hours) for (date, hours) in sorted(hoursByDay.items())]})
-
-	request['wrappers'] = False
-	print toJS(data)
 
 @get('sprints/(?P<id>[0-9]+)/availability')
 def showAvailability(handler, request, id):
