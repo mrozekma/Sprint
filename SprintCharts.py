@@ -10,14 +10,14 @@ from Availability import Availability
 from utils import *
 
 colors = ['#4572a7', '#aa4643', '#89a54e', '#80699b', '#3d96ae', '#db843d', '#92a8cd', '#a47d7c', '#b5ca92']
-colorMap = { # Maps the pure colors from Status to chart colors
-	'#f00': '#aa4643',
-	'#ff0': '#b47c19',
-	'#0f0': '#89a54e',
-	'#00f': '#4572a7',
-	'#fff': '#000',
-	'#000': '#80699b',
-	'#ff7f00': '#db843d'
+colorMap = { # Maps status names to chart colors
+	'blocked': '#4572a7',
+	'canceled': '#000',
+	'complete': '#89a54e',
+	'deferred': '#80699b',
+	'in progress': '#b47c19',
+	'not started': '#aa4643',
+	'split': '#db843d'
 }
 
 def setupTimeline(chart, sprint, skippedSeries = []):
@@ -208,7 +208,7 @@ class StatusChart(Chart):
 		self.series = seriesList = []
 
 		counts = OrderedDict((name, []) for block in statusMenu for name in block)
-		self.colors = [colorMap.get(statuses[type].color, statuses[type].color) for type in counts]
+		self.colors = [colorMap[type] for type in counts]
 		for type, count in counts.iteritems():
 			seriesList.append({
 				'name': statuses[type].text,
@@ -402,9 +402,10 @@ class TaskChart(Chart):
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
 		self.title.text = ''
-		self.plotOptions.line.dataLabels.enabled = True
-		self.plotOptions.line.step = True
+		self.tooltip.formatter = "function() {console.log(this);return '<small>' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</small><br><span style=\"color: ' + this.series.color + '\">' + this.series.name + '</span>: ' + this.y + (this.y == 1 ? ' hour' : ' hours')}"
+		self.plotOptions.line.dataLabels.enabled = not many
 		self.plotOptions.line.dataLabels.x = -10
+		self.plotOptions.line.step = True
 		self.legend.enabled = False
 		self.credits.enabled = False
 		with self.xAxis as x:
@@ -422,20 +423,19 @@ class TaskChart(Chart):
 			y.minorTickInterval = 1
 			y.title.text = 'Hours'
 
-		self.series = seriesList = []
-		for task in tasks:
-			revs = task.getRevisions()
-			series = {
-				'name': task.safe.name if many else 'Hours',
-				'data': [],
-			}
-			if many:
-				series['events'] = {'click': "function() {window.location = '/tasks/%d';}" % task.id}
-			seriesList.append(series)
+		if not many:
+			self.series = seriesList = []
+			for task in tasks:
+				revs = task.getRevisions()
+				series = {
+					'name': task.safe.name,
+					'data': [],
+				}
+				seriesList.append(series)
 
-			hoursByDay = dict((tsStripHours(rev.timestamp), rev.hours) for rev in revs)
-			hoursByDay[tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))] = task.hours
-			series['data'] += [(utcToLocal(date) * 1000, hours) for (date, hours) in sorted(hoursByDay.items())]
+				hoursByDay = dict((tsStripHours(rev.timestamp), rev.hours) for rev in revs)
+				hoursByDay[tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))] = task.hours
+				series['data'] += [(utcToLocal(date) * 1000, hours) for (date, hours) in sorted(hoursByDay.items())]
 
 class GroupGoalsChart(Chart):
 	def __init__(self, group):

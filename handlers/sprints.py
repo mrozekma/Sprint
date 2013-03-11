@@ -726,7 +726,7 @@ def showMetrics(handler, request, id):
 	print "<br><br>"
 
 @get('sprints/(?P<id>[0-9]+)/history')
-def showSprintHistory(handler, request, id):
+def showSprintHistory(handler, request, id, assigned = None):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
@@ -740,14 +740,57 @@ def showSprintHistory(handler, request, id):
 	Chart.include()
 	chart = TaskChart('chart', sprint.getTasks())
 	chart.js()
+	print "<script src=\"/static/sprint-history.js\" type=\"text/javascript\"></script>"
+	print "<script type=\"text/javascript\">"
+	print "$(document).ready(function() {"
+	if assigned:
+		print "    $('%s').addClass('selected');" % ', '.join("#filter-assigned a[assigned=\"%s\"]" % username for username in assigned.split(','))
+	print "    setup_filter_buttons();"
+	print "    apply_filters();"
+	print "});"
+	print "</script>"
 
 	print (tabs << 'history') % id
 	if len(tasks) == 0:
 		print ErrorBox("This sprint has no tasks")
-	else:
-		chart.placeholder()
-		showHistory(tasks, True)
+		print "<br>"
+		return
+
+	print "<div id=\"filter-assigned\">"
+	print "<a class=\"fancy danger\" href=\"#\"><img src=\"/static/images/cross.png\">&nbsp;None</a>"
+	for member in sorted(sprint.members):
+		print "<a class=\"fancy\" assigned=\"%s\" href=\"/sprints/%d/history?assigned=%s\"><img src=\"%s\">&nbsp;%s</a>" % (member.username, id, member.username, member.getAvatar(16), member.username)
+	print "</div><br>"
+
+	chart.placeholder()
+	showHistory(tasks, True)
 	print "<br>"
+
+@get('sprints/(?P<id>[0-9]+)/history/chart-data')
+def getSprintHistoryData(handler, request, id, assigned = None):
+	requirePriv(handler, 'User')
+	id = int(id)
+	sprint = Sprint.load(id)
+	if not sprint:
+		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	tasks = sprint.getTasks(includeDeleted = True)
+
+	if assigned:
+		assigned = filter(None, [User.load(username = username) for username in assigned.split(',')])
+
+	data = []
+	for task in tasks:
+		revs = task.getRevisions()
+		if assigned:
+			revs = filter(lambda rev: any(user in assigned for user in rev.assigned), revs)
+		if len(revs) == 0:
+			continue
+		hoursByDay = {tsStripHours(rev.timestamp): rev.hours for rev in revs}
+		hoursByDay[tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))] = task.hours
+		data.append({'name': task.name, 'data': [(utcToLocal(date) * 1000, hours) for (date, hours) in sorted(hoursByDay.items())]})
+
+	request['wrappers'] = False
+	print toJS(data)
 
 @get('sprints/(?P<id>[0-9]+)/availability')
 def showAvailability(handler, request, id):

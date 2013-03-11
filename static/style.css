@@ -884,11 +884,28 @@ div.notes .new-note #preview {
 .revision-history img.bullet {
 	position: relative;
 	top: 3px;
-	padding-left: 15px;
+}
+
+.revision-entry {
+	border-left: 4px solid #000;
+	margin-bottom: 5px;
+	padding: 2px 0px 5px 5px;
+}
+
+.revision-entry .type {
+	float: left;
+	font-weight: bold;
+	font-variant: small-caps
 }
 
 .revision-history .timestamp {
-	padding-right: 10px;
+	float: right;
+	font-family: monospace;
+}
+
+.revision-history .body {
+	clear: both;
+	padding-top: 4px;
 }
 
 .revision-history .hours-up {

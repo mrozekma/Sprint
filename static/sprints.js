@@ -294,7 +294,8 @@ function apply_filters() {
 	});
 
 	if(assigned.length > 0 || statuses.length > 0) {
-		groups.each(function(e) {
+		// Hide non-fixed groups with no tasks
+		groups.each(function() {
 			seek = $(this);
 			if(seek.hasClass('fixed')) {
 				return;
