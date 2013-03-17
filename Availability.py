@@ -31,3 +31,6 @@ class Availability:
 			rows = db().select("SELECT COALESCE(SUM(hours), 0) FROM availability WHERE sprintid = ? AND timestamp >= ?", self.sprint.id, dateToTs(timestamp))
 		rows = list(rows)
 		return int(rows[0]['COALESCE(SUM(hours), 0)'])
+
+	def trim(self):
+		db().update("DELETE FROM availability WHERE sprintid = ? AND (timestamp < ? OR timestamp > ?)", self.sprint.id, self.sprint.start, self.sprint.end)

@@ -498,7 +498,7 @@ def showInfo(handler, request, id):
 	print "var sprintid = %d;" % id
 	print "$(document).ready(function() {"
 	print "    $('input.date[name=start]').datepicker({"
-	print "        minDate: '%s'," % getNow().strftime('%m/%d/%Y')
+	print "        minDate: '%s'," % min(tsToDate(sprint.start), getNow()).strftime('%m/%d/%Y')
 	print "        beforeShowDay: $.datepicker.noWeekends"
 	print "    });"
 	print "    $('input.date[name=end]').datepicker({"
@@ -519,7 +519,7 @@ def showInfo(handler, request, id):
 	else:
 		print "%s<br><br>" % sprint.safe.name
 	print "<b>Duration</b><br>"
-	if editable and dateToTs(getNow()) < sprint.start: # Pre-planning:
+	if editable:
 		print "<input type=\"text\" name=\"start\" class=\"date\" value=\"%s\">" % (tsToDate(sprint.start).strftime('%m/%d/%Y')),
 	else:
 		print tsToDate(sprint.start).strftime('%m/%d/%Y'),
@@ -544,7 +544,7 @@ def showInfo(handler, request, id):
 			print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user in sprint.members else '', user.safe.username)
 		print "</select>"
 	else:
-		print ', '.join(map(str, sorted(sprint.members)))
+		print ', '.join(member.str('scrummaster' if member == sprint.owner else 'member') for member in sorted(sprint.members))
 	print "<br>"
 
 	if editable:
@@ -570,8 +570,6 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 		die("You must be the scrummaster to modify sprint information")
 
 	if p_start:
-		if getNow() > tsToDate(sprint.start):
-			die("You cannot change the sprint's start date once the sprint has begun")
 		try:
 			start = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_start)
 			if not start:
@@ -580,8 +578,9 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 			start = datetime(year, month, day, 0, 0, 0)
 		except ValueError:
 			die("Malformed start date: %s" % stripTags(p_start))
-		if start < tsToDate(tsStripHours(dateToTs(getNow()))):
-			die("You cannot start the sprint before today")
+		minDate = tsToDate(tsStripHours(min(dateToTs(getNow()), sprint.start)))
+		if start < minDate:
+			die("You cannot start the sprint before %s" % minDate.strftime('%d %b %Y'))
 	else:
 		start = None
 
@@ -640,6 +639,7 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 
 	if start:
 		sprint.start = dateToTs(start)
+		avail.trim()
 
 	sprint.save()
 
@@ -655,9 +655,13 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 		goal.save()
 
 	if start:
-		for task in sprint.getTasks():
-			task.timestamp = sprint.start
-			task.save()
+		for task in sprint.getTasks(includeDeleted = True):
+			for rev in task.getRevisions():
+				if rev.timestamp < sprint.start:
+					rev.timestamp = sprint.start
+					rev.save()
+				else:
+					break
 
 	request['code'] = 299
 	delay(handler, SuccessBox("Updated info", close = 3, fixed = True))
