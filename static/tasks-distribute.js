@@ -5,6 +5,18 @@ var userLeft = undefined, userRight = undefined;
 var chart = undefined;
 
 $(document).ready(function() {
+	updateSuccess = function(data, text, request) {
+		distData = data;
+		errorMessage = distData.error;
+		process();
+	}
+
+	updateFail = function(data, text, request) {
+		distData = undefined;
+		errorMessage = text + ' - ' + errorThrown;
+		process();
+	}
+
 	$('#distribution-range-slider').slider({
 		range: true,
 		min: 0,
@@ -22,22 +34,27 @@ $(document).ready(function() {
 	$('.distribution img.user-gravatar').click(function() {
 		col = $(this).parents('.distribution');
 		side = col.hasClass('left') ? 'left' : 'right';
+		req = update();
 		$(this).effect('transfer', {
 			to: '.distribution.' + side + ' .selected img.user-gravatar',
 			className: 'distribution-transfer'
 		}, 'fast', function() {
 			if(side == 'left') {
+				userLeft = null;
+				process();
 				userLeft = $(this).attr('userid');
 			} else {
+				userRight = null;
+				process();
 				userRight = $(this).attr('userid');
 			}
 			$('.selected img.user-gravatar', col).attr('src', $(this).attr('src')).css('visibility', 'visible');
-			update();
+			req.done(updateSuccess).fail(updateFail);
 		});
 	});
 
 	updateDistSpan(distMin, distMax);
-	update();
+	update().done(updateSuccess).fail(updateFail);
 });
 
 function update(target_userid, taskid) {
@@ -48,20 +65,10 @@ function update(target_userid, taskid) {
 		data['task'] = taskid;
 	}
 
-	$.ajax({
+	return $.ajax({
 		url: '/tasks/distribute/update',
 		type: 'POST',
-		data: data,
-		success: function(data, text, request) {
-			distData = data;
-			errorMessage = distData.error;
-			process();
-		},
-		error: function(request, text, errorThrown) {
-			distData = undefined;
-			errorMessage = text + ' - ' + errorThrown;
-			process();
-		}
+		data: data
 	});
 }
 
@@ -93,7 +100,9 @@ function process() {
 		info = $('.distribution.' + side + ' .info');
 		tasks = $('.distribution.' + side + ' .tasks');
 		if(user == undefined) {
-			info.hide();
+			$('.username', info).text('Loading...');
+			$('.hours', info).html('&nbsp;');
+			$('.task-progress-total .progress-current', info).css('visibility', 'hidden');
 			tasks.empty();
 		} else {
 			pcnt = user.availability == 0 ? (user.hours > 0 ? 101 : 100) : Math.floor(user.hours * 100 / user.availability);
@@ -114,7 +123,7 @@ function process() {
 				row.click(function() {
 					targetUser = (side == 'left' ? userRight : userLeft);
 					if(targetUser != undefined) {
-						update(targetUser, $(this).attr('taskid'));
+						update(targetUser, $(this).attr('taskid')).done(updateSuccess).fail(updateFail);
 					}
 				});
 			}
