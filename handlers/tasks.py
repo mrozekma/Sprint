@@ -456,7 +456,7 @@ def newTaskImport(handler, request, group, source = None):
 	handler.title("New Tasks")
 	requirePriv(handler, 'User')
 	id = int(group)
-	print "<script src=\"/static/sprints-import.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/tasks-import.js\" type=\"text/javascript\"></script>"
 
 	print (tabs << 'import') % id
 
@@ -503,13 +503,14 @@ def newTaskImport(handler, request, group, source = None):
 		existingNames = [g.name for g in sprint.getGroups()]
 
 		print "<form method=\"post\" action=\"/tasks/new/import?group=%d&source=%d\">" % (group.id, source.id)
+		print "<input type=\"hidden\" name=\"included\" value=\"\">"
 		print "<table class=\"task-import\" border=0>"
 		print "<tr><th><input type=\"checkbox\" id=\"include_all\"></th><th>Task</th><th>Group</th><th>Assigned</th><th>Hours</th></tr>"
 		for task in source.getTasks():
 			if not task.shouldImport():
 				continue
 			print "<tr>"
-			print "<td><input type=\"checkbox\" name=\"include[%d]\"></td>" % task.id
+			print "<td><input type=\"checkbox\" data-id=\"%d\"></td>" % task.id
 			print "<td class=\"name\"><input type=\"text\" name=\"name[%d]\" value=\"%s\"></td>" % (task.id, task.name.replace('"', '&quot;'))
 			print "<td class=\"group\"><select name=\"group[%d]\">" % task.id
 			for g in groups:
@@ -527,7 +528,7 @@ def newTaskImport(handler, request, group, source = None):
 		print "</form><br><br>"
 
 @post('tasks/new/import')
-def newTaskImportPost(handler, request, group, source, p_group, p_name, p_hours, p_assigned, p_include = {}):
+def newTaskImportPost(handler, request, group, source, p_group, p_name, p_hours, p_assigned, p_included = ''):
 	handler.title("Import Tasks")
 	requirePriv(handler, 'User')
 
@@ -547,7 +548,7 @@ def newTaskImportPost(handler, request, group, source, p_group, p_name, p_hours,
 	if not source:
 		ErrorBox.die('Invalid Sprint', "No sprint with ID <b>%d</b>" % id)
 
-	ids = p_include.keys()
+	ids = p_included.split(',') if p_included != '' else []
 	if not all(map(lambda id: id in p_group and id in p_name and id in p_hours, ids)):
 		ErrorBox.die('Malformed Request', 'Incomplete form data')
 
