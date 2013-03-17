@@ -18,7 +18,7 @@ def projectsList(handler, request):
 	undelay(handler)
 
 	boxes = {} # project -> {'str': box HTML, 'weight': ascending sort weight}
-	for project in Project.loadAll() + (Project.loadAllTest() if isDevMode(handler) else []):
+	for project in Project.getAllSorted(handler.session['user']):
 		writer = ResponseWriter()
 		sprints = project.getSprints()
 		activeSprints = filter(lambda sprint: sprint.isActive(), sprints)

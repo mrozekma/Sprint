@@ -470,14 +470,21 @@ def newTaskImport(handler, request, group, source = None):
 	elif not sprint.canEdit(handler.session['user']):
 		ErrorBox.die("Permission Denied", "You don't have permission to modify this sprint")
 
+	sprints = sprint.project.getSprints()
+	sprintIdx = sprints.index(sprint)
+	prevSprint = sprints[sprintIdx - 1] if sprintIdx > 0 else None
+
 	if not source:
-		print "Select a sprint to import from:"
+		print "Select a sprint to import from:<br><br>"
 		print "<form method=\"get\" action=\"/tasks/new/import\">"
 		print "<input type=\"hidden\" name=\"group\" value=\"%d\">" % group.id
-		for project in Project.loadAll():
-			print "<h3>%s</h3>" % project.name
-			for sprint in project.getSprints():
-				print "<input type=\"radio\" name=\"source\" id=\"source_%d\" value=\"%d\"><label for=\"source_%d\">%s</label>" % (sprint.id, sprint.id, sprint.id, sprint.name)
+		print "<select name=\"source\" id=\"import-source\">"
+		for projectIter in Project.getAllSorted(handler.session['user'], sprint.project):
+			print "<optgroup label=\"%s\">" % projectIter.safe.name
+			for sprintIter in projectIter.getSprints():
+				print "<option value=\"%d\"%s>%s</option>" % (sprintIter.id, ' selected' if sprintIter == prevSprint else '', sprintIter.safe.name)
+			print "</optgroup>"
+		print "</select>"
 		print "<br><br>"
 		print Button('Next').positive().post()
 		print "</form>"
@@ -497,12 +504,12 @@ def newTaskImport(handler, request, group, source = None):
 
 		print "<form method=\"post\" action=\"/tasks/new/import?group=%d&source=%d\">" % (group.id, source.id)
 		print "<table class=\"task-import\" border=0>"
-		print "<tr><th>&nbsp;</th><th>Task</th><th>Group</th><th>Assigned</th><th>Hours</th></tr>"
+		print "<tr><th><input type=\"checkbox\" id=\"include_all\"></th><th>Task</th><th>Group</th><th>Assigned</th><th>Hours</th></tr>"
 		for task in source.getTasks():
 			if not task.shouldImport():
 				continue
 			print "<tr>"
-			print "<td><input type=\"checkbox\" name=\"include[%d]\" checked=\"true\"></td>" % task.id
+			print "<td><input type=\"checkbox\" name=\"include[%d]\"></td>" % task.id
 			print "<td class=\"name\"><input type=\"text\" name=\"name[%d]\" value=\"%s\"></td>" % (task.id, task.name.replace('"', '&quot;'))
 			print "<td class=\"group\"><select name=\"group[%d]\">" % task.id
 			for g in groups:
@@ -517,7 +524,7 @@ def newTaskImport(handler, request, group, source = None):
 			print "</tr>"
 		print "</table>"
 		print Button('Import').positive().post()
-		print "</form>"
+		print "</form><br><br>"
 
 @post('tasks/new/import')
 def newTaskImportPost(handler, request, group, source, p_group, p_name, p_hours, p_assigned, p_include = {}):

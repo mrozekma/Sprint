@@ -965,6 +965,10 @@ div.sprint-option {
 	border: 3px solid #fff;
 }
 
+select#import-source {
+	width: 400px;
+}
+
 table.task-import td.name input {
 	width: 400px;
 }

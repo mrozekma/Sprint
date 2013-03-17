@@ -1,6 +1,7 @@
 from rorn.ResponseWriter import ResponseWriter
 
 from DB import ActiveRecord, db
+from LoadValues import isDevMode
 from User import User
 from utils import stripTags
 
@@ -30,5 +31,24 @@ class Project(ActiveRecord):
 	@classmethod
 	def loadAllTest(cls, orderby = None, **attrs):
 		return filter(lambda project: project.id < 0, super(Project, cls).loadAll(orderby = orderby, **attrs))
+
+	@staticmethod
+	def getAllSorted(user = None, firstProject = None):
+		# Put projects this user is in first, and test projects last
+		def sortKey(project):
+			if project == firstProject:
+				return 0
+			if user is None:
+				return 1
+			sprints = project.getSprints()
+			activeSprints = filter(lambda sprint: sprint.isActive(), sprints)
+			activeMembers = set(sum((sprint.members for sprint in activeSprints), []))
+			return 1 if user in activeMembers else 2
+
+		projects = sorted(Project.loadAll(), key = sortKey)
+		if isDevMode() and user and user.hasPrivilege('Dev'):
+			projects += Project.loadAllTest()
+
+		return projects
 
 from Sprint import Sprint
