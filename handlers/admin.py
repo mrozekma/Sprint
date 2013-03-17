@@ -381,7 +381,7 @@ def adminSessionsPost(handler, request, p_key, p_action, p_value = None):
 					print "<option value=\"%d\">%s</option>" % (user.id, user.safe.username)
 				print "</select><br>"
 				print Button('Reassign', type = 'submit').positive()
-				print Button('Cancel', id = 'cancel-button', type = 'button').negative()
+				print Button('Cancel', id = 'cancel-button', type = 'button', url = '/admin/sessions').negative()
 				print "</form>"
 				break
 		if case('destroy'):
