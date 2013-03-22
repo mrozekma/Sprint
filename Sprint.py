@@ -81,7 +81,7 @@ class Sprint(ActiveRecord):
 		from Prefs import Prefs
 		page = currentUser.getPrefs().defaultSprintTab if currentUser else 'backlog'
 
-		return "<img src=\"/static/images/sprint.png\" class=\"sprint\"><a href=\"%s\">%s</a>" % (sprintTabs[page]['path'] % self.id, self.getFormattedName())
+		return "<img src=\"/static/images/sprint.png\" class=\"sprint\"><a href=\"%s\">%s</a>" % (sprintTabs()[page].getPath(self.id), self.getFormattedName())
 
 	def __str__(self):
 		return self.getFormattedName()

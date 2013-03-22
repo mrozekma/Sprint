@@ -15,7 +15,7 @@ from Table import Table
 from Task import Task, statuses, statusMenu
 from User import User
 from Group import Group
-from Tabs import Tabs
+from Tabs import Tabs, parseName as parseTabName
 from Goal import Goal
 from Availability import Availability
 from Chart import Chart
@@ -30,12 +30,33 @@ from utils import *
 
 # groupings = ['status', 'owner', 'hours']
 
-tabs = Tabs()
-tabs['info'] = '/sprints/%d/info'
-tabs['backlog'] = '/sprints/%d'
-tabs['metrics'] = '/sprints/%d/metrics'
-tabs['history'] = '/sprints/%d/history'
-tabs['availability'] = '/sprints/%d/availability'
+def tabs(sprint = None, where = None):
+	base, name = parseTabName(where) if where is not None else (None, None)
+
+	tabs = Tabs()
+	tabs['info'] = '/sprints/%d/info'
+	tabs['backlog'] = '/sprints/%d'
+	tabs['metrics'] = '/sprints/%d/metrics'
+	tabs['history'] = '/sprints/%d/history'
+	tabs['availability'] = '/sprints/%d/availability'
+
+	if sprint is not None:
+		tabs = tabs.format(sprint.id)
+
+	if where is not None:
+		tabs = tabs.where(where)
+
+	return tabs
+
+def drawNavArrows(sprint, tab):
+	print "<div id=\"sprint-nav\"><div>"
+	sprints = sprint.project.getSprints()
+	thisIdx = sprints.index(sprint)
+	if thisIdx > 0:
+		print "<a href=\"/sprints/%d/%s\"><img src=\"/static/images/prev.png\" title=\"%s\"></a>" % (sprints[thisIdx - 1].id, tab, sprints[thisIdx - 1].safe.name.replace('"', '&quot;'))
+	if thisIdx < len(sprints) - 1:
+		print "<a href=\"/sprints/%d/%s\"><img src=\"/static/images/next.png\" title=\"%s\"></a>" % (sprints[thisIdx + 1].id, tab, sprints[thisIdx + 1].safe.name.replace('"', '&quot;'))
+	print "</div></div>"
 
 @get('sprints')
 def sprint(handler, request):
@@ -120,7 +141,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	print "</div>"
 
 	print "<div class=\"backlog-tabs\">"
-	print (tabs << 'backlog') % id
+	print tabs(sprint, 'backlog')
 	print "<input type=\"text\" id=\"search\" value=\"%s\">" % search.getFullString().replace('"', '&quot;')
 	print "</div>"
 
@@ -341,17 +362,6 @@ def printTask(handler, task, days, group = None, highlight = False, editable = T
 	print "</td>"
 	print "</tr>"
 
-def drawNavArrows(sprint, tab):
-	print "<div id=\"sprint-nav\"><div>"
-	sprints = sprint.project.getSprints()
-	thisIdx = sprints.index(sprint)
-	if thisIdx > 0:
-		print "<a href=\"/sprints/%d/%s\"><img src=\"/static/images/prev.png\" title=\"%s\"></a>" % (sprints[thisIdx - 1].id, tab, sprints[thisIdx - 1].safe.name.replace('"', '&quot;'))
-	if thisIdx < len(sprints) - 1:
-		print "<a href=\"/sprints/%d/%s\"><img src=\"/static/images/next.png\" title=\"%s\"></a>" % (sprints[thisIdx + 1].id, tab, sprints[thisIdx + 1].safe.name.replace('"', '&quot;'))
-	print "</div></div>"
-
-
 @post('sprints/(?P<sprintid>[0-9]+)')
 def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 	def die(msg):
@@ -510,7 +520,7 @@ def showInfo(handler, request, id):
 
 	print InfoBox('Loading...', id = 'post-status', close = True)
 
-	print (tabs << 'info') % id
+	print tabs(sprint, 'info')
 
 	print "<form method=\"post\" action=\"/sprints/info?id=%d\">" % sprint.id
 	print "<b>Name</b><br>"
@@ -694,7 +704,7 @@ def showMetrics(handler, request, id):
 
 	Chart.include()
 	map(lambda (anchor, title, chart): chart.js(), charts)
-	print (tabs << 'metrics') % id
+	print tabs(sprint, 'metrics')
 	for anchor, title, chart in charts:
 		print "<a name=\"%s\">" % anchor
 		print "<h2><a href=\"#%s\">%s</a></h2>" % (anchor, title)
@@ -756,7 +766,7 @@ def showSprintHistory(handler, request, id, assigned = None):
 	print "});"
 	print "</script>"
 
-	print (tabs << 'history') % id
+	print tabs(sprint, 'history')
 	if len(tasks) == 0:
 		print ErrorBox("This sprint has no tasks")
 		print "<br>"
@@ -783,7 +793,7 @@ def showAvailability(handler, request, id):
 
 	handler.title(sprint.safe.name)
 	drawNavArrows(sprint, 'availability')
-	print (tabs << 'availability') % id
+	print tabs(sprint, 'availability')
 
 	print "<script src=\"/static/sprint-availability.js\" type=\"text/javascript\"></script>"
 	print "<script type=\"text/javascript\">"

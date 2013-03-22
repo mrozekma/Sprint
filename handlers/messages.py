@@ -20,7 +20,7 @@ def inbox(handler, request):
 
 	print InfoBox("Note", "You can control your automated message subscriptions from the <a href=\"/prefs\">preferences</a> page")
 
-	print tabs << 'inbox'
+	print tabs.where('inbox')
 	undelay(handler)
 
 	Markdown.head('div.message .body pre code')
@@ -37,7 +37,7 @@ def sent(handler, request):
 	handler.title('Messages')
 	requirePriv(handler, 'User')
 
-	print tabs << 'sent'
+	print tabs.where('sent')
 	undelay(handler)
 
 	Markdown.head('div.message .body pre code')

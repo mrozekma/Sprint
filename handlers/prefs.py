@@ -36,8 +36,8 @@ def prefs(handler, request):
 	print "<h3>Default Sprint Tab</h3>"
 	print "Which tab you're taken to when following links in the project list:<br><br>"
 	print "<select name=\"default_tab\">"
-	for tab in sprintTabs:
-		print "<option value=\"%s\"%s>%s</option>" % (tab['name'], ' selected' if tab['name'] == prefs.defaultSprintTab else '', tab['displayName'])
+	for tab in sprintTabs().group('').values():
+		print "<option value=\"%s\"%s>%s</option>" % (tab.name, ' selected' if tab.name == prefs.defaultSprintTab else '', tab.getDisplayName())
 	print "</select>"
 
 	print "<h3>Backlog Style</h3>"
@@ -75,7 +75,7 @@ def prefsPost(handler, request, p_default_tab, p_backlog_style, p_messages = [])
 
 	if not handler.session['user']:
 		die("You must be logged in to modify preferences")
-	if p_default_tab not in sprintTabs:
+	if p_default_tab not in sprintTabs():
 		die("Unrecognized default tab <b>%s</b>" % stripTags(p_default_tab))
 	if set(p_backlog_style.keys()) != set(name for block in statusMenu for name in block):
 		die("Backlog style key mismatch")

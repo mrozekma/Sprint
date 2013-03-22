@@ -18,7 +18,6 @@ def header(handler, path):
 	print "<head>"
 	print "<title>$title$</title>"
 	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/style.css\">"
-	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/bootstrap.css\">"
 	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/syntax-highlighting.css\">"
 	print "<link rel=\"shortcut icon\" href=\"/static/images/favicon.ico\">"
 
@@ -31,6 +30,9 @@ def header(handler, path):
 	print "<script src=\"/static/jquery.mousewheel-min.js\"></script>"
 	print "<script src=\"/static/jquery.terminal-0.4.23.js\"></script>"
 	print "<link href=\"/static/jquery.terminal.css\" rel=\"stylesheet\" type=\"text/css\" />"
+
+	print "<script src=\"/static/bootstrap-dropdown.js\" type=\"text/javascript\"></script>"
+	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/bootstrap.css\">"
 
 	print "<link rel=\"stylesheet\" href=\"/static/chosen/chosen.css\" />"
 	print "<script src=\"/static/chosen/chosen.jquery.js\" type=\"text/javascript\"></script>"

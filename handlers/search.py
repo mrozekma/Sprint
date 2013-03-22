@@ -17,7 +17,7 @@ tabs['others'] = '/search/saved/others'
 def searchSaved(handler, request):
 	handler.title('Saved Searches')
 	requirePriv(handler, 'User')
-	print tabs << 'yours'
+	print tabs.where('yours')
 	undelay(handler)
 
 	searches = SavedSearch.loadAll(userid = handler.session['user'].id)
@@ -46,7 +46,7 @@ def searchSaved(handler, request):
 def searchSavedOthers(handler, request):
 	handler.title('Saved Searches')
 	requirePriv(handler, 'User')
-	print tabs << 'others'
+	print tabs.where('others')
 	undelay(handler)
 
 	print "<style type=\"text/css\">"

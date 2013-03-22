@@ -25,6 +25,8 @@ from Event import Event
 from Markdown import Markdown
 from utils import *
 
+from handlers.sprints import tabs as sprintTabs
+
 @get('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)')
 def task(handler, request, ids):
 	requirePriv(handler, 'User')
@@ -166,7 +168,7 @@ def newTaskSingle(handler, request, group):
 	requirePriv(handler, 'User')
 	id = int(group)
 
-	print (tabs << 'single') % id
+	print tabs.format(id).where('single')
 
 	group = Group.load(group)
 	if not group:
@@ -302,7 +304,7 @@ def newTaskMany(handler, request, group):
 	print "next_url = '/sprints/%d';" % sprint.id
 	print "</script>"
 
-	print (tabs << 'many') % id
+	print tabs.format(id).where('many')
 
 	if not (sprint.isActive() or sprint.isPlanning()):
 		ErrorBox.die("Sprint Closed", "Unable to modify inactive sprint")
@@ -458,7 +460,7 @@ def newTaskImport(handler, request, group, source = None):
 	id = int(group)
 	print "<script src=\"/static/tasks-import.js\" type=\"text/javascript\"></script>"
 
-	print (tabs << 'import') % id
+	print tabs.format(id).where('import')
 
 	group = Group.load(group)
 	if not group:
@@ -591,13 +593,15 @@ def newTaskImportPost(handler, request, group, source, p_group, p_name, p_hours,
 
 @get('tasks/distribute')
 def distribute(handler, request, sprint):
-	handler.title("Distribute Tasks")
-	requirePriv(handler, 'Write')
-
+	handler.title('Distribute Tasks')
 	sprintid = int(sprint)
 	sprint = Sprint.load(sprintid)
 	if not sprint:
 		ErrorBox.die('Invalid Sprint', "No sprint with ID <b>%d</b>" % id)
+
+	handler.title(sprint.safe.name)
+	print sprintTabs(sprint, 'distribute')
+	requirePriv(handler, 'Write')
 	if not (sprint.isActive() or sprint.isPlanning()):
 		ErrorBox.die("Sprint Closed", "Unable to modify inactive sprint")
 	if not sprint.canEdit(handler.session['user']):
@@ -609,11 +613,6 @@ def distribute(handler, request, sprint):
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % sprint.id
 	print "</script>"
-
-	print "<div id=\"distribution-title-buttons\"><div>"
-	print Button('Backlog', "/sprints/%d" % sprint.id)
-	print Button('Metrics', "/sprints/%d/metrics" % sprint.id)
-	print "</div></div>"
 
 	print InfoBox('Loading...', id = 'post-status', close = True)
 
