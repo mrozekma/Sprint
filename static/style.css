@@ -524,12 +524,26 @@ img.user, img.project, img.sprint {
 	background-color:#6299c5;
 }
 
-#sprint-warnings .header {
-	cursor: pointer;
+.sprint-warnings > * {
+	margin: 0px 40px 10px 20px;
 }
 
-#sprint-warnings ul {
-	display: none;
+.sprint-warnings h1 {
+	font-size: 14pt;
+}
+
+.sprint-warnings > div {
+	padding-left: 32px;
+	background-repeat: no-repeat;
+	background-position: 8px 2px;
+}
+
+.sprint-warnings > div.good {
+	background-image: url(/static/images/tick.png);
+}
+
+.sprint-warnings > div.bad {
+	background-image: url(/static/images/cross.png);
 }
 
 #assigned-menu.contextMenu li a {

@@ -43,7 +43,7 @@ class Tab:
 			subNums = sum(tab.num or 0 for tab in members.values())
 			if subNums > 0:
 				num = subNums
-		if num is not None:
+		if num > 0:
 			print "<div class=\"num\">%d</div>" % num
 		print "<b class=\"caret\"></b>"
 		print "</a>"

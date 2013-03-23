@@ -37,7 +37,7 @@ def tabs(sprint = None, where = None):
 	tabs['metrics'] = '/sprints/%d/metrics'
 	if sprint is not None and (sprint.isPlanning() or base == 'planning'):
 		tabs['planning', 'history'] = '/sprints/%d/history'
-		tabs['planning', 'checklist'] = '/sprints/%d/checklist'
+		tabs.add(('planning', 'checklist'), path = '/sprints/%d/checklist', num = len(sprint.getWarnings()))
 		tabs['planning', 'distribute'] = '/tasks/distribute?sprint=%d'
 	elif sprint is not None and (sprint.isOver() or base == 'wrapup'):
 		tabs['wrapup', 'history'] = '/sprints/%d/history'
@@ -234,16 +234,6 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 		else:
 			daysTillPlanning = (tsToDate(sprint.start) - getNow()).days + 1
 			print InfoBox("The sprint has <b>not begun</b> &mdash; planning is %s. All changes are considered to have been made midnight of plan day" % ('tomorrow' if daysTillPlanning == 1 else "in %d days" % daysTillPlanning))
-
-		warnings = sprint.getWarnings()
-		if warnings:
-			print "<div id=\"sprint-warnings\" class=\"alert-message warning\">"
-			print "<span class=\"header\"><img class=\"bumpdown\" src=\"/static/images/expand.png\"> %s</span>" % pluralize(len(warnings), 'planning warning', 'planning warnings')
-			print "<ul>"
-			for warning in warnings:
-				print "<li>%s</li>" % warning
-			print "</ul>"
-			print "</div>"
 	elif sprint.isReview():
 		print InfoBox("Today is <b>sprint review</b> &mdash; this is the last day to make changes to the backlog")
 
@@ -904,20 +894,83 @@ def sprintAvailabilityPost(handler, request, id, p_hours):
 	Event.sprintAvailUpdate(handler, sprint)
 
 @get('sprints/(?P<id>[0-9]+)/checklist')
-def showSprintResults(handler, request, id):
+def showSprintChecklist(handler, request, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
-	tasks = sprint.getTasks(includeDeleted = True)
+	tasks = sprint.getTasks()
 
 	handler.title(sprint.safe.name)
 	drawNavArrows(sprint, 'checklist')
 	print tabs(sprint, ('planning', 'checklist'))
 
-	from Privilege import dev
-	dev(handler)
+	warnings = sprint.getWarnings()
+
+	def good(text): print "<div class=\"good\">%s</div>" % text
+	def bad(text): print "<div class=\"bad\">%s</div>" % text
+	def userStr(l):
+		l = map(str, sorted(l))
+		for case in switch(len(l)):
+			if case(0):
+				return ''
+			if case(1):
+				return l[0]
+			if case(2):
+				return "%s and %s" % tuple(l)
+			if case():
+				front, last = l[:-1], l[-1]
+				return "%s, and %s" % (', '.join(front), last)
+
+	print "<div class=\"sprint-warnings\">"
+	print "<h1>Members</h1>"
+
+	if 'no-availability' in warnings:
+		bad("%s %s no <a href=\"/sprints/%d/availability\">availability</a>" % (userStr(warnings['no-availability']), 'has' if len(warnings['no-availability']) == 1 else 'have', sprint.id))
+	else:
+		good("All users have some availability during the sprint")
+
+	if 'overcommitted' in warnings:
+		bad("%s %s <a href=\"/sprints/%d/metrics#commitment-by-user\">overcommitted</a>" % (userStr(warnings['overcommitted']), 'is' if len(warnings['overcommitted']) == 1 else 'are', sprint.id))
+	else:
+		good("All members have enough availability for their tasks")
+
+	print "<br><h1>Goals</h1>"
+
+	if 'no-sprint-goals' in warnings:
+		bad("There are no <a href=\"/sprints/%d/info\">sprint goals</a>" % sprint.id)
+	else:
+		goals = filter(lambda goal: goal.name != '', sprint.getGoals())
+		good(pluralize(len(goals), 'sprint goal is defined', 'sprint goals are defined'))
+
+	if 'tasks-without-goals' in warnings:
+		bad("There are many <a href=\"/sprints/%d?search=goal:none\">tasks unrelated to the sprint goals</a>" % sprint.id)
+	else:
+		unaffiliated = filter(lambda task: not task.goal, tasks)
+		if unaffiliated == []:
+			good("All tasks contribute to the sprint goals")
+		else:
+			good("Most tasks contribute to the sprint goals (<a href=\"/sprints/%d?search=goal:none\">%d left</a>)" % (sprint.id, len(unaffiliated)))
+
+	print "<br><h1>Tasks</h1>"
+
+	if 'open-without-hours' in warnings:
+		bad("There are <a href=\"/sprints/%d?search=status:not-started,in-progress,blocked hours:0\">open tasks with no hour estimate</a>" % sprint.id)
+	else:
+		good("All open tasks have hours estimated")
+
+	if 'closed-with-hours' in warnings:
+		bad("There are <a href=\"/sprints/%d?search=status:deferred,split hours:>0\">deferred tasks with hours</a>. These hours are counted as part of the sprint commitment" % sprint.id)
+	else:
+		good("All closed tasks have 0 hours")
+
+	if 'too-many-hours' in warnings:
+		bad("There are <a href=\"/sprints/%d?search=hours:>24\">tasks with too many hours</a>" % sprint.id)
+	else:
+		good("All tasks have at most 24 hours estimated")
+
+	print "</div>"
 
 @get('sprints/(?P<id>[0-9]+)/results')
 def showSprintResults(handler, request, id):
@@ -926,7 +979,11 @@ def showSprintResults(handler, request, id):
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
-	tasks = sprint.getTasks(includeDeleted = True)
+
+	tasksNow = sprint.getTasks()
+	tasksStart = filter(None, (task.getRevisionAt(tsToDate(sprint.start)) for task in tasksNow))
+	tasksNow = {task.id: task for task in tasksNow}
+	tasksStart = {task.id: task for task in tasksStart}
 
 	handler.title(sprint.safe.name)
 	drawNavArrows(sprint, 'results')
@@ -937,6 +994,16 @@ def showSprintResults(handler, request, id):
 
 	from Privilege import dev
 	dev(handler)
+
+	print "<ul>"
+
+	completed = filter(lambda task: task.status == 'complete', tasksNow.values())
+	print "<li><a href=\"/sprints/%d?search=status:complete\">%s completed</a> (%d%% of the original hourly commitment)</li>" % (sprint.id, pluralize(len(completed), 'task', 'tasks'), sum(tasksStart[task.id].hours if task.id in tasksStart else 0 for task in completed) * 100 / sum(task.hours for task in tasksStart.values()))
+
+	planned = filter(lambda task: task.id in tasksStart, tasksNow.values())
+	print "<li>%d%% of tasks were planned from the start</li>" % (len(planned) * 100 / len(tasksNow))
+
+	print "</ul>"
 
 @get('sprints/(?P<id>[0-9]+)/retrospective')
 def showSprintRetrospective(handler, request, id):

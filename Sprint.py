@@ -89,7 +89,7 @@ class Sprint(ActiveRecord):
 		return self.getFormattedName()
 
 	def getWarnings(self):
-		rtn = []
+		rtn = {}
 
 		from Availability import Availability
 		tasks = self.getTasks()
@@ -99,35 +99,34 @@ class Sprint(ActiveRecord):
 
 		# Users with 0 availability
 		zeroes = [user for (user, hours) in userAvails.iteritems() if hours == 0]
-		if len(zeroes) == 1:
-			rtn.append("%s has no <a href=\"/sprints/%d/availability\">availability</a>" % (zeroes[0], self.id))
-		elif len(zeroes) > 0:
-			rtn.append("%d members have no <a href=\"/sprints/%d/availability\">availability</a>" % (len(zeroes), self.id))
+		if zeroes != []:
+			rtn['no-availability'] = zeroes
 
 		# Users with >100% commitment
 		overcommitted = filter(lambda user: userAvails[user] < sum(task.hours for task in tasks if user in task.assigned), self.members)
-		if len(overcommitted) == 1:
-			rtn.append("%s is <a href=\"/sprints/%d/metrics#commitment-by-user\">overcommitted</a>" % (overcommitted[0], self.id))
-		elif len(overcommitted) > 0:
-			rtn.append("%d members are <a href=\"/sprints/%d/metrics#commitment-by-user\">overcommitted</a>" % (len(overcommitted), self.id))
+		if overcommitted != []:
+			rtn['overcommitted'] = overcommitted
 
 		# No sprint goals, or too many tasks (at least 10 tasks and more than 20% of all tasks) without a goal
 		unaffiliated = filter(lambda task: not task.goal, tasks)
-		if len(filter(lambda goal: goal.name != '', self.getGoals())) == 0:
-			rtn.append("There are no <a href=\"/sprints/%d/info\">sprint goals</a>" % self.id)
+		if filter(lambda goal: goal.name != '', self.getGoals()) == []:
+			rtn['no-sprint-goals'] = True
 		elif len(unaffiliated) >= 10 and len(unaffiliated) / len(tasks) > .20:
-			rtn.append("There are many <a href=\"/sprints/%d?search=goal:none\">tasks unrelated to the sprint goals</a>" % self.id)
+			rtn['tasks-without-goals'] = unaffiliated
 
-		# Incomplete tasks with 0 hours
-		if len(filter(lambda task: task.stillOpen() and task.hours == 0, tasks)) > 0:
-			rtn.append("There are <a href=\"/sprints/%d?search=status:not-started,in-progress,blocked hours:0\">open tasks with no hour estimate</a>" % self.id)
+		# Open tasks with 0 hours
+		noHours = filter(lambda task: task.stillOpen() and task.hours == 0, tasks)
+		if noHours != []:
+			rtn['open-without-hours'] = noHours
 
-		# Deferred/split tasks with >0 hours
-		if len(filter(lambda task: (task.status == 'deferred' or task.status == 'split') and task.hours > 0, tasks)) > 0:
-			rtn.append("There are <a href=\"/sprints/%d?search=status:deferred,split hours:>0\">deferred tasks with hours</a>. These hours are counted as part of the sprint commitment" % self.id)
+		# Closed tasks with >0 hours
+		haveHours = filter(lambda task: not task.stillOpen() and task.hours > 0, tasks)
+		if haveHours != []:
+			rtn['closed-with-hours'] = haveHours
 
 		# Tasks with too many hours
-		if len(filter(lambda task: task.hours > 24, tasks)) > 0:
-			rtn.append("There are <a href=\"/sprints/%d?search=hours:>24\">tasks with too many hours</a>" % self.id)
+		tooManyHours = filter(lambda task: task.hours > 24, tasks)
+		if tooManyHours != []:
+			rtn['too-many-hours'] = tooManyHours
 
 		return rtn
