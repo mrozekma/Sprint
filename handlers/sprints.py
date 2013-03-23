@@ -28,8 +28,6 @@ from Search import Search
 from Event import Event
 from utils import *
 
-# groupings = ['status', 'owner', 'hours']
-
 def tabs(sprint = None, where = None):
 	base, name = parseTabName(where) if where is not None else (None, None)
 
@@ -37,13 +35,32 @@ def tabs(sprint = None, where = None):
 	tabs['info'] = '/sprints/%d/info'
 	tabs['backlog'] = '/sprints/%d'
 	tabs['metrics'] = '/sprints/%d/metrics'
-	tabs['history'] = '/sprints/%d/history'
+	if sprint is not None and (sprint.isPlanning() or base == 'planning'):
+		tabs['planning', 'history'] = '/sprints/%d/history'
+		tabs['planning', 'checklist'] = '/sprints/%d/checklist'
+		tabs['planning', 'distribute'] = '/tasks/distribute?sprint=%d'
+	elif sprint is not None and (sprint.isOver() or base == 'wrapup'):
+		tabs['wrapup', 'history'] = '/sprints/%d/history'
+		tabs['wrapup', 'results'] = '/sprints/%d/results'
+		tabs['wrapup', 'retrospective'] = '/sprints/%d/retrospective'
+	else:
+		tabs['history'] = '/sprints/%d/history'
 	tabs['availability'] = '/sprints/%d/availability'
 
 	if sprint is not None:
 		tabs = tabs.format(sprint.id)
 
-	if where is not None:
+	# Special case tabs that move around based on sprint status
+	if name == 'history' and sprint is not None:
+		if sprint.isPlanning():
+			tabs = tabs.where(('planning', 'history'))
+		elif sprint.isOver():
+			tabs = tabs.where(('wrapup', 'history'))
+		else:
+			tabs = tabs.where('history')
+	elif name == 'distribute' and sprint is not None and sprint.isPlanning():
+		tabs = tabs.where(('planning', 'distribute'))
+	elif where is not None:
 		tabs = tabs.where(where)
 
 	return tabs
@@ -885,6 +902,60 @@ def sprintAvailabilityPost(handler, request, id, p_hours):
 	request['code'] = 299
 	delay(handler, SuccessBox("Updated availability", close = 3, fixed = True))
 	Event.sprintAvailUpdate(handler, sprint)
+
+@get('sprints/(?P<id>[0-9]+)/checklist')
+def showSprintResults(handler, request, id):
+	requirePriv(handler, 'User')
+	id = int(id)
+	sprint = Sprint.load(id)
+	if not sprint:
+		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	tasks = sprint.getTasks(includeDeleted = True)
+
+	handler.title(sprint.safe.name)
+	drawNavArrows(sprint, 'checklist')
+	print tabs(sprint, ('planning', 'checklist'))
+
+	from Privilege import dev
+	dev(handler)
+
+@get('sprints/(?P<id>[0-9]+)/results')
+def showSprintResults(handler, request, id):
+	requirePriv(handler, 'User')
+	id = int(id)
+	sprint = Sprint.load(id)
+	if not sprint:
+		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	tasks = sprint.getTasks(includeDeleted = True)
+
+	handler.title(sprint.safe.name)
+	drawNavArrows(sprint, 'results')
+	print tabs(sprint, ('wrapup', 'results'))
+
+	if not sprint.isOver():
+		ErrorBox.die('Sprint Open', "Results aren't available until the sprint has closed")
+
+	from Privilege import dev
+	dev(handler)
+
+@get('sprints/(?P<id>[0-9]+)/retrospective')
+def showSprintRetrospective(handler, request, id):
+	requirePriv(handler, 'User')
+	id = int(id)
+	sprint = Sprint.load(id)
+	if not sprint:
+		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	tasks = sprint.getTasks(includeDeleted = True)
+
+	handler.title(sprint.safe.name)
+	drawNavArrows(sprint, 'retrospective')
+	print tabs(sprint, ('wrapup', 'retrospective'))
+
+	if not sprint.isOver():
+		ErrorBox.die('Sprint Open', "The retrospective isn't available until the sprint has closed")
+
+	from Privilege import dev
+	dev(handler)
 
 @get('sprints/new')
 def newSprint(handler, request, project):

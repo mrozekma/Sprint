@@ -50,8 +50,10 @@ class Sprint(ActiveRecord):
 		return tsToDate(self.end).date() == getNow().date()
 
 	def isActive(self):
-		now = dateToTs(getNow())
-		return self.start <= now <= self.end
+		return tsToDate(self.start) <= getNow() <= tsToDate(self.end)
+
+	def isOver(self):
+		return getNow() > tsToDate(self.end)
 
 	def canEdit(self, user):
 		return (self.isActive() or self.isPlanning()) and user and user.hasPrivilege('Write')
