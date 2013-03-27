@@ -60,3 +60,16 @@ class UserExtension(Extension):
 	def extendMarkdown(self, md, md_global):
 		md.registerExtension(self)
 		md.inlinePatterns.add('user', userPattern, '_end')
+
+class StrikethroughPattern(Pattern):
+	def handleMatch(self, m):
+		text = m.group(2)
+		s = etree.Element('s')
+		s.text = text
+		return s
+strikethroughPattern = StrikethroughPattern('---([^ ].*?)---')
+
+class StrikethroughExtension(Extension):
+	def extendMarkdown(self, md, md_global):
+		md.registerExtension(self)
+		md.inlinePatterns.add('strikethrough', strikethroughPattern, '_end')

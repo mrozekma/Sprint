@@ -35,7 +35,7 @@ def helpMarkdown(handler, request):
 	print "<script src=\"/static/prettify/prettify.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/help-markdown.js\" type=\"text/javascript\"></script>"
 
-	print "Markdown is used to format messages and task notes. The <a href=\"http://daringfireball.net/projects/markdown/\">official Markdown website</a> has pretty comprehensive documentation, but this page summarizes the syntax and lists some extensions"
+	print "Markdown is used to format some longer-length text (messages, task notes, etc). The <a href=\"http://daringfireball.net/projects/markdown/\">official Markdown website</a> has pretty comprehensive documentation, but this page summarizes the syntax and lists some extensions"
 
 	print "<h2>Basic syntax</h2>"
 	print "This is standard markdown syntax; if you've used it before you can skip this section:<br><br>"

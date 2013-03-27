@@ -26,6 +26,8 @@ from Export import exports
 from LoadValues import isDevMode
 from Search import Search
 from Event import Event
+from Retrospective import Retrospective, Category as RetroCategory, Entry as RetroEntry
+from Markdown import Markdown
 from utils import *
 
 def tabs(sprint = None, where = None):
@@ -992,8 +994,8 @@ def showSprintResults(handler, request, id):
 	if not sprint.isOver():
 		ErrorBox.die('Sprint Open', "Results aren't available until the sprint has closed")
 
-	from Privilege import dev
-	dev(handler)
+	from rorn.Box import WarningBox
+	print WarningBox("This feature is still under development")
 
 	print "<ul>"
 
@@ -1012,17 +1014,107 @@ def showSprintRetrospective(handler, request, id):
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
-	tasks = sprint.getTasks(includeDeleted = True)
+	editing = (sprint.owner == handler.session['user'])
 
 	handler.title(sprint.safe.name)
 	drawNavArrows(sprint, 'retrospective')
 	print tabs(sprint, ('wrapup', 'retrospective'))
 
+	Markdown.head()
+	print "<script type=\"text/javascript\">"
+	print "var sprint_id = %d;" % sprint.id
+	print "var editing = %s;" % toJS(editing)
+	print "</script>"
+	print "<script src=\"/static/sprint-retrospective.js\" type=\"text/javascript\"></script>"
+
 	if not sprint.isOver():
 		ErrorBox.die('Sprint Open', "The retrospective isn't available until the sprint has closed")
 
-	from Privilege import dev
-	dev(handler)
+	retro = Retrospective.load(sprint)
+	if retro is None:
+		if editing:
+			print "<form method=\"post\" action=\"/sprints/%d/retrospective/start\">" % sprint.id
+			print Button("Start Retrospective").post().positive()
+			print "</form>"
+		else:
+			print ErrorBox("This sprint has no retrospective")
+		done()
+
+	print "The sprint retrospective asks two main questions:<br>"
+	print "<ul class=\"retrospective-list\">"
+	print "<li class=\"good\">What went well during the sprint?</li>"
+	print "<li class=\"bad\">What could be improved in the next sprint?</li>"
+	print "</ul>"
+	if editing:
+		print "For now the list of categories is fixed; eventually you'll be able to modify them per-sprint. Click an existing item to edit it, or the margin icon to toggle it. Fill in the text area at the end of the category to add a new item; clear a text area to delete it. <a href=\"/help/markdown\">Markdown</a> is available if necessary"
+
+	print "<div class=\"retrospective markdown\">"
+	for category, entries in retro.iteritems():
+		print "<div class=\"category\" data-id=\"%d\">" % category.id
+		print "<div class=\"name\">%s</div>" % stripTags(category.name)
+		for entry in sorted(entries, key = lambda entry: 0 if entry.good else 1):
+			print "<div class=\"entry %s\" data-id=\"%d\"><textarea>%s</textarea></div>" % ('good' if entry.good else 'bad', entry.id, stripTags(entry.body))
+		if not editing and len(entries) == 0:
+			print "<div class=\"none\">No entries</div>"
+		print "</div>"
+	print "</div>"
+
+@post('sprints/(?P<id>[0-9]+)/retrospective/start')
+def sprintRetrospectiveStart(handler, request, id):
+	if not handler.session['user']:
+		ErrorBox.die('Forbidden', "You must be logged in to modify sprint info")
+
+	sprint = Sprint.load(id)
+	if not sprint:
+		ErrorBox.die('Sprints', "There is no sprint with ID %d" % id)
+	elif sprint.owner != handler.session['user']:
+		ErrorBox.die('Forbidden', "Only the scrummaster can edit the retrospective")
+
+	Retrospective.init(sprint)
+	redirect("/sprints/%d/retrospective" % sprint.id)
+
+@post('sprints/(?P<sprintid>[0-9]+)/retrospective/render')
+def sprintRetrospectiveRender(handler, request, sprintid, p_id, p_catid, p_body = None, p_good = None):
+	def die(msg):
+		print msg
+		done()
+
+	request['wrappers'] = False
+	if p_id != 'new':
+		p_id = to_int(p_id, 'id', die)
+	p_catid = to_int(p_catid, 'catid', die)
+	if p_good is not None:
+		p_good = to_bool(p_good)
+	if not handler.session['user']:
+		die("You must be logged in to modify sprint info")
+
+	sprint = Sprint.load(sprintid)
+	if not sprint:
+		die("There is no sprint with ID %d" % sprintid)
+	elif sprint.owner != handler.session['user'] and (p_body is not None or p_good is not None):
+		die("Only the scrummaster can edit the retrospective")
+
+	if p_id == 'new':
+		if p_body is None or p_good is None:
+			die("Missing body/good")
+		entry = RetroEntry(p_catid, p_body, p_good)
+	else:
+		entry = RetroEntry.load(p_id)
+		if p_body is not None:
+			entry.body = p_body
+		if p_good is not None:
+			entry.good = p_good
+
+		if entry.body == '':
+			entry.delete()
+			request['code'] = 299
+			print toJS({'id': entry.id, 'deleted': True});
+			return
+
+	entry.save()
+	request['code'] = 299
+	print toJS({'id': entry.id, 'body': Markdown.render(entry.body), 'good': entry.good})
+
 
 @get('sprints/new')
 def newSprint(handler, request, project):
