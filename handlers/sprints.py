@@ -39,7 +39,7 @@ def tabs(sprint = None, where = None):
 	tabs['metrics'] = '/sprints/%d/metrics'
 	if sprint is not None and (sprint.isPlanning() or base == 'planning'):
 		tabs['planning', 'history'] = '/sprints/%d/history'
-		tabs.add(('planning', 'checklist'), path = '/sprints/%d/checklist', num = len(sprint.getWarnings()))
+		tabs.add(('planning', 'checklist'), path = '/sprints/%d/checklist', num = len(sprint.getWarnings()) or None)
 		tabs['planning', 'distribute'] = '/tasks/distribute?sprint=%d'
 	elif sprint is not None and (sprint.isOver() or base == 'wrapup'):
 		tabs['wrapup', 'history'] = '/sprints/%d/history'
