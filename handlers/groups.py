@@ -189,11 +189,14 @@ def assignGroupGoalPost(handler, request, id, p_goal):
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
 
-	goal = Goal.load(int(p_goal))
-	if not goal:
-		ErrorBox.die('Invalid Goal', "No goal with ID <b>%d</b>" % int(p_goal))
-	elif not goal.sprint == group.sprint:
-		ErrorBox.die('Invalid Goal', "Selected goal is not part of the correct sprint")
+	if p_goal == '0':
+		goal = None
+	else:
+		goal = Goal.load(int(p_goal))
+		if not goal:
+			ErrorBox.die('Invalid Goal', "No goal with ID <b>%d</b>" % int(p_goal))
+		elif not goal.sprint == group.sprint:
+			ErrorBox.die('Invalid Goal', "Selected goal is not part of the correct sprint")
 
 	for task in group.getTasks():
 		if task.goal != goal:

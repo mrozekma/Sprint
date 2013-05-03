@@ -843,10 +843,10 @@ def taskEditPost(handler, request, ids, p_assigned, p_hours, p_status, p_goal, p
 		ErrorBox.die("You don't have permission to modify this sprint")
 
 	changes = {
-		'assigned': None if p_assigned == '' else User.load(int(p_assigned)),
-		'hours': None if p_hours == '' else int(p_hours),
-		'status': None if p_status == '' else p_status,
-		'goal': None if p_goal == '' else Goal.load(int(p_goal))
+		'assigned': False if p_assigned == '' else User.load(int(p_assigned)),
+		'hours': False if p_hours == '' else int(p_hours),
+		'status': False if p_status == '' else p_status,
+		'goal': False if p_goal == '' else Goal.load(int(p_goal))
 	}
 
 	if changes['assigned'] and changes['assigned'] not in sprint.members:
@@ -857,7 +857,7 @@ def taskEditPost(handler, request, ids, p_assigned, p_hours, p_status, p_goal, p
 	changed = set()
 	for task in tasks:
 		for field, value in changes.iteritems():
-			if value is not None and getattr(task, field) != value:
+			if value is not False and getattr(task, field) != value:
 				setattr(task, field, value)
 				changed.add(task)
 				Event.taskUpdate(handler, task, field, value)
