@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.0"
+   width="60"
+   height="68.513756"
+   id="split"
+   sodipodi:version="0.32"
+   inkscape:version="0.45.1"
+   sodipodi:docname="Sub-arrows.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   sodipodi:docbase="C:\Documents and Settings\Tim\Desktop">
+  <metadata
+     id="metadata18">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     inkscape:window-height="960"
+     inkscape:window-width="1454"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     guidetolerance="10.0"
+     gridtolerance="10.0"
+     objecttolerance="10.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base"
+     inkscape:zoom="10.666667"
+     inkscape:cx="60"
+     inkscape:cy="42.536983"
+     inkscape:window-x="144"
+     inkscape:window-y="31"
+     inkscape:current-layer="split" />
+  <defs
+     id="d">
+    <radialGradient
+       cx="30"
+       cy="-310"
+       r="30"
+       fx="30"
+       fy="-310"
+       id="radial1"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.1677,0,0,0.168,22.26125,45.14375)">
+      <stop
+         style="stop-color:#a249a5"
+         offset="0"
+         id="stop1" />
+      <stop
+         style="stop-color:black;stop-opacity:0"
+         offset="1"
+         id="stop2" />
+    </radialGradient>
+    <radialGradient
+       cx="30"
+       cy="10"
+       r="13.13"
+       fx="30"
+       fy="10"
+       id="radialWhite"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.639,0,0,0.608,8.03825,-13.24525)">
+      <stop
+         style="stop-color:white"
+         offset="0"
+         id="white" />
+      <stop
+         style="stop-color:white;stop-opacity:0.95"
+         offset="0.6"
+         id="midstop" />
+      <stop
+         style="stop-color:white;stop-opacity:0"
+         offset="1"
+         id="transwhite" />
+    </radialGradient>
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#radialWhite"
+       id="radialGradient2174"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.639,0,0,0.608,8.03825,-13.24525)"
+       cx="30"
+       cy="10"
+       fx="30"
+       fy="10"
+       r="13.13" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#radial1"
+       id="radialGradient2176"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.1677,0,0,0.168,22.26125,45.14375)"
+       cx="30"
+       cy="-310"
+       fx="30"
+       fy="-310"
+       r="30" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#radial1"
+       id="radialGradient2315"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.1677,0,0,0.168,24.98,60.3)"
+       cx="30"
+       cy="-310"
+       fx="30"
+       fy="-310"
+       r="30" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#radialWhite"
+       id="radialGradient2318"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.639,0,0,0.608,10.757,1.911)"
+       cx="30"
+       cy="10"
+       fx="30"
+       fy="10"
+       r="13.13" />
+  </defs>
+  <g
+     id="g2233"
+     transform="translate(-1.4375,35.232509)">
+    <g
+       id="g2186"
+       transform="matrix(0,1,-1,0,61.4375,-26.71875)">
+      <path
+         id="path2188"
+         style="fill:#0054a6"
+         d="M 60,10 L 47,0 L 47,20 L 60,10 z " />
+      <rect
+         id="rect2190"
+         style="fill:#0054a6"
+         y="6"
+         x="35"
+         height="8"
+         width="15" />
+    </g>
+    <g
+       transform="matrix(0,1,-1,0,41.4375,-26.71875)"
+       id="g2192">
+      <path
+         d="M 60,10 L 47,0 L 47,20 L 60,10 z "
+         style="fill:#0054a6"
+         id="path2194" />
+      <rect
+         width="15"
+         height="8"
+         x="35"
+         y="6"
+         style="fill:#0054a6"
+         id="rect2196" />
+    </g>
+    <g
+       id="g2198"
+       transform="matrix(0,1,-1,0,21.4375,-26.71875)">
+      <path
+         id="path2200"
+         style="fill:#0054a6"
+         d="M 60,10 L 47,0 L 47,20 L 60,10 z " />
+      <rect
+         id="rect2202"
+         style="fill:#0054a6"
+         y="6"
+         x="35"
+         height="8"
+         width="15" />
+    </g>
+  </g>
+  <path
+     style="fill:#ed1c24"
+     d="M 26.017679,8.495731 L 26.017679,23.495731 L 29.798929,29.214481 L 34.017679,23.495731 L 34.017679,8.495731 L 26.017679,8.495731 z "
+     id="redhead"
+     sodipodi:nodetypes="cccccc" />
+  <path
+     style="fill:#ed1c24"
+     d="M 27.323996,22.21875 L 18.667746,30.875 L 14.011496,26.21875 L 11.886496,42.4375 L 28.167746,40.375 L 24.323996,36.53125 L 32.980246,27.875 L 27.323996,22.21875 z M 11.886496,42.4375 L 11.823996,42.4375 L 11.886496,42.5 L 11.886496,42.4375 z "
+     id="path2212" />
+  <path
+     style="fill:#ed1c24"
+     d="M 32.667746,22.21875 L 27.011496,27.875 L 35.698996,36.53125 L 31.917746,40.3125 L 48.105246,42.4375 L 46.073996,26.15625 L 41.355246,30.875 L 32.667746,22.21875 z M 48.105246,42.4375 L 48.105246,42.5 L 48.167746,42.4375 L 48.105246,42.4375 z "
+     id="path2218" />
+  <path
+     d="M 38.3,8 C 38.3,12.4 34.6,16 30,16 C 25.4,16 21.7,12.4 21.7,8 C 21.7,3.6 25.4,0 30,0 C 34.6,0 38.3,3.6 38.3,8 L 38.3,8 z "
+     style="fill:url(#radialGradient2318)"
+     id="sphere1" />
+  <path
+     d="M 36,8 C 36,11.31 33.31,14 30,14 C 26.69,14 24,11.31 24,8 C 24,4.69 26.69,2 30,2 C 33.31,2 36,4.69 36,8 L 36,8 z "
+     style="fill:url(#radialGradient2315)"
+     id="sphere2" />
+</svg>

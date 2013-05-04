@@ -898,6 +898,8 @@ div.notes .new-note #preview {
 .revision-history img.bullet {
 	position: relative;
 	top: 3px;
+	width: 16px;
+	height: 16px;
 }
 
 .revision-entry {

@@ -12,10 +12,15 @@ class Status:
 	def getIcon(self): return "/static/images/status-%s.png" % self.name.replace(' ', '-')
 	icon = property(getIcon)
 
-	def __init__(self, name, text, revisionVerb):
+	def __init__(self, name, text, revVerbWasOpen, revVerbWasClosed = None):
 		self.name = name
 		self.text = text
-		self.revisionVerb = revisionVerb
+		self.revVerbWasOpen = revVerbWasOpen
+		self.revVerbWasClosed = revVerbWasClosed or revVerbWasOpen
+
+	# wasOpen indicates if the previous revision was open
+	def getRevisionVerb(self, wasOpen):
+		return self.revVerbWasOpen if wasOpen else self.revVerbWasClosed
 
 statuses = [
 	Status('blocked', 'Blocked', 'Blocked'),
@@ -23,7 +28,7 @@ statuses = [
 	Status('complete', 'Complete', 'Completed'),
 	Status('deferred', 'Deferred', 'Deferred'),
 	Status('in progress', 'In Progress', 'Started'),
-	Status('not started', 'Not Started', 'Aborted'),
+	Status('not started', 'Not Started', 'Aborted', 'Resumed'),
 	Status('split', 'Split', 'Split'),
 ]
 statuses = dict([(s.name, s) for s in statuses])

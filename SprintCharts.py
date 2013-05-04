@@ -124,7 +124,7 @@ class HoursChart(Chart):
 							elif t.status == 'complete':
 								texts.append("<span style=\"color: #0a0\">(Complete %d)</span> %s" % (hoursDiff[t], t.name))
 							else:
-								texts.append("<span style=\"color: #999\">(%s %d)</span> %s" % (statuses[t.status].revisionVerb, hoursDiff[t], t.name))
+								texts.append("<span style=\"color: #999\">(%s %d)</span> %s" % (statuses[t.status].getRevisionVerb(hoursYesterday.get(t, 0) > 0), hoursDiff[t], t.name))
 					flagSeries['data'].append({'x': days.index(day), 'title': alphabet[len(flagSeries['data']) % len(alphabet)], 'text': '<br>'.join(texts)})
 
 		avail = Availability(sprint)

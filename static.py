@@ -11,7 +11,8 @@ def static(handler, request, path, v = None):
 	types = {
 		'css': 'text/css',
 		'js': 'text/javascript',
-		'png': 'image/png'
+		'png': 'image/png',
+		'svg': 'image/svg+xml'
 		}
 
 	if not isfile("static/" + filename):

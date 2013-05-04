@@ -21,7 +21,7 @@ colorMap = { # Maps status names to border colors
 def entry(rev, oldRev, describeTask, icon, color, text):
 	useRev = oldRev or rev
 	print "<div class=\"revision-entry\" style=\"border-color: %s\" assigned=\"%s\">" % (color, ' '.join(user.username for user in rev.assigned))
-	print "<div class=\"type\"><img class=\"bullet\" src=\"/static/images/%s.png\">&nbsp;%s</div>" % (icon, text)
+	print "<div class=\"type\"><img class=\"bullet\" src=\"/static/images/%s\">&nbsp;%s</div>" % (icon, text)
 	print "<div class=\"timestamp\">%s by %s</div>" % (tsToDate(rev.timestamp).strftime('%H:%M:%S'), userStr(rev))
 	print "<div class=\"body\">"
 	if describeTask:
@@ -52,43 +52,44 @@ def userStr(rev, arg = None):
 def hoursChanged(rev, oldRev, describeTask):
 	hoursDiff = rev.hours - oldRev.hours
 	verb = 'increased' if hoursDiff > 0 else 'decreased'
-	with entry(rev, oldRev, describeTask, "revision-hours-%s" % verb, '#8b8b00', "Hours %s" % verb.capitalize()):
+	with entry(rev, oldRev, describeTask, "revision-hours-%s.svg" % verb, '#8b8b00', "Hours %s" % verb.capitalize()):
 		pass # The entry() exit handler will output the text
 
 def created(rev, oldRev, describeTask):
-	with entry(rev, oldRev, describeTask, 'revision-create', '#008b00', 'Created'):
+	with entry(rev, oldRev, describeTask, 'revision-create.svg', '#008b00', 'Created'):
 		print "%s. %s" % (rev.getStatus().text.capitalize(), pluralize(rev.hours, 'hour remains', 'hours remain'))
 
 def deleted(rev, oldRev, describeTask):
-	with entry(rev, oldRev, describeTask, 'revision-deleted', '#8b0000', 'Deleted'):
+	with entry(rev, oldRev, describeTask, 'revision-deleted.svg', '#8b0000', 'Deleted'):
 		pass
 
 def undeleted(rev, oldRev, describeTask):
-	with entry(rev, oldRev, describeTask, 'revision-undeleted', '#8b0000', 'Undeleted'):
+	with entry(rev, oldRev, describeTask, 'revision-undeleted.svg', '#8b0000', 'Undeleted'):
 		pass
 
 def statusChanged(rev, oldRev, describeTask):
 	status = rev.getStatus()
-	with entry(rev, oldRev, describeTask, 'revision-' + status.name.replace(' ', '-'), colorMap[status.name], status.revisionVerb):
+	verb = status.getRevisionVerb(oldRev.stillOpen())
+	with entry(rev, oldRev, describeTask, "revision-%s.svg" % verb.lower().replace(' ', '-'), colorMap[status.name], verb):
 		pass
 
 def renamed(rev, oldRev, describeTask):
-	with entry(rev, oldRev, describeTask, 'revision-renamed', '#0b88d7', 'Renamed'):
+	with entry(rev, oldRev, describeTask, 'revision-renamed.svg', '#0b88d7', 'Renamed'):
 		print "Renamed to &quot;%s&quot;" % rev.safe.name
 
 def reassigned(rev, oldRev, describeTask):
-	with entry(rev, oldRev, describeTask, 'revision-assigned', '#8a2800', 'Reassigned'):
+	with entry(rev, oldRev, describeTask, 'revision-assigned.svg', '#8a2800', 'Reassigned'):
 		print "Reassigned to %s" % ', '.join(userStr(rev, user) for user in rev.assigned)
 
 def goalChanged(rev, oldRev, describeTask):
-	with entry(rev, oldRev, describeTask, 'tag-blue', '#0bc6d7', 'Goal Changed'):
+	with entry(rev, oldRev, describeTask, 'tag-blue.png', '#0bc6d7', 'Goal Changed'):
 		if rev.goal is None:
 			print "Cleared sprint goal"
 		else:
 			print "Set sprint goal to <img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;<a href=\"/sprints/%d?search=goal:%s\">%s</a>" % (rev.goal.color, rev.sprint.id, rev.goal.color, rev.goal.safe.name)
 
 def unrecognizedChange(rev, oldRev, field, describeTask):
-	with entry(rev, oldRev, describeTask, 'revision-unknown', '#000', "Field Changed"):
+	with entry(rev, oldRev, describeTask, 'revision-unknown.svg', '#000', "Field Changed"):
 		print "Field '%s' changed: %s &#rarr; %s" % (field, stripTags(str(oldRev.__getattribute__(field))), stripTags(str(rev.__getattribute__(field))))
 
 def showHistory(tasks, describeTask):
