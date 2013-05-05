@@ -63,7 +63,7 @@ class DiskQueue(Thread):
 class DB:
 	def __init__(self):
 		self.diskConn = connect(filename, check_same_thread = False)
-		self.conn = connect(':memory:')
+		self.conn = connect(':memory:', check_same_thread = False)
 
 		from Log import console
 		console('db', 'Starting memory backfill')

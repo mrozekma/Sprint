@@ -1,4 +1,5 @@
 import re
+from sqlite3 import connect
 from threading import Thread
 from time import sleep
 from os.path import isdir, exists
@@ -8,6 +9,7 @@ from shutil import copy
 from rorn.ResponseWriter import ResponseWriter
 from rorn.Session import sessions
 
+from DB import db
 from Lock import getLock
 from utils import *
 
@@ -125,3 +127,30 @@ def backup():
 		return
 
 	print "Backup to %s successful" % filename
+
+@job('Log Archive', MONTHLY)
+def logArchive():
+	if not isdir('logs'):
+		print "No logs directory exists; aborting"
+		return
+
+	filename = datetime.now().strftime('logs/%Y%m%d-%H%M%S.log')
+	if exists(filename):
+		print "Log file %s already exists; aborting" % filename
+		return
+
+	cursor = db().cursor()
+	cursor.execute("ATTACH DATABASE '%s' AS archive" % filename)
+	cursor.execute("SELECT sql FROM main.sqlite_master WHERE type = 'table' AND name = 'log'")
+	sql = cursor.fetchone()[0]
+	if not sql.startswith('CREATE TABLE log'):
+		print "Unexpected SQL: %s" % sql
+		return
+	cursor.execute(sql.replace('CREATE TABLE log', 'CREATE TABLE archive.log'))
+	cursor.execute("INSERT INTO archive.log SELECT * FROM log")
+	cursor.execute("SELECT COUNT(*) FROM archive.log")
+	numRows = cursor.fetchone()[0]
+	cursor.execute("DETACH DATABASE archive");
+
+	db().update("DELETE FROM log")
+	print "Archived %s to %s" % (pluralize(numRows, 'log entry', 'log entries'), filename)
