@@ -25,7 +25,7 @@ def entry(rev, oldRev, describeTask, icon, color, text):
 	print "<div class=\"timestamp\">%s by %s</div>" % (tsToDate(rev.timestamp).strftime('%H:%M:%S'), userStr(rev))
 	print "<div class=\"body\">"
 	if describeTask:
-		print "<a href=\"/tasks/%d\">%s</a>, assigned to %s<br>" % (rev.id, useRev.safe.name, ', '.join(userStr(useRev, user) for user in useRev.assigned))
+		print "<a href=\"/tasks/%d\">%s</a>, assigned to %s<br>" % (rev.id, useRev.safe.name, ', '.join(userStr(useRev, user) for user in sorted(useRev.assigned)))
 
 	w = ResponseWriter()
 	yield
@@ -79,7 +79,7 @@ def renamed(rev, oldRev, describeTask):
 
 def reassigned(rev, oldRev, describeTask):
 	with entry(rev, oldRev, describeTask, 'revision-assigned.svg', '#8a2800', 'Reassigned'):
-		print "Reassigned to %s" % ', '.join(userStr(rev, user) for user in rev.assigned)
+		print "Reassigned to %s" % ', '.join(userStr(rev, user) for user in sorted(rev.assigned))
 
 def goalChanged(rev, oldRev, describeTask):
 	with entry(rev, oldRev, describeTask, 'tag-blue.png', '#0bc6d7', 'Goal Changed'):
