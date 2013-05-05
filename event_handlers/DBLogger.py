@@ -126,5 +126,5 @@ class DBLogger(EventHandler):
 	def mockTime(self, handler, effectiveTime, delta):
 		log(handler, 'admin.mocktime', "%s (%s)" % (effectiveTime, delta))
 
-	def cron(self, handler):
-		log(handler, 'admin.cron.run', "")
+	def cron(self, handler, name):
+		log(handler, 'admin.cron.run', "Ran cron job: %s" % name)

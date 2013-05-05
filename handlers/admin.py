@@ -571,25 +571,28 @@ def adminCron(handler, request):
 	handler.title('Cron jobs')
 	requireAdmin(handler)
 
-	print "<form method=\"post\" action=\"/admin/cron/run\">"
-	print Button('Run now').info().post()
-	print "</form>"
-
 	for job in Cron.getJobs():
+		print "<form method=\"post\" action=\"/admin/cron/run\">"
+		print "<input type=\"hidden\" name=\"name\" value=\"%s\">" % job.name
 		print "<h2>%s</h2>" % job.name
-		print "<b>Last run: %s</b><br>" % (job.lastrun.strftime('%d %b %Y %H:%M:%S') if job.lastrun else 'Never')
+		print "<b>Last run: %s</b>&nbsp;&nbsp;&nbsp;%s<br>" % (job.lastrun.strftime('%d %b %Y %H:%M:%S') if job.lastrun else 'Never', Button('run now').mini().post())
 
 		print "<div class=\"cron-log\">%s</div>" % (job.log if job.log else '')
+		print "</form>"
 	print "<br><br>"
 
 @post('admin/cron/run')
-def adminCronPost(handler, request):
-	handler.title('Run cron jobs')
+def adminCronPost(handler, request, p_name):
+	handler.title('Run cron job')
 	requireAdmin(handler)
 
-	Cron.runAll()
-	Event.cron(handler)
-	redirect('/admin/cron')
+	for job in Cron.getJobs():
+		if job.name == p_name:
+			job.run()
+			Event.cron(handler, p_name)
+			redirect('/admin/cron')
+
+	ErrorBox.die("Unknown job: %s" % stripTags(p_name))
 
 @post('admin/build')
 def adminBuildModePost(handler, request, p_mode):

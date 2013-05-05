@@ -71,5 +71,5 @@ class EventHandlerTemplate(EventHandler):
 	def revokePrivilege(self, handler, user, priv):
 	def repl(self, handler, code):
 	def mockTime(self, handler, effectiveTime, delta):
-	def cron(self, handler):
+	def cron(self, handler, name):
 """

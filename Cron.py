@@ -1,3 +1,4 @@
+import re
 from threading import Thread
 from time import sleep
 from os.path import isdir, exists
@@ -10,10 +11,18 @@ from rorn.Session import sessions
 from Lock import getLock
 from utils import *
 
+# Regular expression that matches 'YYYY-MM-DD HH:MM:SS', where # is a digit
+# The cron thread only checks once/minute, so times can't be more precise than that and the SS field should always be ## to avoid missing some cycles
+MINUTELY = '####-##-## ##:##:##'
+HOURLY = '####-##-## ##:00:##'
+DAILY = '####-##-## 00:00:##'
+MONTHLY = '####-##-01 00:00:##'
+
 cronjobs = []
-def job(name):
+def job(name, period):
 	def wrap(f):
-		cronjobs.append(CronJob(name, f))
+		pattern = re.compile(period.replace('#', '\d+'))
+		cronjobs.append(CronJob(name, pattern, f))
 		return f
 	return wrap
 
@@ -27,23 +36,28 @@ class CronThread(Thread):
 	def run(self):
 		self.running = True
 		while self.running:
-			if getNow().hour == 0:
-				with getLock('global'):
-					Cron.runAll()
+			for job in cronjobs:
+				job.tick()
 
-			sleep(60*60)
+			sleep(60)
 
 class CronJob:
-	def __init__(self, name, fn):
+	def __init__(self, name, period, fn):
 		self.name = name
+		self.period = period
 		self.fn = fn
 		self.lastrun = None
 		self.log = None
 
+	def tick(self):
+		if self.period.match(str(getNow().replace(microsecond = 0))):
+			self.run()
+
 	def run(self):
 		writer = ResponseWriter()
 		try:
-			self.fn()
+			with getLock('global'):
+				self.fn()
 			self.log = writer.done()
 		except Exception, e:
 			writer.done()
@@ -60,10 +74,6 @@ class Cron:
 		return cronjobs
 
 	@staticmethod
-	def runAll():
-		map(lambda job: job.run(), Cron.getJobs())
-
-	@staticmethod
 	def start():
 		global thread
 		thread = CronThread()
@@ -72,7 +82,7 @@ class Cron:
 	def stop():
 		thread.running = False
 
-@job('Old sessions')
+@job('Old sessions', DAILY)
 def oldSessions():
 	print "Processing %s<br><br>" % pluralize(len(sessions), 'session', 'sessions')
 	toDelete = []
@@ -98,7 +108,7 @@ def oldSessions():
 		del sessions[key]
 	print "done"
 
-@job('Backup')
+@job('Backup', DAILY)
 def backup():
 	if not isdir('backups'):
 		print "No backups directory exists; aborting"
