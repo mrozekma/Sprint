@@ -628,6 +628,8 @@ def distribute(handler, request, sprint):
 		print "<div class=\"distribution %s\">" % col
 		for user in sorted(sprint.members):
 			print "<img class=\"user-gravatar\" src=\"%s\" userid=\"%d\" title=\"%s\">" % (user.getAvatar(64), user.id, user.safe.username)
+		if col == 'right':
+			print "<img class=\"user-gravatar\" src=\"/static/images/revision-deferred.svg\" userid=\"deferred\" title=\"Deferred tasks\">"
 		print "<br><br>"
 
 		print "<div class=\"selected\">"
@@ -664,25 +666,57 @@ def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_task = N
 
 	# Make changes
 	if p_targetUser != None and p_task != None:
-		userid = int(p_targetUser)
-		user = User.load(userid)
-		if not user:
-			die("No user with ID %d" % userid)
 		task = Task.load(int(p_task))
 		if not task:
 			die("Invalid task ID")
 
-		task.assigned = [user]
-		if task.creator == handler.session['user'] and (dateToTs(getNow()) - task.timestamp) < 5*60:
-			task.save()
+		if p_targetUser == 'deferred':
+			task.status = 'deferred'
+			task.hours = 0
+			if task.creator == handler.session['user'] and (dateToTs(getNow()) - task.timestamp) < 5*60:
+				task.save()
+			else:
+				task.saveRevision(handler.session['user'])
+			Event.taskUpdate(handler, task, 'status', task.status)
 		else:
-			task.saveRevision(handler.session['user'])
-		Event.taskUpdate(handler, task, 'assigned', task.assigned)
+			userid = to_int(p_targetUser, 'targetUser', die)
+			user = User.load(userid)
+			if not user:
+				die("No user with ID %d" % userid)
+
+			task.assigned = [user]
+			if task.creator == handler.session['user'] and (dateToTs(getNow()) - task.timestamp) < 5*60:
+				task.save()
+			else:
+				task.saveRevision(handler.session['user'])
+			Event.taskUpdate(handler, task, 'assigned', task.assigned)
+
+	def makeTaskMap(task):
+		return {
+			'id': task.id,
+			'groupid': task.group.id,
+			'hours': task.hours,
+			'name': task.name,
+			'important': task.hours > 8,
+			'team': len(task.assigned) > 1
+		}
 
 	# Return current info
 	tasks = filter(lambda task: task.stillOpen(), sprint.getTasks())
 	avail = Availability(sprint)
-	m = {}
+
+	deferredTasks = filter(lambda task: task.status == 'deferred', sprint.getTasks())
+	m = {
+		'deferred': {
+			'username': 'Deferred tasks',
+			'groups': [{
+				'id': group.id,
+				'name': group.name
+			} for group in sorted((group for group in set(task.group for task in deferredTasks)), key = lambda group: group.seq)],
+			'tasks': [makeTaskMap(task) for task in deferredTasks]
+		}
+	}
+
 	for user in sprint.members:
 		userTasks = filter(lambda task: user in task.assigned, tasks)
 		m[user.id] = {
@@ -693,15 +727,9 @@ def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_task = N
 				'id': group.id,
 				'name': group.name
 			} for group in sorted((group for group in set(task.group for task in userTasks)), key = lambda group: group.seq)],
-			'tasks': [{
-				'id': task.id,
-				'groupid': task.group.id,
-				'hours': task.hours,
-				'text': "(%d) %s" % (task.hours, task.name),
-				'important': task.hours > 8,
-				'team': len(task.assigned) > 1
-			} for task in userTasks]
+			'tasks': [makeTaskMap(task) for task in userTasks]
 		}
+
 	print toJS(m)
 
 @post('tasks/(?P<taskid>[0-9]+)/notes/new')

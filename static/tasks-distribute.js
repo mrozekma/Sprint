@@ -11,7 +11,7 @@ $(document).ready(function() {
 		process();
 	}
 
-	updateFail = function(data, text, request) {
+	updateFail = function(data, text, errorThrown) {
 		distData = undefined;
 		errorMessage = text + ' - ' + errorThrown;
 		process();
@@ -87,28 +87,40 @@ function process() {
 	$('#post-status').hide();
 	if(distData == undefined) {return;}
 
-	for(userid in distData) {
-		user = distData[userid];
-		pcnt = user.availability == 0 ? (user.hours > 0 ? 101 : 100) : Math.floor(user.hours * 100 / user.availability);
-		$('.distribution img.user-gravatar[userid=' + userid + ']').toggleClass('overcommitted', pcnt < distMin || pcnt > distMax);
-		$('.distribution div.user[userid=' + userid + '] .hours div').text(user.hours);
-	}
-
 	['left', 'right'].forEach(function(side) {
 		userid = (side == 'left') ? userLeft : userRight;
 		user = distData[userid];
 		info = $('.distribution.' + side + ' .info');
 		tasks = $('.distribution.' + side + ' .tasks');
-		if(user == undefined) {
+		if(userid == 'deferred') {
+			$('.username', info).text('Deferred tasks');
+			$('.hours', info).html('&nbsp;');
+			$('.task-progress-total', info).hide();
+			info.show();
+			tasks.addClass('deferred');
+
+			tasks.empty();
+			for(i in user.groups) {
+				group = user.groups[i];
+				tasks.append($('<div/>').addClass('group').attr('groupid', group.id).text(group.name));
+			}
+			for(i in user.tasks) {
+				task = user.tasks[i];
+				row = $('<div/>').addClass('task').attr('taskid', task.id).text(task.name)
+				$('.group[groupid=' + task.groupid + ']', tasks).append(row);
+			}
+		} else if(user == undefined) {
 			$('.username', info).text('Loading...');
 			$('.hours', info).html('&nbsp;');
 			$('.task-progress-total .progress-current', info).css('visibility', 'hidden');
 			tasks.empty();
+			tasks.removeClass('deferred');
 		} else {
 			pcnt = user.availability == 0 ? (user.hours > 0 ? 101 : 100) : Math.floor(user.hours * 100 / user.availability);
 			$('.username', info).text(user.username);
 			$('.hours', info).html(user.hours + ' / ' + user.availability + ' hours (' + user.tasks.length + (user.tasks.length == 1 ? ' task' : ' tasks') + ', ' + (user.availability == 0 && user.hours > 0 ? '&#8734;' : pcnt) + '%)');
 			$('.task-progress-total .progress-current', info).css('width', Math.min(100, pcnt) + '%').css('visibility', pcnt > 0 ? 'visible' : 'hidden').toggleClass('progress-current-red', pcnt < distMin || pcnt > distMax);
+			$('.task-progress-total', info).show();
 			info.show();
 
 			tasks.empty();
@@ -118,7 +130,7 @@ function process() {
 			}
 			for(i in user.tasks) {
 				task = user.tasks[i];
-				row = $('<div/>').addClass('task').toggleClass('important', task.important).toggleClass('team', task.team).attr('taskid', task.id).text(task.text)
+				row = $('<div/>').addClass('task').toggleClass('important', task.important).toggleClass('team', task.team).attr('taskid', task.id).text('(' + task.hours + ') ' + task.name)
 				$('.group[groupid=' + task.groupid + ']', tasks).append(row);
 				row.click(function() {
 					targetUser = (side == 'left' ? userRight : userLeft);
@@ -139,6 +151,7 @@ function showChart() {
 	usernames = []
 	nameToID = {}
 	for(userid in distData) {
+		if(userid == 'deferred') {continue;}
 		user = distData[userid];
 		usernames.push(user.username);
 		nameToID[user.username] = userid;

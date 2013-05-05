@@ -1240,6 +1240,10 @@ div.clear {
 	cursor: pointer;
 }
 
+.distribution .tasks.deferred .task {
+	cursor: default !important;
+}
+
 .distribution .tasks .task.important {
 	-webkit-animation-name: pulse-red;
 	-webkit-animation-duration: 2s;
