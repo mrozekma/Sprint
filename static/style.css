@@ -41,7 +41,7 @@ code {
 
 .terminal {
 	color: #fff !important;
-	position: absolute !important;
+	position: fixed !important;
 	width: 95%;
 	z-index: 3;
 	bottom: 5px;
