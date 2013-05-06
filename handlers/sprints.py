@@ -475,9 +475,7 @@ def findActiveSprint(handler, request, project = None, search = None):
 	if search:
 		url += "?search=%s" % search
 
-	sprints = Sprint.loadAll()
-	sprints = filter(lambda s: handler.session['user'] in s.members and s.isActive() and (s.project == project if project else True), sprints)
-
+	sprints = Sprint.loadAllActive(handler.session['user'], project)
 	for case in switch(len(sprints)):
 		if case(0):
 			ErrorBox.die('Active sprint', 'No active sprints found')

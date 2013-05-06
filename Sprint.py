@@ -21,8 +21,13 @@ class Sprint(ActiveRecord):
 		self.members = ActiveRecord.loadLink(self, 'members', [('sprintid', self.id)], User, 'userid')
 
 	@classmethod
-	def loadAllActive(cls):
-		return filter(lambda s: s.isActive(), Sprint.loadAll())
+	def loadAllActive(cls, member = None, project = None):
+		rtn = filter(lambda s: s.isActive(), Sprint.loadAll())
+		if member:
+			rtn = filter(lambda s: member in s.members, rtn)
+		if project:
+			rtn = filter(lambda s: s.project == project, rtn)
+		return rtn
 
 	def save(self):
 		ActiveRecord.save(self)

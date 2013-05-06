@@ -1,7 +1,8 @@
 function term_process(command, term) {
 	$.post('/shell/run', {
 		mode: this.mode || '',
-		command: command
+		command: command,
+		path: window.location.pathname + window.location.search
 	}, function(data, text, request) {
 		if('error' in data) {
 			term.error(data['error']);
@@ -21,6 +22,10 @@ function term_process(command, term) {
 				$.each(data['output'].split('\n'), function() {
 					term.echo(this);
 				});
+			}
+
+			if('redirect' in data) {
+				window.location = data['redirect'];
 			}
 		}
 	}, 'json');
