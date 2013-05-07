@@ -911,6 +911,7 @@ def showSprintChecklist(handler, request, id):
 	warnings = sprint.getWarnings()
 
 	def good(text): print "<div class=\"good\">%s</div>" % text
+	def warn(text): print "<div class=\"warn\">%s</div>" % text
 	def bad(text): print "<div class=\"bad\">%s</div>" % text
 	def userStr(l):
 		l = map(str, sorted(l))
@@ -931,7 +932,7 @@ def showSprintChecklist(handler, request, id):
 	if 'no-availability' in warnings:
 		bad("%s %s no <a href=\"/sprints/%d/availability\">availability</a>" % (userStr(warnings['no-availability']), 'has' if len(warnings['no-availability']) == 1 else 'have', sprint.id))
 	else:
-		good("All users have some availability during the sprint")
+		good("All members have some availability during the sprint")
 
 	if 'overcommitted' in warnings:
 		bad("%s %s <a href=\"/sprints/%d/metrics#commitment-by-user\">overcommitted</a>" % (userStr(warnings['overcommitted']), 'is' if len(warnings['overcommitted']) == 1 else 'are', sprint.id))
@@ -948,6 +949,8 @@ def showSprintChecklist(handler, request, id):
 
 	if 'tasks-without-goals' in warnings:
 		bad("There are many <a href=\"/sprints/%d?search=goal:none\">tasks unrelated to the sprint goals</a>" % sprint.id)
+	elif 'no-sprint-goals' in warnings and tasks != []:
+		warn("There are %s waiting for goals" % pluralize(len(tasks), 'task', 'tasks'))
 	else:
 		unaffiliated = filter(lambda task: not task.goal, tasks)
 		if unaffiliated == []:

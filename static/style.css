@@ -542,6 +542,10 @@ img.user, img.project, img.sprint {
 	background-image: url(/static/images/tick.png);
 }
 
+.sprint-warnings > div.warn {
+	background-image: url(/static/images/warn.png);
+}
+
 .sprint-warnings > div.bad {
 	background-image: url(/static/images/cross.png);
 }
