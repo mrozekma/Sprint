@@ -801,6 +801,11 @@ ul#goal-menu {
 	width: 350px;
 }
 
+.clear-goal-tasks {
+	display: none;
+	margin-bottom: 10px;
+}
+
 div.notes .note .avatar img {
 	float: left;
 	padding-right: 10px;

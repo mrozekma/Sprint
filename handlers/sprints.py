@@ -515,16 +515,8 @@ def showInfo(handler, request, id):
 	print "<script src=\"/static/sprint-info.js\" type=\"text/javascript\"></script>"
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
-	print "$(document).ready(function() {"
-	print "    $('input.date[name=start]').datepicker({"
-	print "        minDate: '%s'," % min(tsToDate(sprint.start), getNow()).strftime('%m/%d/%Y')
-	print "        beforeShowDay: $.datepicker.noWeekends"
-	print "    });"
-	print "    $('input.date[name=end]').datepicker({"
-	print "        minDate: '%s'," % tsToDate(sprint.end).strftime('%m/%d/%Y')
-	print "        beforeShowDay: $.datepicker.noWeekends"
-	print "    });"
-	print "});"
+	print "var startMin = '%s';" % min(tsToDate(sprint.start), getNow()).strftime('%m/%d/%Y')
+	print "var endMin = '%s';" % tsToDate(sprint.end).strftime('%m/%d/%Y')
 	print "</script>"
 
 	print InfoBox('Loading...', id = 'post-status', close = True)
@@ -552,6 +544,9 @@ def showInfo(handler, request, id):
 	for goal in sprint.getGoals():
 		if editable:
 			print "<input type=\"text\" class=\"goal\" style=\"background-image: url(/static/images/tag-%s.png)\" name=\"goals[%d]\" goalid=\"%d\" value=\"%s\"><br>" % (goal.color, goal.id, goal.id, goal.safe.name)
+			numTasks = len(filter(lambda task: task.goal == goal, tasks))
+			if numTasks > 0:
+				print "<div class=\"clear-goal-tasks\" id=\"clear-tasks-%d\"><input type=\"checkbox\" id=\"clear-tasks-check-%d\" name=\"clear[]\" value=\"%d\"><label for=\"clear-tasks-check-%d\">Reset the %s currently assigned to this goal</label></div>" % (goal.id, goal.id, goal.id, goal.id, pluralize(numTasks, 'task', 'tasks'))
 		elif goal.name:
 			print "<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;%s<br>" % (goal.color, goal.safe.name)
 	print "</table>"
@@ -571,7 +566,7 @@ def showInfo(handler, request, id):
 	print "</form>"
 
 @post('sprints/info')
-def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None, p_members = None):
+def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None, p_members = None, p_clear = []):
 	def die(msg):
 		print msg
 		done()
@@ -627,15 +622,17 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 	if (dateToTs(start) if start else sprint.start) > sprint.end:
 		die("Start date cannot be after end date")
 
+	tasks = sprint.getTasks()
+	changedTasks = set()
 	avail = Availability(sprint)
 	addMembers = list(set(members) - set(sprint.members))
 	delMembers = list(set(sprint.members) - set(members))
 	for user in delMembers:
-		for task in filter(lambda task: user in task.assigned, sprint.getTasks()):
+		for task in filter(lambda task: user in task.assigned, tasks):
 			task.assigned.remove(user)
 			if task.assigned.length == 0:
 				task.assigned = [sprint.owner]
-			task.saveRevision(handler.session['user'])
+			changedTasks.add(task)
 		avail.delete(user)
 		sprint.members.remove(user)
 
@@ -681,6 +678,19 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 					rev.save()
 				else:
 					break
+		for task in changedTasks:
+			if task.timestamp < sprint.start:
+				task.timestamp = sprint.start
+
+	if p_clear:
+		ids = [to_int(goalid, 'p_clear', die) for goalid in p_clear]
+		for task in tasks:
+			if task.goal and task.goal.id in ids:
+				task.goal = None
+				changedTasks.add(task)
+
+	for task in changedTasks:
+		task.saveRevision(handler.session['user'])
 
 	request['code'] = 299
 	delay(handler, SuccessBox("Updated info", close = 3, fixed = True))
