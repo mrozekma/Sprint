@@ -18,24 +18,25 @@ from utils import *
 handlers = {'get': {}, 'post': {}}
 
 @globalize
-def get(index):
+def get(index, **kw):
 	def wrap(f):
-		handlers['get'][re.compile("^%s$" % index)] = f
+		kw['fn'] = f
+		handlers['get'][re.compile("^%s$" % index)] = kw
 		return f
 	return wrap
 
 @globalize
-def post(index):
+def post(index, **kw):
 	def wrap(f):
-		handlers['post'][re.compile("^%s$" % index)] = f
+		kw['fn'] = f
+		handlers['post'][re.compile("^%s$" % index)] = kw
 		return f
 	return wrap
 
-class HTTPHandler(BaseHTTPRequestHandler):
+class HTTPHandler(BaseHTTPRequestHandler, object):
 	def __init__(self, request, address, server):
 		self.session = None
 		self.replacements = {}
-		# self.leftMenu = LeftMenu()
 		BaseHTTPRequestHandler.__init__(self, request, address, server)
 
 	def buildResponse(self, method, postData):
@@ -67,22 +68,22 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			assert path[0] == '/'
 			path = path[1:]
 			if len(path) and path[-1] == '/': path = path[:-1]
-			fn = None
+			handler = None
 			for pattern in handlers[method]:
 				match = pattern.match(path)
 				if match:
-					fn = handlers[method][pattern]
+					handler = request['handler'] = handlers[method][pattern]
 					for k, v in match.groupdict().items():
 						if k in query:
 							self.error("Invalid request", "Duplicate key in request: %s" % k)
 						query[k] = v
 					break
 
-			if not fn:
+			if not handler:
 				self.error("Invalid request", "Unknown %s action <b>%s</b>" % (method.upper(), path if path != '' else "No empty action handler"))
 
 			given = query.keys()
-			expected, _, _, defaults = getargspec(fn)
+			expected, _, _, defaults = getargspec(handler['fn'])
 			defaults = defaults or []
 
 			givenS, expectedS = set(given), set(expected)
@@ -103,7 +104,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			self.replace('{{path}}', path)
 			self.replace('{{get-args}}', queryStr or '')
 
-			self.invokeHandler(fn, request, query)
+			self.invokeHandler(handler, request, query)
 		except DoneRendering: pass
 		except OperationalError, e:
 			writer.clear()
@@ -266,7 +267,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			'code': 200
 		}
 
-	def invokeHandler(self, fn, request, query):
-		fn(handler = self, request = request, **query)
+	def invokeHandler(self, handler, request, query):
+		handler['fn'](handler = self, request = request, **query)
 
 	def requestDone(self, request): pass

@@ -1,0 +1,103 @@
+@import 'utils.less';
+
+#distribution-range {
+	float: left;
+}
+
+#distribution-range-slider {
+	float: left;
+	position: relative;
+	top: 1px;
+	width: 300px;
+	margin: 0 0 30px 50px;
+
+	.ui-slider-range {
+		background: #3468B2;
+	}
+
+	.ui-slider-handle {
+		border-color: #174F2E;
+	}
+
+	.ui-state-hover {
+		background: #4a95ff;
+	}
+}
+
+.distribution {
+	width: 49%;
+	float: left;
+	position: relative;
+
+	&.left {
+		margin-right: 10px;
+	}
+
+	.selected {
+		> * {
+			float: left;
+			padding: 0 5px 10px 0;
+		}
+
+		img.user-gravatar {
+			width: 64px;
+			.filter(none);
+		}
+
+		.username {
+			font-weight: bold;
+		}
+
+		.task-progress-total {
+			width: 250px;
+			margin-left: 0px;
+			margin-top: 5px;
+		}
+	}
+
+	img.user-gravatar {
+		cursor: pointer;
+		width: 32px;
+		.filter(grayscale(100%));
+
+		&:hover, &.overcommitted, &[userid='deferred'] {
+			.filter(none);
+		}
+	}
+
+	.info {
+		display: none;
+	}
+
+	.tasks {
+		.group {
+			font-weight: bold;
+			margin-top: 15px;
+		}
+
+		.task {
+			font-weight: normal;
+			padding-left: 10px;
+			cursor: pointer;
+
+			&.important {
+				-webkit-animation-name: pulse-red;
+				-webkit-animation-duration: 2s;
+				-webkit-animation-timing-function: ease-in-out;
+				-webkit-animation-iteration-count: infinite;
+			}
+
+			&.team {
+				font-style: italic;
+			}
+		}
+
+		&.deferred .task {
+			cursor: default !important;
+		}
+	}
+}
+
+.distribution-transfer {
+	border: 1px solid #000;
+}

@@ -1,0 +1,69 @@
+.project-list {
+	position: relative;
+	margin-left: 30px;
+
+	> .buttons {
+		position: absolute;
+		top: -48px;
+		right: 16px;
+	}
+}
+
+.project-summary {
+	border-left: 4px solid #999;
+	border-top: 1px dotted #999;
+	border-bottom: 1px dotted #999;
+	padding: 0px 5px 3px 5px;
+	margin: 0px 0px 15px 10px;
+
+	&.active {
+		border-left-color: #A00 !important;
+	}
+
+	&.test {
+		background-color: #333;
+		> * {
+			color: #fff;
+		}
+
+		a {
+			color: #ff0;
+		}
+
+		.buttons a {
+			color: #000;
+		}
+	}
+
+	.project-name {
+		float: left;
+		font-weight: bold;
+		margin-right: 10px;
+	}
+
+	.project-members {
+		float: right;
+		min-width: 120px;
+
+		.member.scrummaster a {
+			color: #f00;
+		}
+
+		.member.inactive a {
+			color: #aaa;
+		}
+	}
+
+	.sprint-summaries {
+		/* clear: both; */
+		margin: 30px 0px 0px 10px;
+
+		.sprint-summary .sprint-time {
+			font-size: 80%;
+		}
+	}
+
+	.project-buttons {
+		float: left;
+	}
+}

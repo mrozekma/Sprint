@@ -35,7 +35,6 @@ def requirePriv(handler, priv):
 
 def admin(handler):
 	requirePriv(handler, 'Dev')
-	handler.replace('$headerbg$', '#AA0000', 1)
 
 def dev(handler):
 	if isDevMode(handler):

@@ -30,13 +30,14 @@ from relativeDates import timesince
 from utils import *
 
 pages = []
-def admin(url, name, icon):
+def admin(url, name, icon, **kw):
 	def wrap(f):
 		pages.append({'url': url, 'name': name, 'icon': icon})
-		return get(url)(f)
+		kw['statics'] = ['admin'] + ensureList(kw['statics'] if 'statics' in kw else [])
+		return get(url, **kw)(f)
 	return wrap
 
-@get('admin')
+@get('admin', statics = 'admin')
 def adminIndex(handler, request):
 	handler.title('Admin')
 	requireAdmin(handler)

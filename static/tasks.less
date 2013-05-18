@@ -1,0 +1,83 @@
+@import 'utils.less';
+@import 'revision-history.less';
+
+.note {
+	margin-left: 80px;
+	min-height: 80px;
+	margin-bottom: 10px;
+	background-color: #eee;
+	border: 1px solid #bbb;
+	.rounded;
+
+	.avatar {
+		position: relative;
+
+		img {
+			float: left;
+			position: absolute;
+			left: -80px;
+			font-weight: bold;
+			padding-right: 10px;
+		}
+	}
+
+	.text {
+		text-align: justify;
+
+		> * {
+			padding: 5px;
+		}
+
+		.title {
+			background: #bbb;
+			border-bottom: 1px solid #bbb;
+
+			button {
+				float: right;
+				margin-left: 5px;
+			}
+
+			a.timestamp {
+				color: #000;
+				font-weight: bold;
+			}
+
+			.author {
+				font-weight: bold;
+			}
+		}
+	}
+}
+
+.new-note {
+	display: none;
+
+	.text {
+		.body {
+			padding: 5px 15px 0px 10px;
+		}
+
+		hr {
+			height: 0px;
+			border-width: 0px;
+			border-top: 1px solid #aaa;
+		}
+
+		> button {
+			margin: 0px 0px 5px 10px;
+			width: 200px;
+		}
+
+		.title a {
+			float: right;
+		}
+	}
+
+	#preview {
+		position: relative;
+		top: -10px;
+		border: 1px dashed #aaa;
+		width: 100%;
+		min-height: 100px;
+	}
+}

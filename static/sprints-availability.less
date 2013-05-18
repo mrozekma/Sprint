@@ -1,0 +1,47 @@
+@import 'sprints.less';
+
+table.availability {
+	tr {
+		td {
+			text-align: center
+			width: 35px;
+
+			&.spacer {
+				width: 50px;
+
+				&:nth-last-of-type(2) { // If the sprint ends on a friday, this matches the last spacer so we can hide it
+					display: none;
+				}
+			}
+
+			&:nth-child(1) {
+				padding-right: 20px;
+			}
+
+			&.buttons img {
+				width: 24px;
+				cursor: pointer;
+			}
+		}
+
+		&.dateline td {
+			font-weight: bold;
+		}
+
+		&.userline {
+			td.username {
+				white-space: nowrap;
+				text-align: right;
+			}
+
+			td input {
+				width: 20px;
+			}
+		}
+	}
+
+	button {
+		width: 100%;
+		text-align: center;
+	}
+}

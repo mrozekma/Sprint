@@ -81,7 +81,7 @@ def drawNavArrows(sprint, tab):
 def sprint(handler, request):
 	redirect('/projects')
 
-@get('sprints/(?P<id>[0-9]+)')
+@get('sprints/(?P<id>[0-9]+)', statics = 'sprints-backlog')
 def showBacklog(handler, request, id, search = None, devEdit = False):
 	requirePriv(handler, 'User')
 	id = int(id)
@@ -101,9 +101,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 	editable = sprint.canEdit(handler.session['user']) or (devEdit and isDevMode(handler))
 	search = Search(sprint, search)
 
-	print "<link href=\"/prefs/backlog.css\" rel=\"stylesheet\" type=\"text/css\" />"
 	print "<script src=\"/settings/sprints.js\" type=\"text/javascript\"></script>"
-	print "<script src=\"/static/sprints.js\" type=\"text/javascript\"></script>"
 
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
@@ -489,7 +487,7 @@ def findActiveSprint(handler, request, project = None, search = None):
 				print "<a href=\"%s\">%s</a><br>" % (url % sprint.id, sprint.safe.name)
 			break
 
-@get('sprints/(?P<id>[0-9]+)/info')
+@get('sprints/(?P<id>[0-9]+)/info', statics = 'sprints-info')
 def showInfo(handler, request, id):
 	requirePriv(handler, 'User')
 	id = int(id)
@@ -502,15 +500,6 @@ def showInfo(handler, request, id):
 	handler.title(sprint.safe.name)
 	drawNavArrows(sprint, 'info')
 
-	print "<style type=\"text/css\">"
-	print "input.goal {"
-	print "    width: 400px;"
-	print "    background: url(/static/images/tag-none.png) no-repeat 2px 2px;"
-	print "    padding-left: 24px;"
-	print "}"
-	print "input.name, #select-members, #save-button {width: 424px}"
-	print "</style>"
-	print "<script src=\"/static/sprint-info.js\" type=\"text/javascript\"></script>"
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
 	print "var startMin = '%s';" % min(tsToDate(sprint.start), getNow()).strftime('%m/%d/%Y')
@@ -695,7 +684,7 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 	Event.sprintInfoUpdate(handler, sprint, changes)
 
 
-@get('sprints/(?P<id>[0-9]+)/metrics')
+@get('sprints/(?P<id>[0-9]+)/metrics', statics = 'sprints')
 def showMetrics(handler, request, id):
 	requirePriv(handler, 'User')
 	id = int(id)
@@ -756,7 +745,7 @@ def showMetrics(handler, request, id):
 
 	print "<br><br>"
 
-@get('sprints/(?P<id>[0-9]+)/history')
+@get('sprints/(?P<id>[0-9]+)/history', statics = 'sprints-history')
 def showSprintHistory(handler, request, id, assigned = None):
 	requirePriv(handler, 'User')
 	id = int(id)
@@ -771,7 +760,6 @@ def showSprintHistory(handler, request, id, assigned = None):
 	Chart.include()
 	chart = TaskChart('chart', sprint.getTasks())
 	chart.js()
-	print "<script src=\"/static/sprint-history.js\" type=\"text/javascript\"></script>"
 	print "<script type=\"text/javascript\">"
 	tasksByAssigned = {member.username: [task.id for task in tasks if member in task.assigned] for member in sprint.members}
 	print "var tasks_by_assigned = %s;" % toJS(tasksByAssigned)
@@ -799,7 +787,7 @@ def showSprintHistory(handler, request, id, assigned = None):
 	showHistory(tasks, True)
 	print "<br>"
 
-@get('sprints/(?P<id>[0-9]+)/availability')
+@get('sprints/(?P<id>[0-9]+)/availability', statics = 'sprints-availability')
 def showAvailability(handler, request, id):
 	requirePriv(handler, 'User')
 	id = int(id)
@@ -812,7 +800,6 @@ def showAvailability(handler, request, id):
 	drawNavArrows(sprint, 'availability')
 	print tabs(sprint, 'availability')
 
-	print "<script src=\"/static/sprint-availability.js\" type=\"text/javascript\"></script>"
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
 	print "</script>"
@@ -903,7 +890,7 @@ def sprintAvailabilityPost(handler, request, id, p_hours):
 	delay(handler, SuccessBox("Updated availability", close = 3, fixed = True))
 	Event.sprintAvailUpdate(handler, sprint)
 
-@get('sprints/(?P<id>[0-9]+)/checklist')
+@get('sprints/(?P<id>[0-9]+)/checklist', statics = 'sprints-checklist')
 def showSprintChecklist(handler, request, id):
 	requirePriv(handler, 'User')
 	id = int(id)
@@ -985,7 +972,7 @@ def showSprintChecklist(handler, request, id):
 
 	print "</div>"
 
-@get('sprints/(?P<id>[0-9]+)/results')
+@get('sprints/(?P<id>[0-9]+)/results', statics = 'sprints')
 def showSprintResults(handler, request, id):
 	requirePriv(handler, 'User')
 	id = int(id)
@@ -1018,7 +1005,7 @@ def showSprintResults(handler, request, id):
 
 	print "</ul>"
 
-@get('sprints/(?P<id>[0-9]+)/retrospective')
+@get('sprints/(?P<id>[0-9]+)/retrospective', statics = 'sprints-retrospective')
 def showSprintRetrospective(handler, request, id):
 	requirePriv(handler, 'User')
 	id = int(id)
@@ -1036,7 +1023,6 @@ def showSprintRetrospective(handler, request, id):
 	print "var sprint_id = %d;" % sprint.id
 	print "var editing = %s;" % toJS(editing)
 	print "</script>"
-	print "<script src=\"/static/sprint-retrospective.js\" type=\"text/javascript\"></script>"
 
 	if not sprint.isOver():
 		ErrorBox.die('Sprint Open', "The retrospective isn't available until the sprint has closed")
@@ -1139,6 +1125,7 @@ def newSprint(handler, request, project):
 	print "<style type=\"text/css\">"
 	print "table.list td.right > * {width: 400px;}"
 	print "table.list td.right button {width: 200px;}" # Half of the above value
+	print "#select-members {padding-right: 5px;}"
 	print "</style>"
 	print "<script src=\"/static/sprints-new.js\" type=\"text/javascript\"></script>"
 

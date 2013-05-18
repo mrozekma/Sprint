@@ -87,6 +87,12 @@ function process() {
 	$('#post-status').hide();
 	if(distData == undefined) {return;}
 
+	for(userid in distData) {
+		user = distData[userid];
+		pcnt = user.availability == 0 ? (user.hours > 0 ? 101 : 100) : Math.floor(user.hours * 100 / user.availability);
+		$('.distribution img.user-gravatar[userid=' + userid + ']').toggleClass('overcommitted', pcnt < distMin || pcnt > distMax);
+	}
+
 	['left', 'right'].forEach(function(side) {
 		userid = (side == 'left') ? userLeft : userRight;
 		user = distData[userid];
@@ -117,6 +123,7 @@ function process() {
 			tasks.removeClass('deferred');
 		} else {
 			pcnt = user.availability == 0 ? (user.hours > 0 ? 101 : 100) : Math.floor(user.hours * 100 / user.availability);
+
 			$('.username', info).text(user.username);
 			$('.hours', info).html(user.hours + ' / ' + user.availability + ' hours (' + user.tasks.length + (user.tasks.length == 1 ? ' task' : ' tasks') + ', ' + (user.availability == 0 && user.hours > 0 ? '&#8734;' : pcnt) + '%)');
 			$('.task-progress-total .progress-current', info).css('width', Math.min(100, pcnt) + '%').css('visibility', pcnt > 0 ? 'visible' : 'hidden').toggleClass('progress-current-red', pcnt < distMin || pcnt > distMax);

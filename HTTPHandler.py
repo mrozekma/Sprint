@@ -1,4 +1,5 @@
 from datetime import datetime
+from os.path import isfile
 
 from rorn.HTTPHandler import HTTPHandler as ParentHandler
 from rorn.ResponseWriter import ResponseWriter
@@ -30,23 +31,31 @@ class HTTPHandler(ParentHandler):
 			'log': True
 		}.items())
 
-	def invokeHandler(self, fn, request, query):
+	def invokeHandler(self, handler, request, query):
 		if request['log']:
-			filename = fn.func_code.co_filename
+			filename = handler['fn'].func_code.co_filename
 			if filename.startswith(basePath()):
 				filename = filename[len(basePath())+1:]
-			request['log'] = LogEntry('rorn.handle', "%s %s" % (request['method'].upper(), request['path']), userid = self.session['user'].id if self.session['user'] else None, ip = self.client_address[0], location = "%s(%s:%d)" % (fn.func_code.co_name, filename, fn.func_code.co_firstlineno))
-			Event.pageHandle(self, fn)
+			request['log'] = LogEntry('rorn.handle', "%s %s" % (request['method'].upper(), request['path']), userid = self.session['user'].id if self.session['user'] else None, ip = self.client_address[0], location = "%s(%s:%d)" % (handler['fn'].func_code.co_name, filename, handler['fn'].func_code.co_firstlineno))
+			Event.pageHandle(self, handler['fn'])
 
-		fn(handler = self, request = request, **query)
+		return super(HTTPHandler, self).invokeHandler(handler, request, query)
 
 	def requestDone(self, request):
 		if isinstance(request['log'], LogEntry):
 			request['log'].save()
 
 		if request['wrappers']:
+			types = ['less', 'css', 'js']
+			includes = {type: [] for type in types}
+			if 'handler' in request and 'statics' in request['handler']:
+				for key in ensureList(request['handler']['statics']):
+					for type in types:
+						if isfile("static/%s.%s" % (key, type)):
+							includes[type].append("/static/%s.%s" % (key, type))
+
 			writer = ResponseWriter()
-			header(self, request['path'])
+			header(self, request['path'], includes)
 			print self.response
 			footer(self, request['path'])
 			self.response = writer.done()
@@ -56,7 +65,6 @@ class HTTPHandler(ParentHandler):
 			raise Exception(bricked())
 
 		db().resetCount()
-		self.replace('$headerbg$', '#0152A1', 1)
 
 		#HACK
 		if self.path.startswith('/static/'): return

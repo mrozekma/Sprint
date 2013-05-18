@@ -94,6 +94,9 @@ def uniq(l):
 			rtn.append(n)
 	return rtn
 
+def ensureList(l):
+	return l if isinstance(l, list) else [l]
+
 nowDelta = timedelta()
 def getNow():
 	return datetime.now() + nowDelta

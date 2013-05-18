@@ -13,7 +13,7 @@ tabs = Tabs()
 tabs['inbox'] = '/messages/inbox'
 tabs['sent'] = '/messages/sent'
 
-@get('messages/inbox')
+@get('messages/inbox', statics = 'messages')
 def inbox(handler, request):
 	handler.title('Messages')
 	requirePriv(handler, 'User')
@@ -32,7 +32,7 @@ def inbox(handler, request):
 			message.read = True
 			message.save()
 
-@get('messages/sent')
+@get('messages/sent', statics = 'messages')
 def sent(handler, request):
 	handler.title('Messages')
 	requirePriv(handler, 'User')

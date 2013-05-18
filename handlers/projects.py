@@ -11,9 +11,9 @@ from Button import Button
 from LoadValues import isDevMode
 from utils import *
 
-@get('')
-@get('projects')
-@get('projects/list')
+@get('', statics = 'projects')
+@get('projects', statics = 'projects')
+@get('projects/list', statics = 'projects')
 def projectsList(handler, request):
 	undelay(handler)
 
@@ -74,5 +74,5 @@ def projectsCalendar(handler, request):
 
 	print "<link href=\"/static/fullcalendar.css\" rel=\"stylesheet\" type=\"text/css\" />"
 	print "<script src=\"/static/fullcalendar.js\" type=\"text/javascript\"></script>"
-	print "<script src=\"/static/projects.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/projects-calendar.js\" type=\"text/javascript\"></script>"
 	print "<div id=\"calendar\"></div>"

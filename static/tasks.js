@@ -1,6 +1,6 @@
 $(document).ready(function() {
 	$('.start-new-note').click(function(e) {
-		newNote = $('.new-note', $(this).parents('.notes'));
+		newNote = $('.new-note');
 		newNote.show();
 		$('textarea', newNote).focus();
 		$(this).hide();

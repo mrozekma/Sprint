@@ -1,0 +1,80 @@
+@import 'utils.less';
+
+.box {
+	margin: 5px 0px 5px 0px;
+	border: 1px solid #000;
+	color: #000;
+	background: #fff url(/static/images/corner2.png) no-repeat right bottom;
+
+	.title {
+		padding: 2px 2px 2px 5px;
+		border-bottom: 1px solid #000;
+		background: #000;
+		background-repeat: no-repeat;
+		background-position: 2px 3px;
+	}
+
+	span.boxBody {
+		display: block;
+		padding: 6px;
+		overflow: hidden;
+		word-wrap: break-word;
+	}
+
+	&.collapsible {
+		.title {
+			background-color: #CCC;
+			color: #000;
+			cursor: pointer;
+		}
+
+		span.boxBody {
+			display: none;
+		}
+
+		&.expanded {
+			.title {
+				background-color: #000 !important;
+				color: #FFF !important;
+			}
+
+			span.boxBody {
+				display: block !important;
+			}
+		}
+	}
+
+	.colored(@name, @bg, @fg) {
+		&.@{name} {
+			border-color: @bg;
+			.title {
+				background-color: @bg;
+				border-bottom-color: @bg;
+				color: @fg;
+			}
+		}
+	}
+
+	.typed(@name) {
+		.@{name} .title {
+			background-image: url(/static/images/icons/@name.png);
+			padding-left: 24px;
+		}
+	}
+
+	.colored(~"black", #000, #fff);
+	.colored(~"red", #f00, #000);
+	.colored(~"yellow", #ee0, #000);
+	.colored(~"green", #0a0, #000);
+	.colored(~"blue", #0152a1, #fff);
+
+	.typed(error);
+	.typed(warning);
+	.typed(success);
+	.typed(login);
+}
+
+// Syntax is a bit odd; I named the class and the mixin the same
+.rounded {
+	.rounded;
+}

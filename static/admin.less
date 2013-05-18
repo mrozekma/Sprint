@@ -1,0 +1,175 @@
+#main_a {
+	background-color: #AA0000 !important;
+}
+
+img.admin-icon {
+	width: 64px;
+	border: 0px;
+}
+
+div.repl-box {
+	float: left;
+	width: 49%;
+	margin-right: 5px;
+	border: 1px solid #000;
+	overflow: hidden;
+
+	span.title {
+		display: block;
+		width: 100%;
+		padding: 2px 0px 2px 4px;
+		background-color: #000;
+		color: #fff;
+	}
+
+	.box-wrapper {
+		display: block;
+		height: 600px;
+		margin: 0px;
+		overflow-x: visible;
+		overflow-y: scroll;
+		word-wrap: break-word;
+	}
+
+/* nth-of-type(4n) is a <div class="clear"> put before each row */
+
+	div.elem:nth-of-type(4n+1) {
+		width: 20%;
+		float: left;
+		padding-right: 5px;
+	}
+
+	div.elem:nth-of-type(4n+2) {
+		width: 38%;
+		float: left;
+		padding-right: 5px;
+	}
+
+	div.elem:nth-of-type(4n+3) {
+		width: 38%;
+		float: left;
+	}
+
+	div.elem.header {
+		font-weight: bold;
+	}
+
+	ul {
+		margin: 0px;
+		-webkit-padding-start: 16px;
+	}
+
+	/*
+	table {
+		thead tr {
+			display: block
+		}
+
+		tbody {
+			display: block;
+			height: 574px;
+			overflow: auto;
+			width: 100%
+		}
+
+		thead th, tbody td {
+			width: 100px;
+			word-wrap: break-word;
+		}
+
+		tbody td + td {
+			position: relative;
+			padding-left: 20px;
+		}
+	}
+	*/
+
+	&#console pre {
+		div.repl-code {}
+		div.repl-stdout {
+			color: #00f;
+		}
+		div.repl-stderr {
+			color: #f00;
+		}
+	}
+}
+
+div.cron-log {
+	margin-top: 10px;
+	padding: 5px;
+	border: 1px dashed #000;
+	overflow: auto;
+	word-wrap: wrap;
+}
+
+input#input {
+	clear: both;
+	margin-top: 10px;
+	border: 1px solid #000;
+	width: 99%;
+}
+
+table.granttable td {
+	padding-right: 20px;
+	text-align: center;
+
+	&:first-child {
+		text-align: right;
+	}
+}
+
+table.granttable button {
+	width: 100%;
+}
+
+.logentry {
+	margin-left: 75px;
+
+	> div {
+		width: 100%;
+	}
+
+	> * {
+		float: left;
+		padding: 0 5px 10px 0;
+	}
+
+	div.gravatar {
+		position: relative;
+
+		img.gravatar {
+			position: absolute;
+			top: 8px;
+			left: -75px;
+		}
+	}
+
+	pre {
+		word-wrap: break-word;
+	}
+
+	.label.logtype-admin {
+		background-color: #b94a48;
+	}
+
+	.label.logtype-group {
+		background-color: #3a87ad;
+	}
+
+	.label.logtype-note {
+		background-color: #c67605;
+	}
+
+	.label.logtype-sprint {
+		background-color: #333333;
+	}
+
+	.label.logtype-task {
+		background-color: #3a87ad;
+	}
+
+	.label.logtype-user {
+		background-color: #468847
+	}
+}

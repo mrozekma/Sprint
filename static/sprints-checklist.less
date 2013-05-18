@@ -1,0 +1,29 @@
+@import 'sprints.less';
+
+.sprint-warnings {
+	> * {
+		margin: 0px 40px 10px 20px;
+	}
+
+	h1 {
+		font-size: 14pt;
+	}
+
+	> div {
+		padding-left: 32px;
+		background-repeat: no-repeat;
+		background-position: 8px 2px;
+
+		&.good {
+			background-image: url(/static/images/tick.png);
+		}
+
+		&.warn {
+			background-image: url(/static/images/warn.png);
+		}
+
+		&.bad {
+			background-image: url(/static/images/cross.png);
+		}
+	}
+}

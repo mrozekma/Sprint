@@ -12,12 +12,11 @@ from User import User
 from Message import Message
 from utils import *
 
-def header(handler, path):
+def header(handler, path, includes):
 	print "<!DOCTYPE html>"
 	print "<html>"
 	print "<head>"
 	print "<title>$title$</title>"
-	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/style.css\">"
 	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/syntax-highlighting.css\">"
 	print "<link rel=\"shortcut icon\" href=\"/static/images/favicon.ico\">"
 
@@ -41,15 +40,29 @@ def header(handler, path):
 	print "<script src=\"/static/shell.js\" type=\"text/javascript\"></script>"
 
 	print "<style type=\"text/css\">"
-	print "#main_a {"
-	print "    background-color: $headerbg$;"
-	print "}"
 	if handler.session['user']:
 		print ".username[username~=\"%s\"] {" % handler.session['user'].username
 		print "    color: #C00;"
 		print "    font-weight: bold;"
 		print "}"
 	print "</style>"
+
+	for filename in includes['less']:
+		print "<link rel=\"stylesheet/less\" type=\"text/css\" href=\"%s\" />" % filename
+	# for filename in includes['css']:
+		# print "<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\" />" % filename
+	for filename in includes['js']:
+		print "<script src=\"%s\" type=\"text/javascript\"></script>" % filename
+
+	print "<link rel=\"stylesheet/less\" type=\"text/css\" href=\"/static/style.less\">"
+	print "<script type=\"text/javascript\">"
+	print "less = {"
+	print "    env: '%s'," % ('development' if isDevMode(handler) else 'production')
+	print "    async: false,"
+	print "    dumpLineNumbers: 'comments'"
+	print "};"
+	print "</script>"
+	print "<script src=\"/static/less.js\" type=\"text/javascript\"></script>"
 
 	print "</head>"
 	print "<body>"

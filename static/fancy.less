@@ -1,0 +1,81 @@
+.fancy {
+	button&, a& {
+		cursor: pointer;
+		background-color: #f5f5f5;
+		border: 1px solid #dedede;
+		border-top: 1px solid #eee;
+		border-left :1px solid #eee;
+		font-family: "Lucida Grande", Tahoma, Arial, Verdana, sans-serif;
+
+		&.mini {
+			position: relative;
+			top: -1px;
+			font-size: 70%;
+		}
+
+		&:hover {
+			background-color: #dff4ff;
+			border: 1px solid #c2e1ef;
+			color: #336699;
+		}
+
+		&.positive, &.success {
+			color: #529214;
+
+			&:hover {
+				background-color: #E6EFC2;
+				border: 1px solid #C6D880;
+				color: #529214;
+			}
+
+			&:active {
+				background-color: #529214;
+				border: 1px solid #529214;
+				color: #fff;
+			}
+		}
+
+		&.negative, &.danger {
+			color: #d12f19;
+
+			&:hover {
+				background: #fbe3e4;
+				border: 1px solid #fbc2c4;
+				color: #d12f19;
+			}
+
+			&:active {
+				background-color: #d12f19;
+				border: 1px solid #d12f19;
+				color: #fff;
+			}
+		}
+	}
+
+	button& > img, a& > img {
+		position: relative;
+		top: 2px;
+		left: -3px;
+		border: 0px;
+	}
+
+	a& {
+		color: #000;
+		padding: 1px 9px;
+	}
+
+	button& img {
+		position: relative;
+		top: 3px;
+	}
+
+	a&:active, a&.selected {
+		background-color:#6299c5;
+		border:1px solid #6299c5;
+		color:#fff;
+	}
+
+	a&.selected {
+		font-weight: bold;
+	}
+}

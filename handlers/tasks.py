@@ -27,14 +27,13 @@ from utils import *
 
 from handlers.sprints import tabs as sprintTabs
 
-@get('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)')
+@get('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)', statics = 'tasks')
 def task(handler, request, ids):
 	requirePriv(handler, 'User')
 	Chart.include()
 
-	Markdown.head('.notes .note .text .body pre code')
+	Markdown.head('.note .text .body pre code')
 	print "<script src=\"/static/jquery.typing-0.2.0.min.js\" type=\"text/javascript\"></script>"
-	print "<script src=\"/static/tasks.js\" type=\"text/javascript\"></script>"
 	undelay(handler)
 
 	tasks = {}
@@ -109,8 +108,6 @@ def task(handler, request, ids):
 			print ProgressBar(lbl, total-hours, total, zeroDivZero = True)
 
 		header(task, 'Notes', 2)
-		print "<div class=\"notes\">"
-
 		for note in task.getNotes():
 			print "<div id=\"note%d\" class=\"note\">" % note.id
 			print "<form method=\"post\" action=\"/tasks/%d/notes/%d/modify\">" % (id, note.id)
@@ -142,7 +139,6 @@ def task(handler, request, ids):
 		print "</div>"
 
 		print "<button class=\"btn start-new-note\">Add Note</button>"
-		print "</div>"
 		print "<div class=\"clear\"></div>"
 
 		header(task, 'History', 2)
@@ -287,7 +283,7 @@ $(document).ready(function() {
 	delay(handler, SuccessBox("Added task <b>%s</b>" % task.safe.name, close = 3, fixed = True))
 	Event.newTask(handler, task)
 
-@get('tasks/new/many')
+@get('tasks/new/many', statics = 'tasks-new')
 def newTaskMany(handler, request, group):
 	handler.title("New Tasks")
 	requirePriv(handler, 'User')
@@ -299,7 +295,6 @@ def newTaskMany(handler, request, group):
 	sprint = defaultGroup.sprint
 
 	print "<script src=\"/static/jquery.typing-0.2.0.min.js\" type=\"text/javascript\"></script>"
-	print "<script src=\"/static/tasks-new.js\" type=\"text/javascript\"></script>"
 	print "<script type=\"text/javascript\">"
 	print "next_url = '/sprints/%d';" % sprint.id
 	print "</script>"
@@ -591,7 +586,7 @@ def newTaskImportPost(handler, request, group, source, p_group, p_name, p_hours,
 		delay(handler, WarningBox("No changes", close = 3, fixed = True))
 	redirect("/sprints/%d" % sprint.id)
 
-@get('tasks/distribute')
+@get('tasks/distribute', statics = 'tasks-distribute')
 def distribute(handler, request, sprint):
 	handler.title('Distribute Tasks')
 	sprintid = int(sprint)
@@ -609,7 +604,6 @@ def distribute(handler, request, sprint):
 
 	print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts.js\"></script>"
 	print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts-more.js\"></script>"
-	print "<script type=\"text/javascript\" src=\"/static/tasks-distribute.js\"></script>"
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % sprint.id
 	print "</script>"
@@ -788,11 +782,10 @@ def tasksMine(handler, request):
 	requirePriv(handler, 'User')
 	redirect("/users/%s/tasks" % handler.session['user'].username)
 
-@get('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)/edit')
+@get('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)/edit', statics = 'tasks-edit')
 def taskEdit(handler, request, ids):
 	handler.title("Edit tasks")
 	requirePriv(handler, 'Write')
-	print "<script src=\"/static/tasks-edit.js\" type=\"text/javascript\"></script>"
 
 	ids = map(int, uniq(ids.split(',')))
 	tasks = dict((id, Task.load(id)) for id in ids)

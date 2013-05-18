@@ -13,12 +13,7 @@ from resetpw import printResetForm
 from sprints import tabs as sprintTabs
 from utils import *
 
-backlogStyles = [
-	('show', 'Show', ''),
-	('dim', 'Dim', 'opacity: .4;'),
-	('hide', 'Hide', 'display: none !important;')
-]
-
+backlogStyles = ['show', 'dim', 'hide']
 messageTypes = [('sprintMembership', "Added to a sprint"), ('taskAssigned', "Assigned a task"), ('noteRelated', "Someone added a note on a task you own or have a note on"), ('noteMention', "Mentioned in a note"), ('priv', "Granted a privilege")]
 
 @get('prefs')
@@ -44,8 +39,8 @@ def prefs(handler, request):
 	print "How each task on the backlog is styled, based on status:<br><br>"
 	select = ResponseWriter()
 	print "<select name=\"backlog_style[%s]\">"
-	for (name, displayName, css) in backlogStyles:
-		print "<option value=\"%s\">%s</option>" % (name, displayName)
+	for name in backlogStyles:
+		print "<option value=\"%s\">%s</option>" % (name, name.title())
 	print "</select>"
 	select = select.done()
 
@@ -92,16 +87,13 @@ def prefsPost(handler, request, p_default_tab, p_backlog_style, p_messages = [])
 	print "Saved changes"
 	Event.prefs(handler)
 
-@get('prefs/backlog.css')
-def prefsCSS(handler, request):
+@get('prefs/backlog.less')
+def prefsStyle(handler, request):
 	request['wrappers'] = False
 	request['log'] = False
 	request['contentType'] = 'text/css'
 	if not handler.session['user']: return
 	prefs = handler.session['user'].getPrefs()
 
-	for (name, displayName, css) in backlogStyles:
-		print ', '.join("table.tasks tr[status='%s']" % status for (status, style) in prefs.backlogStyles.iteritems() if style == name) + ' {'
-		print ' '*4 + css
-		print '}'
-		print
+	for (status, style) in prefs.backlogStyles.iteritems():
+		print "@pref_%s: %s;" % (status.replace(' ', '_'), style)
