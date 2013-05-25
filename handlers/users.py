@@ -138,7 +138,7 @@ def userTasks(handler, request, username):
 	if not user:
 		ErrorBox.die("User tasks", "No user named <b>%s</b>" % stripTags(username))
 
-	tasks = [task.id for task in Task.loadAll(assignedid = user.id) if task.stillOpen() and task.sprint.isActive()]
+	tasks = [task.id for task in Task.loadAll() if user in task.assigned and task.stillOpen() and task.sprint.isActive()]
 	if len(tasks) == 0:
 		ErrorBox.die("User tasks", "%s has no open tasks in active sprints" % user)
 
