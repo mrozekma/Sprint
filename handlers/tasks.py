@@ -307,7 +307,7 @@ def newTaskMany(handler, request, group):
 		ErrorBox.die("Permission Denied", "You don't have permission to modify this sprint")
 
 	help = ResponseWriter()
-	print "Each line needs to match the following syntax. Unparseable lines generate an error message but are otherwise ignored"
+	print "Each line needs to match the following syntax. Unparseable lines generate an error message in the preview and must be resolved before saving"
 	print "<ul>"
 	print "<li><b>X</b> &mdash; A single character changes the field separator to that character. The default field separator is |, so that's used in the examples here</li>"
 	print "<li><b>X...X:</b> &mdash; A line ending in a colon is a group name. All tasks after that line will be added to that group. If no group of that name exists, it will be created (the preview will label that group as \"(NEW)\"). A blank line switches back to the default group, which is the group you clicked the new task button on, %s" % defaultGroup.safe.name
@@ -317,6 +317,7 @@ def newTaskMany(handler, request, group):
 	print "<li><b>status</b> &mdash; The initial status of the task. This field is optional; it defaults to \"not started\"</li>"
 	print "<li><b>name</b> &mdash; The name of the task</li>"
 	print "</ul></li>"
+	print "<li><b>#...</b> &mdash; A line starting with a hash character is a comment, and is ignored. You can only comment out entire lines; a hash within a line does not start a comment at that point</li>"
 	print "</ul>"
 	print CollapsibleBox('Help', help.done())
 
@@ -335,19 +336,23 @@ def newTaskMany(handler, request, group):
 
 @post('tasks/new/many')
 def newTaskMany(handler, request, group, p_body, dryrun = False):
+	def die(msg):
+		print msg
+		done()
+
 	request['wrappers'] = False
 	requirePriv(handler, 'User')
 	id = int(group)
 
 	defaultGroup = Group.load(group)
 	if not defaultGroup:
-		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+		die("No group with ID <b>%d</b>" % id)
 
 	sprint = defaultGroup.sprint
 	if not (sprint.isActive() or sprint.isPlanning()):
-		ErrorBox.die("Sprint Closed", "Unable to modify inactive sprint")
+		die("Unable to modify inactive sprint")
 	elif not sprint.canEdit(handler.session['user']):
-		ErrorBox.die("Permission Denied", "You don't have permission to modify this sprint")
+		die("You don't have permission to modify this sprint")
 
 	group = defaultGroup
 	groups = [group]
@@ -355,10 +360,13 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 	tasks = {group: []}
 	sep = '|'
 	lines = map(lambda x: x.strip(" \r\n"), p_body.split('\n'))
+	errors = False
 
 	for line in lines:
 		if line == '':
 			group = defaultGroup
+		elif line[0] == '#': # Comment
+			continue
 		elif len(line) == 1: # Separator
 			sep = line[0]
 		elif line[-1] == ':': # Group
@@ -403,13 +411,19 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 							name = part
 							continue
 
-						print "<i>Unable to parse (no field match on '%s'): %s</i><br>" % (stripTags(part), stripTags(line))
+						errors = True
+						if dryrun:
+							print "<i>Unable to parse (no field match on '%s'): %s</i><br>" % (stripTags(part), stripTags(line))
 					if name == '':
 						name = None
-						print "<i>Unable to parse (empty name): %s</i><br>" % stripTags(line)
+						errors = True
+						if dryrun:
+							print "<i>Unable to parse (empty name): %s</i><br>" % stripTags(line)
 					break
 				if case():
-					print "<i>Unable to parse (field count mismatch): %s</i><br>" % stripTags(line)
+					errors = True
+					if dryrun:
+						print "<i>Unable to parse (field count mismatch): %s</i><br>" % stripTags(line)
 					break
 				break
 
@@ -423,6 +437,8 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 			print "<b>%s%s</b><br>" % (group.safe.name, ' (NEW)' if group in newGroups else '')
 			for name, assigned, status, hours in tasks[group]:
 				print "%s (assigned to %s, %s, %d %s)<br>" % (stripTags(name), ' '.join(map(str, assigned)), status, hours, 'hour remains' if hours == 1 else 'hours remain')
+	elif errors:
+		die('There are unparseable lines in the task script. See the preview for more information')
 	else:
 		for group in groups:
 			# Changing a group's ID will change its hash, so this pulls from tasks before saving the group in case it's new
