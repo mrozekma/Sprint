@@ -150,7 +150,8 @@ def logArchive():
 	cursor.execute("INSERT INTO archive.log SELECT * FROM log")
 	cursor.execute("SELECT COUNT(*) FROM archive.log")
 	numRows = cursor.fetchone()[0]
-	cursor.execute("DETACH DATABASE archive");
+	cursor.execute("DETACH DATABASE archive")
 
 	db().update("DELETE FROM log")
+	db().update("VACUUM")
 	print "Archived %s to %s" % (pluralize(numRows, 'log entry', 'log entries'), filename)
