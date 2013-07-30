@@ -533,7 +533,7 @@ def showInfo(handler, request, id):
 			print "<input type=\"text\" class=\"goal\" style=\"background-image: url(/static/images/tag-%s.png)\" name=\"goals[%d]\" goalid=\"%d\" value=\"%s\"><br>" % (goal.color, goal.id, goal.id, goal.safe.name)
 			numTasks = len(filter(lambda task: task.goal == goal, tasks))
 			if numTasks > 0:
-				print "<div class=\"clear-goal-tasks\" id=\"clear-tasks-%d\"><input type=\"checkbox\" id=\"clear-tasks-check-%d\" name=\"clear[]\" value=\"%d\"><label for=\"clear-tasks-check-%d\">Reset the %s currently assigned to this goal</label></div>" % (goal.id, goal.id, goal.id, goal.id, pluralize(numTasks, 'task', 'tasks'))
+				print "<div class=\"clear-goal-tasks\" id=\"clear-tasks-%d\"><input type=\"checkbox\" id=\"clear-tasks-check-%d\" name=\"clear[]\" value=\"%d\"><label for=\"clear-tasks-check-%d\">Clear the %s currently assigned to this goal (%s will no longer contribute to a sprint goal)</label></div>" % (goal.id, goal.id, goal.id, goal.id, pluralize(numTasks, 'task', 'tasks'), 'it' if numTasks == 1 else 'they')
 		elif goal.name:
 			print "<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;%s<br>" % (goal.color, goal.safe.name)
 	print "</table>"
