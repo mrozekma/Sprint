@@ -226,8 +226,6 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 		print "<a class=\"fancy\" status=\"%s\" href=\"/sprints/%d?search=status:%s\"><img src=\"%s\">%s</a>" % (status.name, id, status.name.replace(' ', '-'), status.getIcon(), status.text)
 	print "</div><br>"
 
-	tasks = search.filter(tasks)
-
 	if sprint.isPlanning():
 		if sprint.isActive():
 			print InfoBox("Today is <b>sprint planning</b> &mdash; tasks aren't finalized until the end of the day")
@@ -236,6 +234,12 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 			print InfoBox("The sprint has <b>not begun</b> &mdash; planning is %s. All changes are considered to have been made midnight of plan day" % ('tomorrow' if daysTillPlanning == 1 else "in %d days" % daysTillPlanning))
 	elif sprint.isReview():
 		print InfoBox("Today is <b>sprint review</b> &mdash; this is the last day to make changes to the backlog")
+	else:
+		noHours = filter(lambda task: task.stillOpen() and task.hours == 0, tasks)
+		if noHours != []:
+			print WarningBox("There are <a href=\"/sprints/%d?search=status:not-started,in-progress,blocked hours:0\">open tasks with no hour estimate</a>" % sprint.id)
+
+	tasks = search.filter(tasks)
 
 	if isDevMode(handler):
 		print Button('#all-tasks borders', "javascript:$('#all-tasks, #all-tasks tr td').css('border', '1px solid #f00').css('border-collapse', 'collapse');").negative()
@@ -711,6 +715,11 @@ def showMetrics(handler, request, id):
 	Chart.include()
 	map(lambda (anchor, title, chart): chart.js(), charts)
 	print tabs(sprint, 'metrics')
+
+	noHours = filter(lambda task: task.stillOpen() and task.hours == 0, tasks)
+	if noHours != []:
+		print WarningBox("There are <a href=\"/sprints/%d?search=status:not-started,in-progress,blocked hours:0\">open tasks with no hour estimate</a>. These unestimated tasks can artifically lower the tasking lines in the following charts" % sprint.id)
+
 	for anchor, title, chart in charts:
 		print "<a name=\"%s\">" % anchor
 		print "<h2><a href=\"#%s\">%s</a></h2>" % (anchor, title)
