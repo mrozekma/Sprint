@@ -17,7 +17,7 @@ from rorn.code import highlightCode
 from DB import db, DiskQueue
 from Privilege import Privilege, admin as requireAdmin, defaults as privDefaults
 from Project import Project
-from User import User
+from User import User, USERNAME_PATTERN
 from Button import Button
 from Table import LRTable
 from Cron import Cron
@@ -267,6 +267,8 @@ def adminUsersPost(handler, request, p_action, p_username, p_privileges = []):
 		if case('new'):
 			if User.load(username = p_username):
 				ErrorBox.die('Add User', "There is already a user named <b>%s</b>" % stripTags(p_username))
+			if not re.match("^%s$" % USERNAME_PATTERN, p_username):
+				ErrorBox.die('Add User', "Username <b>%s</b> is illegal" % stripTags(p_username))
 			privileges = [Privilege.load(name = name) for name in p_privileges]
 			if not all(privileges):
 				ErrorBox.die('Add User', "Unrecognized privilege name")

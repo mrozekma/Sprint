@@ -6,7 +6,7 @@ from rorn.Box import ErrorBox
 from rorn.Session import undelay
 
 from Settings import settings
-from User import User
+from User import User, USERNAME_PATTERN
 from Sprint import Sprint
 from Task import Task
 from Availability import Availability
@@ -27,7 +27,7 @@ def users(handler, request):
 	print "</div>"
 	print "<div class=\"clear\"></div>"
 
-@get('users/(?P<username>[^/]+)')
+@get("users/(?P<username>%s)" % USERNAME_PATTERN)
 def user(handler, request, username):
 	user = User.load(username = username)
 	if not user:
@@ -131,7 +131,7 @@ def user(handler, request, username):
 	else:
 		print "Not a member of any active sprints"
 
-@get('users/(?P<username>[^/]+)/tasks')
+@get("users/(?P<username>%s)/tasks" % USERNAME_PATTERN)
 def userTasks(handler, request, username):
 	handler.title('User tasks')
 	user = User.load(username = username)

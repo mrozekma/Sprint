@@ -272,9 +272,9 @@ function apply_filters() {
 
 		// Special-case many-assigned tasks; hide if all of the assignees are unselected
 		tasks.filter('[assigned*=" "]').each(function() {
-			assigned = $(this).attr('assigned').split(' ');
-			for(i in assigned) {
-				if($('#filter-assigned a[assigned=' + assigned[i] + ']').hasClass('selected')) {
+			task_assigned = $(this).attr('assigned').split(' ');
+			for(i in task_assigned) {
+				if($('#filter-assigned a[assigned=' + task_assigned[i] + ']').hasClass('selected')) {
 					return;
 				}
 			}
@@ -310,6 +310,15 @@ function apply_filters() {
 			}
 		});
 	}
+
+	// Set the new task assignee parameters
+	qs_assigned = $.makeArray(assigned.map(function() {return $(this).attr('assigned');})).join(' ');
+	$('a[href^="/tasks/new"]').each(function() {
+		qs = $.deparam.querystring($(this).attr('href'));
+		qs['assigned'] = qs_assigned;
+		$(this).attr('href', $.param.querystring('/tasks/new', qs));
+		return;
+	});
 
 	update_task_count();
 	update_indexes();

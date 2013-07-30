@@ -5,6 +5,8 @@ from Privilege import Privilege
 from Settings import settings
 from utils import md5
 
+USERNAME_PATTERN = '[a-zA-Z0-9]+'
+
 class User(ActiveRecord):
 	def __init__(self, username, password, hotpKey = '', lastseen = 0, resetkey = 0, id = None):
 		ActiveRecord.__init__(self)

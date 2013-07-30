@@ -29,6 +29,7 @@ def header(handler, path, includes):
 	print "<script src=\"/static/jquery.mousewheel-min.js\"></script>"
 	print "<script src=\"/static/jquery.terminal-0.4.23.js\"></script>"
 	print "<link href=\"/static/jquery.terminal.css\" rel=\"stylesheet\" type=\"text/css\" />"
+	print "<script src=\"/static/jquery.ba-bbq.js\"></script>"
 
 	print "<script src=\"/static/bootstrap-dropdown.js\" type=\"text/javascript\"></script>"
 	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/bootstrap.css\">"

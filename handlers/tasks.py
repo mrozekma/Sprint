@@ -155,14 +155,19 @@ tabs['many'] = '/tasks/new/many?group=%d'
 tabs['import'] = '/tasks/new/import?group=%d'
 
 @get('tasks/new')
-def newTaskGeneric(handler, request, group):
-	redirect("/tasks/new/single?group=%s" % group)
+def newTaskGeneric(handler, request, group, assigned = None):
+	url = '/tasks/new/single'
+	url += "?group=%s" % group
+	if assigned:
+		url += "&assigned=%s" % assigned
+	redirect(url)
 
 @get('tasks/new/single')
-def newTaskSingle(handler, request, group):
+def newTaskSingle(handler, request, group, assigned = ''):
 	handler.title("New Task")
 	requirePriv(handler, 'User')
 	id = int(group)
+	assigned = assigned.split(' ')
 
 	print tabs.format(id).where('single')
 
@@ -218,7 +223,7 @@ def newTaskSingle(handler, request, group):
 	print "<tr><td class=\"left\">Assigned:</td><td class=\"right\">"
 	print "<select id=\"select-assigned\" name=\"assigned[]\" data-placeholder=\"Choose assignees (or leave blank to self-assign)\" size=\"10\" multiple>"
 	for user in sorted(group.sprint.members):
-		print "<option value=\"%d\">%s</option>" % (user.id, user.safe.username)
+		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user.username in assigned else '', user.safe.username)
 	print "</select>"
 	print "</td></tr>"
 	print "<tr><td class=\"left\">Hours:</td><td class=\"right\"><input type=\"text\" name=\"hours\" value=\"8\"></td></tr>"
