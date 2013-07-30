@@ -78,6 +78,10 @@ class HTTPHandler(ParentHandler):
 			self.session['user'].lastseen = dateToTs(getNow())
 			self.session['user'].save()
 
+	def title(self, title):
+		self.replace('$title$', "%s - Sprint" % title if title else "Sprint", 1)
+		self.replace('$bodytitle$', title if title else "Sprint", 1)
+
 # Handlers
 # import index
 from handlers import *

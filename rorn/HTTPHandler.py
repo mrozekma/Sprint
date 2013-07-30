@@ -4,7 +4,8 @@ from collections import defaultdict
 import re
 import cgi
 import sys
-import urllib
+from urllib import unquote
+from urlparse import parse_qs
 from sqlite3 import OperationalError
 import traceback
 
@@ -37,6 +38,7 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 	def __init__(self, request, address, server):
 		self.session = None
 		self.replacements = {}
+		self.title(None)
 		BaseHTTPRequestHandler.__init__(self, request, address, server)
 
 	def buildResponse(self, method, postData):
@@ -52,9 +54,10 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 			# Add GET params to query
 			if '?' in path:
 				path, queryStr = path.split('?', 1)
-				queryStr = urllib.unquote(queryStr)
 				if queryStr != '':
-					query = self.parseQueryString([item.split('=', 1) for item in queryStr.split('&')])
+					queryList = parse_qs(queryStr, keep_blank_values = True)
+					queryList = [[k, v] for k in queryList for v in queryList[k]] # Convert to parseQueryString format
+					query = self.parseQueryString(queryList)
 
 			# Check GET params for a p_ prefix collision
 			for key in query:
@@ -64,10 +67,10 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 			# Add POST params to query with a p_ prefix
 			query.update(dict([('p_' + k, v) for (k, v) in postData.iteritems()]))
 
-			self.title(None)
 			assert path[0] == '/'
 			path = path[1:]
 			if len(path) and path[-1] == '/': path = path[:-1]
+			path = unquote(path)
 			handler = None
 			for pattern in handlers[method]:
 				match = pattern.match(path)
@@ -191,10 +194,6 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 	def replace(self, fromStr, toStr, count = -1):
 		self.replacements[fromStr] = (fromStr, toStr, count)
 
-	def title(self, title):
-		self.replace('$title$', "%s - Sprint" % title if title else "Sprint", 1)
-		self.replace('$bodytitle$', title if title else "Sprint", 1)
-
 	def sendHead(self, code, contentType = 'application/octet-stream', forceDownload = False, additionalHeaders = {}, includeCookie = True):
 		headers = {
 			'Content-type': contentType,
@@ -256,6 +255,8 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 		print ErrorBox(title, text)
 		if isDone:
 			done()
+
+	def title(self, title): pass
 
 	def processingRequest(self): pass
 
