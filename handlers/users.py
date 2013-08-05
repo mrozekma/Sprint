@@ -1,12 +1,17 @@
 from __future__ import division
+from base64 import b64encode, b64decode
 from datetime import datetime
+from imghdr import what as imgtype
 from itertools import groupby
+from PIL import Image
+from StringIO import StringIO
 
-from rorn.Box import ErrorBox
-from rorn.Session import undelay
+from rorn.Box import SuccessBox, ErrorBox
+from rorn.Session import delay, undelay
 
 from Settings import settings
-from User import User, USERNAME_PATTERN
+from User import User, USERNAME_PATTERN, AVATAR_TYPES, AVATAR_MAX_SIZE
+from Privilege import requirePriv
 from Sprint import Sprint
 from Task import Task
 from Availability import Availability
@@ -57,7 +62,10 @@ def user(handler, request, username):
 
 	if user == handler.session['user']:
 		print "<h3>Avatar</h3>"
-		print "Your avatar can be changed at <a href=\"http://gravatar.com/\" target=\"_new\">http://gravatar.com/</a>. It must be associated with the e-mail <b>%s</b>, and be rated PG" % user.getEmail()
+		if user.hasLocalAvatar():
+			print "Your avatar is currently <a href=\"/users/%s/avatar/set\">locally hosted</a>" % user.username
+		else:
+			print "Your avatar can be changed at <a href=\"http://gravatar.com/\" target=\"_new\">http://gravatar.com/</a>. It must be associated with the e-mail <b>%s</b>, and be rated PG. You can also host an avatar <a href=\"/users/%s/avatar/set\">locally</a>, if necessary" % (user.getEmail(), user.username)
 
 		print "<h3>Authentication</h3>"
 		print "Your sprint tool password can be changed <a href=\"/resetpw\">here</a>.",
@@ -143,3 +151,92 @@ def userTasks(handler, request, username):
 		ErrorBox.die("User tasks", "%s has no open tasks in active sprints" % user)
 
 	redirect("/tasks/%s" % ','.join(map(str, tasks)))
+
+@get("users/(?P<username>%s)/avatar" % USERNAME_PATTERN)
+def userAvatarShow(handler, request, username, size = 80):
+	def die(msg):
+		print msg
+		done()
+
+	request['wrappers'] = False
+	size = to_int(size, 'size', die)
+	user = User.load(username = username)
+	if not user:
+		redirect(User.getBlankAvatar())
+	if user.avatar is None:
+		redirect(user.getAvatar())
+
+	data = b64decode(user.avatar)
+	image = Image.open(StringIO(data))
+	image = image.resize((size, size), Image.ANTIALIAS)
+	out = StringIO()
+	image.save(out, 'png')
+	print out.getvalue()
+	request['contentType'] = 'image/png'
+
+@get("users/(?P<username>%s)/avatar/set" % USERNAME_PATTERN)
+def userAvatarSet(handler, request, username):
+	handler.title('Set avatar')
+	requirePriv(handler, 'User')
+	user = User.load(username = username)
+	if not user:
+		ErrorBox.die("Set avatar", "No user named <b>%s</b>" % stripTags(username))
+	if user != handler.session['user']: #TODO Allow devs
+		redirect("/users/%s/avatar/set" % handler.session['user'].username)
+
+	print "Restrictions on a locally hosted avatar:"
+	print "<ul>"
+	print "<li>Type: %s</li>" % ", ".join(AVATAR_TYPES).upper()
+	print "<li>Size: %s bytes</li>" % AVATAR_MAX_SIZE
+	print "</ul>"
+
+	print "<form method=\"post\" enctype=\"multipart/form-data\" action=\"/users/%s/avatar/set\">" % user.username
+	print "<input type=\"file\" name=\"data\"><br>"
+	# Using a plain button here because the file field isn't styled
+	print "<button>Upload</button>"
+	print "</form>"
+
+	if user.hasLocalAvatar():
+		print "<br>"
+		print "You can also remove your existing local avatar. Your account will switch back to using your gravatar image<br>"
+		print "<form method=\"post\" action=\"/users/%s/avatar/remove\">" % user.username
+		print "<button>Remove avatar</button>"
+		print "</form>"
+
+@post("users/(?P<username>%s)/avatar/set" % USERNAME_PATTERN)
+def userAvatarSet(handler, request, username, p_data):
+	handler.title('Set avatar')
+	requirePriv(handler, 'User')
+	user = User.load(username = username)
+	if not user:
+		ErrorBox.die("Set avatar", "No user named <b>%s</b>" % stripTags(username))
+	if user != handler.session['user']: #TODO Allow devs
+		redirect("/users/%s/avatar/set" % handler.session['user'].username)
+
+	if len(p_data) > AVATAR_MAX_SIZE:
+		ErrorBox.die("Set avatar", "Avatar too large (%s)" % pluralize(len(p_data), 'byte', 'bytes'))
+	type = imgtype(None, p_data)
+	if type is None:
+		ErrorBox.die("Set avatar", "Image type unrecognized")
+	elif type not in AVATAR_TYPES:
+		ErrorBox.die("Set avatar", "Unsupported image type %s" % type.upper())
+
+	user.avatar = b64encode(p_data)
+	user.save()
+	delay(handler, SuccessBox("Avatar uploaded"))
+	redirect("/users/%s" % user.username)
+
+@post("users/(?P<username>%s)/avatar/remove" % USERNAME_PATTERN)
+def userAvatarRemove(handler, request, username):
+	handler.title('Remove avatar')
+	requirePriv(handler, 'User')
+	user = User.load(username = username)
+	if not user:
+		ErrorBox.die("Remove avatar", "No user named <b>%s</b>" % stripTags(username))
+	if user != handler.session['user']: #TODO Allow devs
+		redirect("/users/%s/avatar/set" % handler.session['user'].username)
+
+	user.avatar = None
+	user.save()
+	delay(handler, SuccessBox("Avatar removed"))
+	redirect("/users/%s" % user.username)

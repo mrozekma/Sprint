@@ -6,9 +6,11 @@ from Settings import settings
 from utils import md5
 
 USERNAME_PATTERN = '[a-zA-Z0-9]+'
+AVATAR_TYPES = ['png', 'gif', 'jpeg']
+AVATAR_MAX_SIZE = 5 * 1024 * 1024 # bytes
 
 class User(ActiveRecord):
-	def __init__(self, username, password, hotpKey = '', lastseen = 0, resetkey = 0, id = None):
+	def __init__(self, username, password, hotpKey = '', lastseen = 0, resetkey = 0, avatar = None, id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.username = username
@@ -16,6 +18,7 @@ class User(ActiveRecord):
 		self.hotpKey = hotpKey
 		self.lastseen = lastseen
 		self.resetkey = resetkey
+		self.avatar = avatar
 
 		if not id:
 			self.password = User.crypt(self.username, self.password)
@@ -69,8 +72,14 @@ class User(ActiveRecord):
 		return "%s@%s" % (self.username, settings.emailDomain)
 
 	def getAvatar(self, size = 64):
-		email = md5(self.getEmail().strip().lower())
-		return "http://www.gravatar.com/avatar/%s?s=%d&d=wavatar&r=pg" % (email, size)
+		if self.hasLocalAvatar():
+			return "/users/%s/avatar?size=%d" % (self.username, size)
+		else:
+			email = md5(self.getEmail().strip().lower())
+			return "http://www.gravatar.com/avatar/%s?s=%d&d=wavatar&r=pg" % (email, size)
+
+	def hasLocalAvatar(self):
+		return self.avatar is not None
 
 	@staticmethod
 	def getBlankAvatar(size = 64):
