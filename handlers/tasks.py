@@ -162,7 +162,7 @@ def newTaskGeneric(handler, request, group, assigned = None):
 		url += "&assigned=%s" % assigned
 	redirect(url)
 
-@get('tasks/new/single')
+@get('tasks/new/single', statics = 'tasks-new')
 def newTaskSingle(handler, request, group, assigned = ''):
 	handler.title("New Task")
 	requirePriv(handler, 'User')
@@ -183,14 +183,9 @@ def newTaskSingle(handler, request, group, assigned = ''):
 
 	# name, assigned, hours, status, sprint, group
 
-	print "<style type=\"text/css\">"
-	print "table.list td.right > * {width: 400px;}"
-	print "table.list td.right button {width: 200px;}" # Half of the above value
-	print "</style>"
 	print "<script type=\"text/javascript\">"
 	print "next_url = '/sprints/%d#group%d';" % (group.sprint.id, group.id)
 	print "</script>"
-	print "<script src=\"/static/tasks-new.js\" type=\"text/javascript\"></script>"
 
 	print InfoBox('', id = 'post-status', close = True)
 
@@ -825,11 +820,12 @@ def taskEdit(handler, request, ids):
 	print "<h3>New values</h3>"
 	print "<form method=\"post\" action=\"/tasks/%s/edit\">" % ','.join(map(str, ids))
 	print "<table id=\"task-edit-values\" class=\"list\">"
-	print "<tr><td class=\"left\">Assigned:</td><td class=\"right\"><select name=\"assigned\">"
-	print "<option value=\"\">(unchanged)</option>"
+	print "<tr><td class=\"left\">Assigned:</td><td class=\"right\">"
+	print "<select id=\"select-assigned\" name=\"assigned[]\" data-placeholder=\"(unchanged)\" multiple>"
 	for user in sorted(sprint.members):
 		print "<option value=\"%d\">%s</option>" % (user.id, user.safe.username)
-	print "</select></td></tr>"
+	print "</select>"
+	print "</td></tr>"
 	print "<tr><td class=\"left\">Hours:</td><td class=\"right\"><input type=\"text\" name=\"hours\" class=\"hours\"></td></tr>"
 	print "<tr><td class=\"left\">Status:</td><td class=\"right\"><select name=\"status\">"
 	print "<option value=\"\">(unchanged)</option>"
@@ -864,12 +860,12 @@ def taskEdit(handler, request, ids):
 	print "</form>"
 
 @post('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)/edit')
-def taskEditPost(handler, request, ids, p_assigned, p_hours, p_status, p_goal, p_include = {}):
+def taskEditPost(handler, request, ids, p_hours, p_status, p_goal, p_assigned = [], p_include = {}):
 	handler.title("Edit tasks")
 	requirePriv(handler, 'Write')
 
 	allIDs = map(int, uniq(ids.split(',')))
-	ids = map(int, p_include.keys())
+	ids = map(lambda i: to_int(i, 'include', ErrorBox.die), p_include.keys())
 	if not set(ids) <= set(allIDs):
 		ErrorBox.die("Included tasks don't match query arguments")
 
@@ -884,15 +880,19 @@ def taskEditPost(handler, request, ids, p_assigned, p_hours, p_status, p_goal, p
 	if not sprint.canEdit(handler.session['user']):
 		ErrorBox.die("You don't have permission to modify this sprint")
 
+	assignedids = map(lambda i: to_int(i, 'assigned', ErrorBox.die), p_assigned)
+
 	changes = {
-		'assigned': False if p_assigned == '' else User.load(int(p_assigned)),
+		'assigned': False if assignedids == [] else [User.load(assignedid) for assignedid in assignedids],
 		'hours': False if p_hours == '' else int(p_hours),
 		'status': False if p_status == '' else p_status,
 		'goal': False if p_goal == '' else Goal.load(int(p_goal))
 	}
 
-	if changes['assigned'] and changes['assigned'] not in sprint.members:
-		ErrorBox.die("Unable to assign tasks to a non-sprint member")
+	if changes['assigned'] and not all(changes['assigned']):
+		ErrorBox.die("Invalid assignee")
+	if changes['assigned'] and not set(changes['assigned']).issubset(sprint.members):
+		ErrorBox.die("Unable to assign tasks to non-sprint members")
 	if changes['goal'] and changes['goal'].sprint != sprint:
 		ErrorBox.die("Unable to set goal to a goal outside the sprint")
 

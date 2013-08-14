@@ -1,3 +1,15 @@
+@width: 400px;
+
+table.list td.right {
+	> * {
+		width: @width;
+	}
+
+	button {
+		width: @width / 2;
+	}
+}
+
 #many-body {
 	width: 100%;
 	height: 400px;
@@ -12,12 +24,12 @@
 }
 
 select#import-source {
-	width: 400px;
+	width: @width;
 }
 
 table.task-import {
 	td.name input {
-		width: 400px;
+		width: @width;
 	}
 
 	td.group select {
@@ -25,7 +37,7 @@ table.task-import {
 	}
 
 	td.assigned > * {
-		width: 200px;
+		width: @width / 2;
 	}
 
 	td.hours input {
