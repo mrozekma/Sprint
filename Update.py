@@ -1,5 +1,5 @@
 import sys
-from os import remove
+from os import mkdir, remove
 from os.path import isdir, splitext
 from getpass import getpass
 from socket import gethostname
@@ -92,6 +92,10 @@ def init():
 	except Exception, e:
 		remove(dbFilename)
 		die("Unable to create admin user: %s" % e)
+
+	print "Creating backup and log directories"
+	mkdir('backups')
+	mkdir('logs')
 
 	db().diskQueue.flush()
 	print "Done. You can run %s normally now and browse to http://%s:%d/" % (sys.argv[0], gethostname(), PORT)
