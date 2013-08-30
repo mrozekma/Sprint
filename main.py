@@ -43,7 +43,11 @@ if settings.redis:
 	addEventHandler(EventPublisher.EventPublisher(host, port))
 
 # When python is started in the background it ignores SIGINT instead of throwing a KeyboardInterrupt
+def signal_die(signum, frame):
+	signals = dict((getattr(signal, name), name) for name in dir(signal) if name.startswith('SIG') and '_' not in name)
+	raise SystemExit("Caught %s; exiting" % signals.get(signum, "signal %d" % signum))
 signal.signal(signal.SIGINT, signal.default_int_handler)
+signal.signal(signal.SIGTERM, signal_die)
 
 # Daemonize
 if option('daemon'):
@@ -75,7 +79,7 @@ try:
 except KeyboardInterrupt:
 	sys.__stdout__.write("\n\n")
 	console('main', 'Exiting at user request')
-except Exception, e:
+except (Exception, SystemExit), e:
 	sys.__stdout__.write("\n\n")
 	console('main', '%s', e)
 
@@ -84,5 +88,8 @@ server.server_close()
 
 console('main', 'Flushing database')
 db().diskQueue.flush()
+
+if pidFile:
+	os.remove(pidFile)
 
 console('main', 'Done')
