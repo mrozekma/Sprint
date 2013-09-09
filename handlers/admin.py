@@ -9,7 +9,7 @@ from cgi import escape
 from datetime import datetime, time
 from threading import enumerate as threads
 
-from rorn.Box import ErrorBox, SuccessBox
+from rorn.Box import ErrorBox, WarningBox, SuccessBox
 from rorn.Session import sessions, delay, undelay
 from rorn.ResponseWriter import ResponseWriter
 from rorn.code import highlightCode
@@ -17,6 +17,7 @@ from rorn.code import highlightCode
 from DB import db, DiskQueue
 from Privilege import Privilege, admin as requireAdmin, defaults as privDefaults
 from Project import Project
+from Sprint import Sprint
 from User import User, USERNAME_PATTERN
 from Button import Button
 from Table import LRTable
@@ -284,7 +285,7 @@ def adminUsersPost(handler, request, p_action, p_username, p_privileges = []):
 			redirect("/users/%s" % user.username)
 			break
 
-@admin('admin/projects', 'Projects', 'projects')
+@admin('admin/projects', 'Projects', 'projects', statics = 'admin-projects')
 def adminProjects(handler, request):
 	handler.title('Project Management')
 	requireAdmin(handler)
@@ -293,7 +294,8 @@ def adminProjects(handler, request):
 	print "table.list td.right > * {width: 400px;}"
 	print "table.list td.right button {width: 200px;}" # Half of the above value
 	print "</style>"
-	print "<script src=\"/static/admin-projects.js\" type=\"text/javascript\"></script>"
+
+	undelay(handler)
 
 	print "<h3>New Project</h3>"
 	print "<form method=\"post\" action=\"/admin/projects\">"
@@ -305,6 +307,10 @@ def adminProjects(handler, request):
 	print "</td></tr>"
 	print "</table>"
 	print "</form>"
+
+	print "<h3>Current Projects</h3>"
+	for project in Project.getAllSorted(handler.session['user']):
+		print "<a href=\"/admin/projects/%d\">%s</a><br>" % (project.id, project.safe.name)
 
 @post('admin/projects')
 def adminProjectsPost(handler, request, p_name):
@@ -319,6 +325,120 @@ def adminProjectsPost(handler, request, p_name):
 	delay(handler, SuccessBox("Added project <b>%s</b>" % stripTags(p_name), close = True))
 	Event.newProject(handler, project)
 	redirect('/')
+
+@get('admin/projects/(?P<id>[0-9]+)', statics = ['admin', 'admin-projects'])
+def adminProjectsManage(handler, request, id):
+	handler.title('Manage Project')
+	requireAdmin(handler)
+	project = Project.load(int(id))
+	if not project:
+		ErrorBox.die('Invalid Project', "No project with ID <b>%d</b>" % int(id))
+	undelay(handler)
+
+	otherProjects = sorted((p for p in Project.loadAll() if p != project), key = lambda p: p.name)
+
+	print "<a name=\"sprints\"></a>"
+	print "<h3>Sprints</h3>"
+	sprints = project.getSprints()
+	if len(sprints) > 0:
+		print "<form method=\"post\" action=\"/admin/projects/%d/move-sprints\">" % project.id
+		for sprint in sprints:
+			print "<input type=\"checkbox\" name=\"sprintid[]\" value=\"%d\">&nbsp;<a href=\"/sprints/%d\">%s</a><br>" % (sprint.id, sprint.id, sprint)
+		print "<br>"
+		print "Move to project: <select name=\"newproject\">"
+		for p in otherProjects:
+			print "<option value=\"%d\">%s</option>" % (p.id, p.safe.name)
+		print "</select>"
+		print Button('Move', type = 'submit').positive()
+		print "</form>"
+	else:
+		print "No sprints"
+
+	print "<a name=\"rename\"></a>"
+	print "<h3>Rename</h3>"
+	print "<form method=\"post\" action=\"/admin/projects/%d/edit\">" % project.id
+	print "Name: <input type=\"text\" name=\"name\" value=\"%s\">" % project.safe.name
+	print Button('Rename', type = 'submit').positive()
+	print "</form>"
+
+	print "<a name=\"delete\"></a>"
+	print "<h3>Delete</h3>"
+	print "<form method=\"post\" action=\"/admin/projects/%d/delete\">" % project.id
+	if len(project.getSprints()) > 0:
+		if len(otherProjects) > 0:
+			print "Delete <b>%s</b> and move all sprints to <select name=\"newproject\">" % project.safe.name
+			for p in otherProjects:
+				print "<option value=\"%d\">%s</option>" % (p.id, p.safe.name)
+			print "</select>"
+			print Button('Delete', type = 'submit').negative()
+		else:
+			print "Unable to remove the only project if it has sprints"
+	else:
+		print Button("Delete %s" % project.safe.name, type = 'submit').negative()
+	print "</form><br>"
+
+@post('admin/projects/(?P<id>[0-9]+)/move-sprints')
+def adminProjectsMoveSprintsPost(handler, request, id, p_newproject, p_sprintid = None):
+	handler.title('Move Sprints')
+	requireAdmin(handler)
+	project = Project.load(int(id))
+	if not project:
+		ErrorBox.die('Invalid Project', "No project with ID <b>%d</b>" % int(id))
+
+	p_newproject = to_int(p_newproject, 'newproject', ErrorBox.die)
+	target = Project.load(p_newproject)
+
+	if not p_sprintid:
+		delay(handler, WarningBox("No sprints to move", close = True))
+		redirect("/admin/projects/%d" % project.id)
+
+	sprintids = [to_int(id, 'sprintid', ErrorBox.die) for id in p_sprintid]
+	sprints = [Sprint.load(id) for id in sprintids]
+	if not all(sprints):
+		ErrorBox.die("Invalid sprint ID(s)")
+
+	for sprint in sprints:
+		sprint.project = target
+		sprint.save()
+
+	delay(handler, SuccessBox("%s moved" % pluralize(len(sprints), 'sprint', 'sprints'), close = True))
+	redirect("/admin/projects/%d" % project.id)
+
+@post('admin/projects/(?P<id>[0-9]+)/edit')
+def adminProjectsEditPost(handler, request, id, p_name):
+	handler.title('Edit Project')
+	requireAdmin(handler)
+	project = Project.load(int(id))
+	if not project:
+		ErrorBox.die('Invalid Project', "No project with ID <b>%d</b>" % int(id))
+	project.name = p_name
+	project.save()
+	delay(handler, SuccessBox("Saved project changes", close = True))
+	redirect("/admin/projects/%d" % project.id)
+
+@post('admin/projects/(?P<id>[0-9]+)/delete')
+def adminProjectsDeletePost(handler, request, id, p_newproject = None):
+	handler.title('Delete Project')
+	requireAdmin(handler)
+	project = Project.load(int(id))
+	if not project:
+		ErrorBox.die('Invalid Project', "No project with ID <b>%d</b>" % int(id))
+
+	sprints = project.getSprints()
+	if len(sprints) > 0:
+		if p_newproject is None:
+			ErrorBox.die('Missing Parameter', "No new project specified")
+		p_newproject = to_int(p_newproject, 'newproject', ErrorBox.die)
+		target = Project.load(p_newproject)
+		if not target:
+			ErrorBox.die('Invalid Project', "No target project with ID <b>%d</b>" % p_newproject)
+		for sprint in sprints:
+			sprint.project = target
+			sprint.save()
+
+	project.delete()
+	delay(handler, SuccessBox("Project deleted", close = True))
+	redirect("/admin/projects")
 
 @admin('admin/sessions', 'Sessions', 'sessions')
 def adminSessions(handler, request, username = None):
