@@ -1,13 +1,13 @@
 from datetime import datetime
 import os
-from os.path import dirname
+from os.path import abspath, dirname
 from resource import getrlimit, RLIMIT_NOFILE, RLIM_INFINITY
 import signal
 import socket
 import sys
 from threading import currentThread
 
-os.chdir(dirname(__file__))
+os.chdir(dirname(abspath(__file__)))
 
 from BaseHTTPServer import HTTPServer
 from HTTPHandler import HTTPHandler
