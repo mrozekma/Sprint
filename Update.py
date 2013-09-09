@@ -94,8 +94,10 @@ def init():
 		die("Unable to create admin user: %s" % e)
 
 	print "Creating backup and log directories"
-	mkdir('backups')
-	mkdir('logs')
+	if not isdir('backups'):
+		mkdir('backups')
+	if not isdir('logs'):
+		mkdir('logs')
 
 	db().diskQueue.flush()
 	print "Done. You can run %s normally now and browse to http://%s:%d/" % (sys.argv[0], gethostname(), PORT)
