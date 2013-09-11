@@ -828,6 +828,7 @@ def showAvailability(handler, request, id):
 		print "<td>%s<br>%s</td>" % (day.strftime('%d'), day.strftime('%a'))
 		if day.weekday() == 4:
 			print "<td class=\"spacer\">&nbsp;</td>"
+	print "<td class=\"buttons\"></td>" # The stylesheet counts cells from the right, so it's important that this be here to match the other rows
 	print "</tr>"
 	if editable:
 		print "<tr class=\"dateline\">"
@@ -839,6 +840,7 @@ def showAvailability(handler, request, id):
 			print "<td class=\"buttons\"><img src=\"/static/images/clipboard.png\" title=\"Copy first down\"></td>"
 			if day.weekday() == 4:
 				print "<td class=\"spacer\">&nbsp;</td>"
+		print "<td class=\"buttons\"></td>"
 		print "</tr>"
 
 	for user in sorted(sprint.members):
