@@ -11,7 +11,7 @@ class Group(ActiveRecord):
 		self.id = id
 		self.sprintid = sprintid
 		self.name = name
-		self.seq = seq if seq else maxOr(group.seq for group in self.sprint.getGroups())+1
+		self.seq = seq if seq else maxOr(group.seq for group in self.sprint.getGroups()) + 1
 		self.deletable = to_bool(deletable)
 
 	def getTasks(self):

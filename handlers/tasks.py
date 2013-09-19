@@ -445,6 +445,12 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 	elif errors:
 		die('There are unparseable lines in the task script. See the preview for more information')
 	else:
+		# There's some weirdness in the way groups auto-sequence that breaks when multiple groups are made without saving
+		seq = maxOr(group.seq for group in sprint.getGroups()) + 1
+		for group in newGroups:
+			group.seq = seq
+			seq += 1
+
 		for group in groups:
 			# Changing a group's ID will change its hash, so this pulls from tasks before saving the group in case it's new
 			groupTasks = tasks[group]
