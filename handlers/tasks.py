@@ -372,11 +372,16 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 		elif line[-1] == ':': # Group
 			line = line[:-1]
 			group = Group.load(sprintid = sprint.id, name = line)
-			if not group:
+			if not group: # Check if new group already defined
+				for newGroup in newGroups:
+					if newGroup.name == line:
+						group = newGroup
+						break
+			if not group: # Make new group
 				group = Group(sprint.id, line)
 				newGroups.append(group)
 				group.id = -len(newGroups)
-			if not group in groups:
+			if not group in groups: # First time this group has been used in the script
 				groups.append(group)
 				tasks[group] = []
 		else:
