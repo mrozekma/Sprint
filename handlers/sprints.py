@@ -234,7 +234,7 @@ def showBacklog(handler, request, id, search = None, devEdit = False):
 			print InfoBox("The sprint has <b>not begun</b> &mdash; planning is %s. All changes are considered to have been made midnight of plan day" % ('tomorrow' if daysTillPlanning == 1 else "in %d days" % daysTillPlanning))
 	elif sprint.isReview():
 		print InfoBox("Today is <b>sprint review</b> &mdash; this is the last day to make changes to the backlog")
-	else:
+	elif not sprint.isOver():
 		noHours = filter(lambda task: task.stillOpen() and task.hours == 0, tasks)
 		if noHours != []:
 			print WarningBox("There are <a href=\"/sprints/%d?search=status:not-started,in-progress,blocked hours:0\">open tasks with no hour estimate</a>" % sprint.id)
@@ -716,9 +716,10 @@ def showMetrics(handler, request, id):
 	map(lambda (anchor, title, chart): chart.js(), charts)
 	print tabs(sprint, 'metrics')
 
-	noHours = filter(lambda task: task.stillOpen() and task.hours == 0, tasks)
-	if noHours != []:
-		print WarningBox("There are <a href=\"/sprints/%d?search=status:not-started,in-progress,blocked hours:0\">open tasks with no hour estimate</a>. These unestimated tasks can artifically lower the tasking lines in the following charts" % sprint.id)
+	if not sprint.isOver():
+		noHours = filter(lambda task: task.stillOpen() and task.hours == 0, tasks)
+		if noHours != []:
+			print WarningBox("There are <a href=\"/sprints/%d?search=status:not-started,in-progress,blocked hours:0\">open tasks with no hour estimate</a>. These unestimated tasks can artifically lower the tasking lines in the following charts" % sprint.id)
 
 	for anchor, title, chart in charts:
 		print "<a name=\"%s\">" % anchor
