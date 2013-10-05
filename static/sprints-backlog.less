@@ -114,11 +114,6 @@ table.tasks {
 			background-color: rgba(255, 0, 0, .3);
 		}
 
-		&:hover td {
-			border-color: #bce8f1;
-			background-color: #d9edf7;
-		}
-
 		td {
 			vertical-align: middle;
 
@@ -230,6 +225,11 @@ table.tasks {
 			}
 		}
 
+		&:hover td {
+			border-color: #bce8f1;
+			background-color: #d9edf7;
+		}
+
 		&:hover td.flags span.task-index {
 			background-color: #2d6987;
 		}
@@ -253,6 +253,10 @@ table.tasks {
 		&.highlight {
 			background-color: #9cf;
 		}
+	}
+
+	tr.group {
+		cursor: default;
 	}
 
 	tr.task td.name,
