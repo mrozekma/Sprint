@@ -1,10 +1,12 @@
 from datetime import datetime
+from json import dumps as toJS
 from random import randint
 import os
 
 import HTTPHandler
 import menu
 from DB import db
+from ChangeLog import getChanges
 from Options import option
 from LoadValues import getRevisionInfo, isDevMode
 from Settings import settings
@@ -37,6 +39,11 @@ def header(handler, path, includes):
 	print "<link rel=\"stylesheet\" href=\"/static/chosen/chosen.css\" />"
 	print "<script src=\"/static/chosen/chosen.jquery.js\" type=\"text/javascript\"></script>"
 
+	print "<script src=\"/static/noty/jquery.noty.js\"></script>"
+	print "<script src=\"/static/noty/layouts/bottomCenter.js\"></script>"
+	print "<script src=\"/static/noty/themes/default.js\"></script>"
+	print "<script src=\"/static/noty/themes/sprint.js\"></script>"
+
 	print "<script src=\"/static/script.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/shell.js\" type=\"text/javascript\"></script>"
 
@@ -64,6 +71,17 @@ def header(handler, path, includes):
 	print "};"
 	print "</script>"
 	print "<script src=\"/static/less.js\" type=\"text/javascript\"></script>"
+
+	changes = list(getChanges(handler, path))
+	if changes:
+		print "<script src=\"/static/changelog.js\"></script>"
+		print "<script type=\"text/javascript\">"
+		print "$(document).ready(function() {"
+		fmt = "%%(message)s<div style=\"text-align: right; font-size: 6pt\"><a target=\"_blank\" href=\"%s\">%%(hash)s</a></div>" % settings.gitURL if 'gitURL' in settings else "%(message)s"
+		for change in changes:
+			print "    showChangelog(%s);" % toJS(fmt % {'hash': change.hash, 'message': change.message})
+		print "});"
+		print "</script>"
 
 	print "</head>"
 	print "<body>"
