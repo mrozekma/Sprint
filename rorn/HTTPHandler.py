@@ -5,7 +5,6 @@ import re
 import cgi
 import sys
 from urllib import unquote
-from urlparse import parse_qs
 from sqlite3 import OperationalError
 import traceback
 
@@ -55,9 +54,7 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 			if '?' in path:
 				path, queryStr = path.split('?', 1)
 				if queryStr != '':
-					queryList = parse_qs(queryStr, keep_blank_values = True)
-					queryList = [[k, v] for k in queryList for v in queryList[k]] # Convert to parseQueryString format
-					query = self.parseQueryString(queryList)
+					query = self.parseQueryString(queryStr)
 
 			# Check GET params for a p_ prefix collision
 			for key in query:
@@ -144,7 +141,16 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 
 		return request
 
-	def parseQueryString(self, items):
+	def parseQueryString(self, query):
+		# Adapted from urlparse.parse_qsl
+		items = []
+		for arg in query.split('&'):
+			if not arg: continue
+			parts = arg.split('=', 1)
+			items.append([unquote(part.replace('+', ' ')) for part in parts])
+		return self.parseQueryItems(items)
+
+	def parseQueryItems(self, items):
 		query = {}
 		for i in items:
 			k, v = (i[0], True) if len(i) == 1 else i
@@ -246,7 +252,7 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 					items += [(k, v.value) for v in form[k]]
 				else:
 					items.append((k, form[k].value))
-			data = self.parseQueryString(items)
+			data = self.parseQueryItems(items)
 		except TypeError: pass # Happens with empty forms
 		self.do_HEAD('post', data)
 		self.wfile.write(self.response)
