@@ -112,6 +112,11 @@ class Sprint(ActiveRecord):
 		if overcommitted != []:
 			rtn['overcommitted'] = overcommitted
 
+		# Users with no tasks
+		noTasks = filter(lambda user: filter(lambda task: user in task.assigned, tasks) == [], self.members)
+		if noTasks != []:
+			rtn['no-tasks'] = noTasks
+
 		# No sprint goals, or too many tasks (at least 10 tasks and more than 20% of all tasks) without a goal
 		unaffiliated = filter(lambda task: not task.goal, tasks)
 		if filter(lambda goal: goal.name != '', self.getGoals()) == []:

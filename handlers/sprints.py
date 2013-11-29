@@ -947,6 +947,11 @@ def showSprintChecklist(handler, request, id):
 	else:
 		good("All members have enough availability for their tasks")
 
+	if 'no-tasks' in warnings:
+		bad("%s %s <a href=\"/sprints/%d/metrics#commitment-by-user\">no tasks</a>" % (userStr(warnings['no-tasks']), 'has' if len(warnings['no-tasks']) == 1 else 'have', sprint.id))
+	else:
+		good("All members have tasks assigned")
+
 	print "<br><h1>Goals</h1>"
 
 	if 'no-sprint-goals' in warnings:
