@@ -1,0 +1,23 @@
+@width: 400px;
+
+select#import-source {
+	width: @width;
+}
+
+table.task-import {
+	td.name input {
+		width: @width;
+	}
+
+	td.group select {
+		max-width: 300px;
+	}
+
+	td.assigned > * {
+		width: @width / 2;
+	}
+
+	td.hours input {
+		width: 32px;
+	}
+}

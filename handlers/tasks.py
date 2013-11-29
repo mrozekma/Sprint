@@ -475,12 +475,11 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 			delay(handler, WarningBox("No changes", close = 3, fixed = True))
 		request['code'] = 299
 
-@get('tasks/new/import')
+@get('tasks/new/import', statics = 'tasks-import')
 def newTaskImport(handler, request, group, source = None):
 	handler.title("New Tasks")
 	requirePriv(handler, 'User')
 	id = int(group)
-	print "<script src=\"/static/tasks-import.js\" type=\"text/javascript\"></script>"
 
 	print tabs.format(id).where('import')
 
