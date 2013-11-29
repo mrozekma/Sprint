@@ -289,6 +289,11 @@ def newTaskMany(handler, request, group):
 	requirePriv(handler, 'User')
 	id = int(group)
 
+	body = ''
+	if 'many-upload' in handler.session:
+		body = handler.session['many-upload']
+		del handler.session['many-upload']
+
 	defaultGroup = Group.load(group)
 	if not defaultGroup:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
@@ -319,12 +324,17 @@ def newTaskMany(handler, request, group):
 	print "</ul></li>"
 	print "<li><b>#...</b> &mdash; A line starting with a hash character is a comment, and is ignored. You can only comment out entire lines; a hash within a line does not start a comment at that point</li>"
 	print "</ul>"
+	print "You can also use the form above the textarea to upload a text file. The file will be used to fill the textarea, so it should match the syntax described above"
 	print CollapsibleBox('Help', help.done())
 
 	print CollapsibleBox('Groups', "<ul>%s</ul>" % ''.join("<li>%s</li>" % ("<b>%s</b> (default)" if group == defaultGroup else "%s") % group.safe.name for group in sprint.getGroups()))
 
-	print "<form method=\"post\" action=\"/tasks/new/many?group=%d\">" % defaultGroup.id
-	print "<textarea id=\"many-body\" name=\"body\" class=\"defaultfocus\"></textarea>"
+	print "<form id=\"upload-tasks\" method=\"post\" enctype=\"multipart/form-data\" action=\"/tasks/new/many/upload?group=%d\">" % defaultGroup.id
+	print "<input type=\"file\" name=\"data\"><br><br>"
+	print "</form>"
+
+	print "<form id=\"write-tasks\" method=\"post\" action=\"/tasks/new/many?group=%d\">" % defaultGroup.id
+	print "<textarea id=\"many-body\" name=\"body\" class=\"defaultfocus\">%s</textarea>" % body
 
 	print "<div id=\"preview\"></div>"
 	print InfoBox('Loading...', id = 'post-status', close = True)
@@ -552,6 +562,19 @@ def newTaskImport(handler, request, group, source = None):
 		print "</table>"
 		print Button('Import').positive().post()
 		print "</form><br><br>"
+
+@post('tasks/new/many/upload')
+def newTaskManyUpload(handler, request, group, p_data):
+	requirePriv(handler, 'User')
+
+	# Vague sanity check that this is actually text, from http://stackoverflow.com/a/7392391/309308
+	textchars = ''.join(map(chr, [7, 8, 9, 10, 12, 13, 27] + range(0x20, 0x100)))
+	is_binary_string = lambda bytes: bool(bytes.translate(None, textchars))
+	if is_binary_string(p_data):
+		ErrorBox.die("The uploaded file appears to be binary -- it should be a text file matching the normal add tasks format")
+
+	handler.session['many-upload'] = p_data
+	redirect("/tasks/new/many?group=%s" % group)
 
 @post('tasks/new/import')
 def newTaskImportPost(handler, request, group, source, p_group, p_name, p_hours, p_assigned, p_included = ''):
