@@ -185,5 +185,9 @@ class Search:
 		for filt in self.filters.values():
 			tasks = filt.filter(tasks)
 		if self.hasBaseString():
-			tasks = filter(lambda task: partial_ratio(task.name.lower(), self.getBaseString().lower()) >= Search.minMatchPercent(), tasks)
+			# Don't use partial filtering if the string has numbers, it tends to include unwanted results
+			if set(self.getBaseString()) & set('0123456789'):
+				tasks = filter(lambda task: self.getBaseString().lower() in task.name.lower(), tasks)
+			else:
+				tasks = filter(lambda task: partial_ratio(task.name.lower(), self.getBaseString().lower()) >= Search.minMatchPercent(), tasks)
 		return tasks
