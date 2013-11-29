@@ -309,13 +309,13 @@ def newTaskMany(handler, request, group):
 	help = ResponseWriter()
 	print "Each line needs to match the following syntax. Unparseable lines generate an error message in the preview and must be resolved before saving"
 	print "<ul>"
-	print "<li><b>X</b> &mdash; A single character changes the field separator to that character. The default field separator is |, so that's used in the examples here</li>"
+	print "<li><b>X</b> &mdash; A single character changes the field separator to that character. The exception is #, which starts a comment. The default field separator is |, so that's used in the examples here</li>"
 	print "<li><b>X...X:</b> &mdash; A line ending in a colon is a group name. All tasks after that line will be added to that group. If no group of that name exists, it will be created (the preview will label that group as \"(NEW)\"). A blank line switches back to the default group, which is the group you clicked the new task button on, %s" % defaultGroup.safe.name
-	print "<li><b>X...X|X...X|X...X[|X...X]</b> &mdash; 3 or 4 fields are a new task. The fields can appear in any order:<ul>"
-	print "<li><b>assignee</b> &mdash; The person assigned to this task. If multiple people, separate usernames with spaces</li>"
-	print "<li><b>hours</b> &mdash; The number of hours this task will take</li>"
-	print "<li><b>status</b> &mdash; The initial status of the task. This field is optional; it defaults to \"not started\"</li>"
+	print "<li><b>X...X|X...X[|X...X[|X...X]]</b> &mdash; 2-4 fields are a new task. The fields can appear in any order:<ul>"
 	print "<li><b>name</b> &mdash; The name of the task</li>"
+	print "<li><b>hours</b> &mdash; The number of hours this task will take</li>"
+	print "<li><b>assignee</b> &mdash; The person assigned to this task. If multiple people, separate usernames with spaces. This field is optional as long as <b>status</b> is also omitted; it defaults to the current user</li>"
+	print "<li><b>status</b> &mdash; The initial status of the task. This field is optional; it defaults to \"not started\"</li>"
 	print "</ul></li>"
 	print "<li><b>#...</b> &mdash; A line starting with a hash character is a comment, and is ignored. You can only comment out entire lines; a hash within a line does not start a comment at that point</li>"
 	print "</ul>"
@@ -388,6 +388,9 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 			parts = line.split(sep)
 			name, assigned, status, hours = None, None, None, None
 			for case in switch(len(parts)):
+				if case(2):
+					assigned = [handler.session['user']]
+					# Fall-through
 				if case(3):
 					status = 'not started'
 					# Fall-through
