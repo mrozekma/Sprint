@@ -5,7 +5,7 @@ $(document).ready(function() {
 
 	if(editing) {
 		$('.retrospective').on('click', '.entry div', function(e) {
-			$('textarea', $(this).parent('.entry')).show().focus();
+			$('textarea', $(this).parent('.entry')).addClass('active').show().focus();
 			$(this).remove();
 			e.stopPropagation();
 		}).on('click', '.entry textarea', function(e) {
@@ -15,7 +15,10 @@ $(document).ready(function() {
 			if($(this).data('id') != 'new') {
 				update($(this), undefined, $(this).hasClass('good'));
 			}
+		}).on('focus', '.entry textarea', function() {
+			$(this).addClass('active');
 		}).on('blur', '.entry textarea', function() {
+			$(this).removeClass('active');
 			entry = $(this).parent('.entry');
 			body = $(this).val();
 			if(entry.data('id') != 'new' || body.replace(/^\s+|\s+$/g, '') != '') {
