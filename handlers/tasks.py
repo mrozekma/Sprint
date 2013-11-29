@@ -825,7 +825,7 @@ def taskEdit(handler, request, ids):
 	if len(set(task.sprint for task in tasks)) > 1:
 		ErrorBox.die("All tasks must be in the same sprint")
 	sprint = tasks[0].sprint
-	if not sprint.isActive():
+	if not (sprint.isActive() or sprint.isPlanning()):
 		ErrorBox.die("You can't mass-edit tasks from an inactive sprint")
 	elif not sprint.canEdit(handler.session['user']):
 		ErrorBox.die("You don't have permission to modify this sprint")
