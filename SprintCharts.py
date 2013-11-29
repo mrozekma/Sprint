@@ -101,10 +101,11 @@ class HoursChart(Chart):
 		if futureIndex == 0:
 			futureIndex = 1
 
-		hoursToday = None
+		statusToday, hoursToday = None, None
 		for day in days[:futureIndex]:
 			tasksToday = [t.getRevisionAt(day) for t in tasks]
-			hoursYesterday = hoursToday
+			statusYesterday, hoursYesterday = statusToday, hoursToday
+			statusToday = {t: t.status for t in tasksToday if t and not t.deleted}
 			hoursToday = {t: t.manHours() for t in tasksToday if t and not t.deleted}
 			taskSeries['data'].append(sum(hoursToday.values()))
 
@@ -124,7 +125,7 @@ class HoursChart(Chart):
 							elif t.status == 'complete':
 								texts.append("<span style=\"color: #0a0\">(Complete %d)</span> %s" % (hoursDiff[t], t.name))
 							else:
-								texts.append("<span style=\"color: #999\">(%s %d)</span> %s" % (statuses[t.status].getRevisionVerb(hoursYesterday.get(t, 0) > 0), hoursDiff[t], t.name))
+								texts.append("<span style=\"color: #999\">(%s %d)</span> %s" % (statuses[t.status].getRevisionVerb(statusYesterday.get(t, 'not started')), hoursDiff[t], t.name))
 					flagSeries['data'].append({'x': days.index(day), 'title': alphabet[len(flagSeries['data']) % len(alphabet)], 'text': '<br>'.join(texts)})
 
 		avail = Availability(sprint)

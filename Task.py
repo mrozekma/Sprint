@@ -8,19 +8,28 @@ from Goal import Goal
 from inspect import getmembers
 from datetime import datetime, date
 
-class Status:
+class Status(object):
 	def getIcon(self): return "/static/images/status-%s.png" % self.name.replace(' ', '-')
 	icon = property(getIcon)
 
-	def __init__(self, name, text, revVerbWasOpen, revVerbWasClosed = None):
+	def __init__(self, name, text, revVerb):
 		self.name = name
 		self.text = text
-		self.revVerbWasOpen = revVerbWasOpen
-		self.revVerbWasClosed = revVerbWasClosed or revVerbWasOpen
+		self.revVerb = revVerb
 
-	# wasOpen indicates if the previous revision was open
-	def getRevisionVerb(self, wasOpen):
+	def getRevisionVerb(self, oldStatus):
+		return self.revVerb
+		wasOpen = (oldStatus not in ('complete', 'canceled', 'deferred', 'split'))
 		return self.revVerbWasOpen if wasOpen else self.revVerbWasClosed
+
+class NotStartedStatus(Status):
+	def getRevisionVerb(self, oldStatus):
+		if oldStatus in ('complete', 'canceled', 'deferred', 'split'):
+			return 'Reopened'
+		elif oldStatus == 'blocked':
+			return 'Unblocked'
+		else:
+			return super(NotStartedStatus, self).getRevisionVerb(oldStatus)
 
 statuses = [
 	Status('blocked', 'Blocked', 'Blocked'),
@@ -28,7 +37,7 @@ statuses = [
 	Status('complete', 'Complete', 'Completed'),
 	Status('deferred', 'Deferred', 'Deferred'),
 	Status('in progress', 'In Progress', 'Started'),
-	Status('not started', 'Not Started', 'Aborted', 'Resumed'),
+	NotStartedStatus('not started', 'Not Started', 'Aborted'),
 	Status('split', 'Split', 'Split'),
 ]
 statuses = dict([(s.name, s) for s in statuses])

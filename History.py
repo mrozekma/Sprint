@@ -69,7 +69,7 @@ def undeleted(rev, oldRev, describeTask):
 
 def statusChanged(rev, oldRev, describeTask):
 	status = rev.getStatus()
-	verb = status.getRevisionVerb(oldRev.stillOpen())
+	verb = status.getRevisionVerb(oldRev.status)
 	with entry(rev, oldRev, describeTask, "revision-%s.svg" % verb.lower().replace(' ', '-'), colorMap[status.name], verb):
 		pass
 
