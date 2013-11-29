@@ -546,7 +546,8 @@ def showInfo(handler, request, id):
 	if editable:
 		print "<select name=\"members[]\" id=\"select-members\" multiple>"
 		for user in sorted(User.loadAll()):
-			print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user in sprint.members else '', user.safe.username)
+			if user.hasPrivilege('User') or user in sprint.members:
+				print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user in sprint.members else '', user.safe.username)
 		print "</select>"
 	else:
 		print ', '.join(member.str('scrummaster' if member == sprint.owner else 'member') for member in sorted(sprint.members))
@@ -1157,7 +1158,8 @@ def newSprint(handler, request, project):
 	print "<tr><td class=\"left\">Members:</td><td class=\"right\">"
 	print "<select name=\"members[]\" id=\"select-members\" multiple>"
 	for user in sorted(User.loadAll()):
-		print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user == handler.session['user'] or user == handler.session['user'] else '', user.safe.username)
+		if user.hasPrivilege('User'):
+			print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user == handler.session['user'] or user == handler.session['user'] else '', user.safe.username)
 	print "</select>"
 	print "</td></tr>"
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
