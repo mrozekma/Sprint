@@ -18,8 +18,13 @@ $(document).ready(function() {
 		}).on('blur', '.entry textarea', function() {
 			entry = $(this).parent('.entry');
 			body = $(this).val();
-			if(entry.data('id') != 'new' || body != '') {
+			if(entry.data('id') != 'new' || body.replace(/^\s+|\s+$/g, '') != '') {
 				update(entry, body, entry.hasClass('good'));
+			}
+		}).on('keyup', '.entry textarea', function(e) {
+			// Enter finishes editing; Shift+Enter inserts a newline
+			if(e.keyCode == 13 && !e.shiftKey) {
+				$(this).blur();
 			}
 		});
 
@@ -53,8 +58,10 @@ function update(entry, body, good) {
 		prettyPrint();
 		if(entry.data('id') == 'new') {
 			entry.data('id', data.id);
-			insert_new(entry.parent('.category'));
-			$('.entry[data-id=new] textarea', entry.parent('.category')).focus();
 		}
 	}, 'json');
+	if(entry.data('id') == 'new') {
+		insert_new(entry.parent('.category'));
+	}
+	$('.entry[data-id=new] textarea', entry.parent('.category')).focus();
 }
