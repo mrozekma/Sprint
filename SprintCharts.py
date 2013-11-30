@@ -7,6 +7,7 @@ from string import uppercase as alphabet
 from Chart import Chart
 from Task import Task, statuses, statusMenu
 from Availability import Availability
+from ProgressBar import ProgressBar
 from utils import *
 
 colors = ['#4572a7', '#aa4643', '#89a54e', '#80699b', '#3d96ae', '#db843d', '#92a8cd', '#a47d7c', '#b5ca92']
@@ -462,3 +463,38 @@ class GroupGoalsChart(Chart):
 		# Percentages
 		for m in self.series[0].data.get():
 			m['y'] = float("%2.2f" % (m['x'] * 100 / len(tasks)))
+
+# These aren't Highcharts, but they're used by the metrics page and provide the same interface
+
+class CommitmentByUserChart:
+	def __init__(self, sprint):
+		self.sprint = sprint
+
+	def js(self): pass
+
+	def placeholder(self):
+		tasks = self.sprint.getTasks()
+		avail = Availability(self.sprint)
+		for user in sorted(self.sprint.members):
+			hours = sum(t.hours for t in tasks if user in t.assigned)
+			total = avail.getAllForward(getNow().date(), user)
+			print ProgressBar("<a style=\"color: #000\" href=\"/sprints/%d?search=assigned:%s\">%s</a>" % (self.sprint.id, user.safe.username, user.safe.username), hours, total, zeroDivZero = True, style = {100.01: 'progress-current-red'})
+
+class GoalsChart:
+	def __init__(self, sprint):
+		self.sprint = sprint
+
+	def js(self): pass
+
+	def placeholder(self):
+		tasks = self.sprint.getTasks()
+		originalTasks = filter(None, (task.getStartRevision(False) for task in tasks))
+		taskMap = dict([(task.id, task) for task in tasks])
+		for goal in self.sprint.getGoals() + [None]:
+			if goal and goal.name == '':
+				continue
+			start = sum(t.hours * len(t.assigned) for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
+			now = sum(t.manHours() for t in tasks if t.goalid == (goal.id if goal else 0))
+			if not goal and start == now == 0:
+				continue
+			print ProgressBar("<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;<a style=\"color: #000\" href=\"/sprints/%d?search=goal:%s\">%s</a>" % (goal.color if goal else 'none', self.sprint.id, goal.color if goal else 'none', goal.safe.name if goal else 'Other'), start - now, start, zeroDivZero = False, style = {100: 'progress-current-green'})

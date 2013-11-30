@@ -20,7 +20,6 @@ from Goal import Goal
 from Availability import Availability
 from Chart import Chart
 from SprintCharts import *
-from ProgressBar import ProgressBar
 from History import showHistory
 from Export import exports
 from LoadValues import isDevMode
@@ -707,10 +706,12 @@ def showMetrics(handler, request, id):
 
 	charts = [
 		('general', 'Hours (general)', HoursChart('chart-general', sprint)),
-		('status', 'Task status', StatusChart('chart-status', sprint)),
+		('commitment-by-user', 'Commitment (by user)', CommitmentByUserChart(sprint)),
 		('earned-value', 'Earned Value', EarnedValueChart('chart-earned-value', sprint)),
 		('by-user', 'Hours (by user)', HoursByUserChart('chart-by-user', sprint)),
+		('status', 'Task status', StatusChart('chart-status', sprint)),
 		('commitment', 'Total commitment', CommitmentChart('chart-commitment', sprint)),
+		('goals', 'Sprint goals', GoalsChart(sprint)),
 	]
 
 	Chart.include()
@@ -726,33 +727,6 @@ def showMetrics(handler, request, id):
 		print "<a name=\"%s\">" % anchor
 		print "<h2><a href=\"#%s\">%s</a></h2>" % (anchor, title)
 		chart.placeholder()
-
-	print "<a name=\"commitment-by-user\">"
-	print "<div style=\"position: relative\">"
-	print "<h2><a href=\"#commitment-by-user\">Commitment (by user)</a></h2>"
-	print "<div style=\"position: absolute; top: 0px; right: 16px;\">"
-	if sprint.canEdit(handler.session['user']):
-		print Button('Redistribute', "/tasks/distribute?sprint=%d" % sprint.id)
-	print "</div>"
-	print "</div>"
-	avail = Availability(sprint)
-	for user in sorted(sprint.members):
-		hours = sum(t.hours for t in tasks if user in t.assigned)
-		total = avail.getAllForward(getNow().date(), user)
-		print ProgressBar("<a style=\"color: #000\" href=\"/sprints/%d?search=assigned:%s\">%s</a>" % (sprint.id, user.safe.username, user.safe.username), hours, total, zeroDivZero = True, style = {100.01: 'progress-current-red'})
-
-	originalTasks = filter(None, (task.getStartRevision(False) for task in tasks))
-	taskMap = dict([(task.id, task) for task in tasks])
-	print "<a name=\"goals\">"
-	print "<h2><a href=\"#goals\">Sprint goals</a></h2>"
-	for goal in sprint.getGoals() + [None]:
-		if goal and goal.name == '':
-			continue
-		start = sum(t.hours * len(t.assigned) for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
-		now = sum(t.manHours() for t in tasks if t.goalid == (goal.id if goal else 0))
-		if not goal and start == now == 0:
-			continue
-		print ProgressBar("<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;<a style=\"color: #000\" href=\"/sprints/%d?search=goal:%s\">%s</a>" % (goal.color if goal else 'none', sprint.id, goal.color if goal else 'none', goal.safe.name if goal else 'Other'), start - now, start, zeroDivZero = False, style = {100: 'progress-current-green'})
 
 	print "<br><br>"
 
