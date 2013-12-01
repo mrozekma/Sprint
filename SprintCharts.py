@@ -41,14 +41,12 @@ function() {
 			series['data'] = [[a, b] for (a, b) in zip([day.strftime('%A, %b %d, %Y') for day in sprint.getDays()], series['data'])]
 
 class HoursChart(Chart):
-	def __init__(self, placeholder, sprint):
+	def __init__(self, placeholder, sprint, allTasks, revisions, **_):
 		Chart.__init__(self, placeholder)
 		days = [day for day in sprint.getDays()]
 		now = getNow()
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
 		futureIndex = days.index(futureStarts) if futureStarts else None
-
-		tasks = sprint.getTasks(includeDeleted = True)
 
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
@@ -104,7 +102,7 @@ class HoursChart(Chart):
 
 		statusToday, hoursToday = None, None
 		for day in days[:futureIndex]:
-			tasksToday = [t.getRevisionAt(day) for t in tasks]
+			tasksToday = [revisions[t.id, day] for t in allTasks]
 			statusYesterday, hoursYesterday = statusToday, hoursToday
 			statusToday = {t: t.status for t in tasksToday if t and not t.deleted}
 			hoursToday = {t: t.manHours() for t in tasksToday if t and not t.deleted}
@@ -177,14 +175,12 @@ class HoursChart(Chart):
 			})
 
 class StatusChart(Chart):
-	def __init__(self, placeholder, sprint):
+	def __init__(self, placeholder, sprint, tasks, revisions, **_):
 		Chart.__init__(self, placeholder)
 		days = [day for day in sprint.getDays()]
 		now = getNow()
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
 		futureIndex = days.index(futureStarts) if futureStarts else None
-
-		tasks = sprint.getTasks()
 
 		self.chart.type = 'area'
 		self.title.text = ''
@@ -218,21 +214,19 @@ class StatusChart(Chart):
 			})
 
 		for day in days:
-			tasksToday = [t.getRevisionAt(day) for t in tasks]
+			tasksToday = [revisions[t.id, day] for t in tasks]
 			for type, count in counts.iteritems():
 				count.append(len(filter(lambda task: task and task.status == type, tasksToday)))
 
 		setupTimeline(self, sprint)
 
 class EarnedValueChart(Chart):
-	def __init__(self, placeholder, sprint):
+	def __init__(self, placeholder, sprint, tasks, revisions, **_):
 		Chart.__init__(self, placeholder)
 		days = [day for day in sprint.getDays()]
 		now = getNow()
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
 		futureIndex = days.index(futureStarts) if futureStarts else None
-
-		tasks = sprint.getTasks()
 
 		self.chart.type = 'waterfall'
 		self.tooltip.enabled = False
@@ -285,7 +279,7 @@ function() {
 
 		yesterdaySum = 0
 		for day in days:
-			dayTasks = [t.getRevisionAt(day) for t in tasks]
+			dayTasks = [revisions[t.id, day] for t in tasks]
 			todaySum = sum(t.earnedValueHours() for t in dayTasks if t)
 			series['data'].append(todaySum - yesterdaySum)
 			yesterdaySum = todaySum
@@ -293,14 +287,12 @@ function() {
 		setupTimeline(self, sprint)
 
 class HoursByUserChart(Chart):
-	def __init__(self, placeholder, sprint):
+	def __init__(self, placeholder, sprint, allTasks, revisions, **_):
 		Chart.__init__(self, placeholder)
 		days = [day for day in sprint.getDays()]
 		now = getNow()
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
 		futureIndex = days.index(futureStarts) if futureStarts else None
-
-		tasks = sprint.getTasks(includeDeleted = True)
 
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
@@ -330,15 +322,13 @@ class HoursByUserChart(Chart):
 			seriesList.append(series)
 
 			for day in days:
-				series['data'].append(sum(t.hours if t and user in t.assigned and not t.deleted else 0 for t in [t.getRevisionAt(day) for t in tasks]))
+				series['data'].append(sum(t.hours if t and user in t.assigned and not t.deleted else 0 for t in [revisions[t.id, day] for t in allTasks]))
 
 		setupTimeline(self, sprint)
 
 class CommitmentChart(Chart):
-	def __init__(self, placeholder, sprint):
+	def __init__(self, placeholder, sprint, tasks, **_):
 		Chart.__init__(self, placeholder)
-
-		tasks = sprint.getTasks()
 		start = tsToDate(sprint.start)
 
 		self.title.text = ''
@@ -467,34 +457,34 @@ class GroupGoalsChart(Chart):
 # These aren't Highcharts, but they're used by the metrics page and provide the same interface
 
 class CommitmentByUserChart:
-	def __init__(self, sprint):
+	def __init__(self, sprint, tasks, **_):
 		self.sprint = sprint
+		self.tasks = tasks
 
 	def js(self): pass
 
 	def placeholder(self):
-		tasks = self.sprint.getTasks()
 		avail = Availability(self.sprint)
 		for user in sorted(self.sprint.members):
-			hours = sum(t.hours for t in tasks if user in t.assigned)
+			hours = sum(t.hours for t in self.tasks if user in t.assigned)
 			total = avail.getAllForward(getNow().date(), user)
 			print ProgressBar("<a style=\"color: #000\" href=\"/sprints/%d?search=assigned:%s\">%s</a>" % (self.sprint.id, user.safe.username, user.safe.username), hours, total, zeroDivZero = True, style = {100.01: 'progress-current-red'})
 
 class GoalsChart:
-	def __init__(self, sprint):
+	def __init__(self, sprint, tasks, **_):
 		self.sprint = sprint
+		self.tasks = tasks
 
 	def js(self): pass
 
 	def placeholder(self):
-		tasks = self.sprint.getTasks()
-		originalTasks = filter(None, (task.getStartRevision(False) for task in tasks))
-		taskMap = dict([(task.id, task) for task in tasks])
+		originalTasks = filter(None, (task.getStartRevision(False) for task in self.tasks))
+		taskMap = dict([(task.id, task) for task in self.tasks])
 		for goal in self.sprint.getGoals() + [None]:
 			if goal and goal.name == '':
 				continue
 			start = sum(t.hours * len(t.assigned) for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
-			now = sum(t.manHours() for t in tasks if t.goalid == (goal.id if goal else 0))
+			now = sum(t.manHours() for t in self.tasks if t.goalid == (goal.id if goal else 0))
 			if not goal and start == now == 0:
 				continue
 			print ProgressBar("<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">&nbsp;<a style=\"color: #000\" href=\"/sprints/%d?search=goal:%s\">%s</a>" % (goal.color if goal else 'none', self.sprint.id, goal.color if goal else 'none', goal.safe.name if goal else 'Other'), start - now, start, zeroDivZero = False, style = {100: 'progress-current-green'})

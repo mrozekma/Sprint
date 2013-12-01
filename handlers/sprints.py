@@ -2,6 +2,7 @@ from __future__ import with_statement, division
 from datetime import datetime, date, timedelta
 from json import dumps as toJS
 from collections import OrderedDict
+from itertools import product
 
 from rorn.Session import delay, undelay
 from rorn.ResponseWriter import ResponseWriter
@@ -695,7 +696,12 @@ def showMetrics(handler, request, id):
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
-	tasks = sprint.getTasks()
+
+	context = {}
+	context['sprint'] = sprint
+	context['allTasks'] = sprint.getTasks(includeDeleted = True)
+	context['tasks'] = tasks = filter(lambda task: not task.deleted, context['allTasks'])
+	context['revisions'] = {(task.id, day): task.getRevisionAt(day) for task, day in product(context['allTasks'], sprint.getDays())}
 
 	handler.title(sprint.safe.name)
 	drawNavArrows(sprint, 'metrics')
@@ -705,13 +711,13 @@ def showMetrics(handler, request, id):
 	print "</style>"
 
 	charts = [
-		('general', 'Hours (general)', HoursChart('chart-general', sprint)),
-		('commitment-by-user', 'Commitment (by user)', CommitmentByUserChart(sprint)),
-		('earned-value', 'Earned Value', EarnedValueChart('chart-earned-value', sprint)),
-		('by-user', 'Hours (by user)', HoursByUserChart('chart-by-user', sprint)),
-		('status', 'Task status', StatusChart('chart-status', sprint)),
-		('commitment', 'Total commitment', CommitmentChart('chart-commitment', sprint)),
-		('goals', 'Sprint goals', GoalsChart(sprint)),
+		('general', 'Hours (general)', HoursChart('chart-general', **context)),
+		('commitment-by-user', 'Commitment (by user)', CommitmentByUserChart(**context)),
+		('earned-value', 'Earned Value', EarnedValueChart('chart-earned-value', **context)),
+		('by-user', 'Hours (by user)', HoursByUserChart('chart-by-user', **context)),
+		('status', 'Task status', StatusChart('chart-status', **context)),
+		('commitment', 'Total commitment', CommitmentChart('chart-commitment', **context)),
+		('goals', 'Sprint goals', GoalsChart(**context)),
 	]
 
 	Chart.include()
