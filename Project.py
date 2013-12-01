@@ -34,18 +34,27 @@ class Project(ActiveRecord):
 
 	@staticmethod
 	def getAllSorted(user = None, firstProject = None):
-		# Put projects this user is in first, and test projects last
+		# Ordering:
+		#   * firstProject (if not None)
+		#   * Active projects this user is in
+		#   * Other active projects
+		#   * Inactive projects
+		#   * Test projects
+
 		def sortKey(project):
 			if project == firstProject:
 				return 0
-			if user is None:
-				return 1
 			sprints = project.getSprints()
 			activeSprints = filter(lambda sprint: sprint.isActive(), sprints)
 			activeMembers = set(sum((sprint.members for sprint in activeSprints), []))
-			return 1 if user in activeMembers else 2
+			if user and user in activeMembers:
+				return 1
+			if activeSprints:
+				return 2
+			return 3
 
-		projects = sorted(Project.loadAll(), key = sortKey)
+		projects = Project.loadAll(orderby = 'name') # First, just alphabetize
+		projects = sorted(projects, key = sortKey) # Then use sortKey
 		if isDevMode() and user and user.hasPrivilege('Dev'):
 			projects += Project.loadAllTest()
 

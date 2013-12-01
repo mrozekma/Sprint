@@ -1,8 +1,8 @@
-import re
 from datetime import datetime, date, timedelta
+import re
+import sys
 import time
 from time import mktime
-import sys
 
 from rorn.utils import *
 
@@ -47,7 +47,10 @@ class Weekday:
 
 	@staticmethod
 	def today():
-		day = getNow()
+		return Weekday.nextWeekday(getNow())
+
+	@staticmethod
+	def nextWeekday(day):
 		while not Weekday.isWeekDay(day):
 			day += timedelta(1)
 		return day
@@ -105,6 +108,12 @@ def getNowDelta():
 def setNowDelta(delta):
 	global nowDelta
 	nowDelta = delta
+
+def partition(pred, iter):
+	good, bad = [], []
+	for item in iter:
+		(good if pred(item) else bad).append(item)
+	return good, bad
 
 def lipsum():
 	return """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum. Aliquam at sapien ante, sit amet fermentum nisi. Maecenas in arcu ante. Etiam ac ligula sed est elementum rhoncus vitae et urna. Vestibulum tempus enim quis nisi rutrum venenatis. Vivamus dapibus aliquet erat, pellentesque dapibus leo placerat lacinia. Suspendisse potenti. Etiam nisl felis, aliquam in molestie id, dapibus feugiat dolor. Duis sagittis auctor fringilla. Curabitur tellus neque, vehicula a imperdiet ut, ullamcorper in nunc. Aliquam tincidunt ornare fringilla. Suspendisse potenti. Vestibulum quis turpis dignissim lectus ullamcorper viverra.<br><br>

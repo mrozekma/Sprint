@@ -49,10 +49,10 @@ class Sprint(ActiveRecord):
 			seek += oneday
 
 	def isPlanning(self):
-		return tsToDate(self.start).date() >= getNow().date()
+		return Weekday.nextWeekday(tsToDate(self.start).date()) >= getNow().date()
 
 	def isReview(self):
-		return tsToDate(self.end).date() == getNow().date()
+		return tsToDate(self.end).date() == Weekday.nextWeekday(getNow().date())
 
 	def isActive(self):
 		return tsToDate(self.start) <= getNow() <= tsToDate(self.end)
@@ -83,12 +83,12 @@ class Sprint(ActiveRecord):
 		cls = 'sprint-name active' if self.isActive() else 'sprint-name'
 		return "<span class=\"%s\">%s</span>" % (cls, self.safe.name)
 
-	def link(self, currentUser):
+	def link(self, currentUser, icon = 'sprint'):
 		from handlers.sprints import tabs as sprintTabs
 		from Prefs import Prefs
 		page = currentUser.getPrefs().defaultSprintTab if currentUser else 'backlog'
 
-		return "<img src=\"/static/images/sprint.png\" class=\"sprint\"><a href=\"%s\">%s</a>" % (sprintTabs()[page].getPath(self.id), self.getFormattedName())
+		return "<img src=\"/static/images/%s.png\" class=\"sprint\"><a href=\"%s\">%s</a>" % (icon, sprintTabs()[page].getPath(self.id), self.getFormattedName())
 
 	def __str__(self):
 		return self.getFormattedName()

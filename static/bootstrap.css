@@ -288,6 +288,12 @@ button.btn::-moz-focus-inner, input[type=submit].btn::-moz-focus-inner {
 .label.important {
 	background-color: #c43c35;
 }
+.label.primary {
+	background-color: #428bca;
+}
+.label.danger {
+	background-color: #d9534f;
+}
 .label.warning {
 	background-color: #f89406;
 }

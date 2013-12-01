@@ -22,8 +22,8 @@
 
 	&.test {
 		background-color: #333;
-		> * {
-			color: #fff;
+		> *, .sprint-name {
+			color: #fff !important;
 		}
 
 		a {
@@ -52,6 +52,10 @@
 		.member.inactive a {
 			color: #aaa;
 		}
+
+		&.long .member.inactive {
+			display: none;
+		}
 	}
 
 	.sprint-summaries {
@@ -60,6 +64,39 @@
 
 		.sprint-summary .sprint-time {
 			font-size: 80%;
+		}
+
+		.sprint-active {
+			.sprint-name {
+				margin-left: 2px;
+				font-weight: bold;
+				font-size: 120%;
+				color: #000;
+				display: inline;
+			}
+
+			a {
+				margin-right: 15px;
+			}
+
+			.sprint-time {
+				display: inline;
+				position: relative;
+				top: -4px;
+			}
+
+			margin-bottom: 15px;
+		}
+
+		.show-old-sprints {
+			color: #00f;
+			cursor: pointer;
+			margin-top: 12px;
+			font-size: 80%;
+		}
+
+		.old-sprints {
+			display: none;
 		}
 	}
 
