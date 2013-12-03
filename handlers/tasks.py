@@ -370,7 +370,7 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 	tasks = {group: []}
 	sep = '|'
 	lines = map(lambda x: x.strip(" \r\n"), p_body.split('\n'))
-	errors = False
+	errors = []
 
 	for line in lines:
 		if line == '':
@@ -429,19 +429,13 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 							name = part
 							continue
 
-						errors = True
-						if dryrun:
-							print "<i>Unable to parse (no field match on '%s'): %s</i><br>" % (stripTags(part), stripTags(line))
+						errors.append("Unable to parse (no field match on '%s'): %s" % (stripTags(part), stripTags(line)))
 					if name == '':
 						name = None
-						errors = True
-						if dryrun:
-							print "<i>Unable to parse (empty name): %s</i><br>" % stripTags(line)
+						errors.append("Unable to parse (empty name): %s" % stripTags(line))
 					break
 				if case():
-					errors = True
-					if dryrun:
-						print "<i>Unable to parse (field count mismatch): %s</i><br>" % stripTags(line)
+					errors.append("Unable to parse (field count mismatch): %s" % stripTags(line))
 					break
 				break
 
@@ -450,11 +444,41 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 
 	if dryrun:
 		request['log'] = False
+		numTasks = sum(len(taskSet) for taskSet in tasks.values())
+		taskHours = sum(hours for taskSet in tasks.values() for name, assigned, status, hours in taskSet)
+		avail = Availability(sprint)
+		availHours = avail.getAllForward(getNow().date(), handler.session['user'])
+		usedHours = sum(task.hours for task in sprint.getTasks() if handler.session['user'] in task.assigned)
+		availHours -= usedHours
+		if errors:
+			print ErrorBox("<br>".join(errors))
+		if numTasks:
+			box = InfoBox
+			stats = "Adding %s " % pluralize(numTasks, 'task', 'tasks')
+			if newGroups:
+				stats += "and %s " % pluralize(len(newGroups), 'group', 'groups')
+			stats += "for a total of %s" % pluralize(taskHours, 'hour', 'hours')
+			if taskHours:
+				if availHours == 0:
+					stats += ". You have no future availability for these tasks"
+					box = WarningBox
+				elif availHours < 0:
+					stats += ". You are already overcommitted by %s" % pluralize(-availHours, 'hour', 'hours')
+					box = WarningBox
+				else:
+					stats += ", %d%% of your future availability" % (100 * taskHours / availHours)
+					box = WarningBox if taskHours > availHours else InfoBox
+			print box(stats)
+		elif not errors:
+			print InfoBox("Waiting for tasks. Click \"Help\" above if needed")
+
 		for group in groups:
-			print "<br>"
+			if len(tasks[group]) == 0:
+				continue
 			print "<b>%s%s</b><br>" % (group.safe.name, ' (NEW)' if group in newGroups else '')
 			for name, assigned, status, hours in tasks[group]:
 				print "%s (assigned to %s, %s, %d %s)<br>" % (stripTags(name), ' '.join(map(str, assigned)), status, hours, 'hour remains' if hours == 1 else 'hours remain')
+			print "<br>"
 	elif errors:
 		die('There are unparseable lines in the task script. See the preview for more information')
 	else:
