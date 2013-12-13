@@ -23,4 +23,4 @@ def static(handler, request, path, v = None):
 		request['contentType'] = types[ext]
 
 	with open("static/" + filename) as f:
-		print f.read()
+		sys.stdout.write(f.read())

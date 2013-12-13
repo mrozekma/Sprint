@@ -2,7 +2,8 @@ from datetime import datetime, date, timedelta
 import re
 import sys
 import time
-from time import mktime
+from threading import Thread
+from time import mktime, sleep
 
 from rorn.utils import *
 
@@ -18,6 +19,20 @@ def localToUTC(timestamp): return timestamp - (UTC_OFFSET * 3600)
 def tsStart(timestamp): return dateToTs(tsToDate(timestamp).replace(hour = 0, minute = 0, second = 0))
 def tsEnd(timestamp): return dateToTs(tsToDate(timestamp).replace(hour = 23, minute = 59, second = 59))
 def formatDate(d): return d.strftime(DATE_FMT)
+
+def threadYield():
+	sleep(0)
+
+class RunBG(Thread):
+	def __init__(self, fn):
+		Thread.__init__(self)
+		self.fn = fn
+
+	def run(self):
+		self.fn()
+
+def bg(fn):
+	RunBG(fn).start()
 
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/410692
 class switch(object):

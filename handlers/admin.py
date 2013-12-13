@@ -8,12 +8,15 @@ from json import loads as fromJS, dumps as toJS
 from cgi import escape
 from datetime import datetime, time
 from threading import enumerate as threads
+from time import sleep
 
 from rorn.Box import ErrorBox, WarningBox, SuccessBox
-from rorn.Session import sessions, delay, undelay
+from rorn.Lock import locks, counters
 from rorn.ResponseWriter import ResponseWriter
+from rorn.Session import sessions, delay, undelay
 from rorn.code import highlightCode
 
+from HTTPServer import server
 from DB import db, DiskQueue
 from Privilege import Privilege, admin as requireAdmin, defaults as privDefaults
 from Project import Project
@@ -26,7 +29,6 @@ from LoadValues import getLoadtime, setDevMode
 from Log import LogEntry, log
 from Settings import settings
 from Event import Event
-from Lock import locks
 from relativeDates import timesince
 from utils import *
 
@@ -51,47 +53,43 @@ def adminInfo(handler, request):
 	handler.title('Information')
 	requireAdmin(handler)
 
-	print """
-<style type="text/css">
-table {
-    border-color: #000;
-    border-collapse: collapse
-}
-table tr th {
-    background-color: #ccc;
-}
-
-table tr td.center {
-    text-align: center;
-}
-</style>
-"""
+	print "<div class=\"info\">"
 
 	print "<h3>Uptime</h3>"
 	loadTime = getLoadtime()
 	print "Started %s<br>" % loadTime
 	print "Up for %s<br>" % timesince(loadTime)
+	print "Total requests: %d<br>" % server().getTotalRequests()
 
 	print "<h3>Database</h3>"
 	print "Writing to memory; mirroring to disk every %d seconds / %d writes<br>" % (DiskQueue.PERIOD, DiskQueue.SIZE)
 	print "Current queue size: %d<br>" % db().diskQueue.size
 	print "Last sync: %s (%s ago)<br>" % (db().diskQueue.lastFlush, pluralize(int((datetime.now() - db().diskQueue.lastFlush).total_seconds()), 'second', 'seconds'))
 	print "Disk writes: %d<br>" % db().counts['flush']
-	print "Total requests: %d" % db().counts['total']
+	print "Total queries: %d<br>" % db().counts['total']
 
 	print "<h3>Threads</h3>"
 	print "<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\">"
-	print "<tr><th>ID</th><th>Name</th><th>Alive</th><th>Daemon</th></tr>"
-	for thread in threads():
-		print "<tr><td>%s</td><td>%s</td><td class=\"center\"><img src=\"/static/images/%s.png\"></td><td class=\"center\"><img src=\"/static/images/%s.png\"></td></tr>" % (thread.ident, thread.name, 'tick' if thread.isAlive() else 'cross', 'tick' if thread.daemon else 'cross')
+	print "<tr><th>ID</th><th class=\"main\">Name</th><th>Alive</th><th>Daemon</th></tr>"
+	for thread in sorted(threads(), key = lambda thread: thread.name):
+		print "<tr><td>%s</td><td>%s</td><td class=\"%s\">&nbsp;</td><td class=\"%s\">&nbsp;</td></tr>" % ('None' if thread.ident is None else "%x" % abs(thread.ident), thread.name, 'yes' if thread.isAlive() else 'no', 'yes' if thread.daemon else 'no')
 	print "</table>"
 
 	print "<h3>Locks</h3>"
 	print "<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\">"
-	print "<tr><th>Name</th><th>Available</th><th>Reentrant</th></tr>"
-	for (name, lock) in locks.iteritems():
-		print "<tr><td>%s</td><td class=\"center\"><img src=\"/static/images/%s.png\"></td><td class=\"center\"><img src=\"/static/images/%s.png\"></td></tr>" % (name, 'tick' if lock.avail() else 'cross', 'tick' if lock.reentrant() else 'cross')
+	print "<tr><th class=\"main\">Name</th><th>Available</th><th>Reentrant</th></tr>"
+	for (name, lock) in sorted(locks.iteritems()):
+		print "<tr><td>%s</td><td class=\"%s\">&nbsp;</td><td class=\"%s\">&nbsp;</td></tr>" % (name, 'yes' if lock.avail() else 'no', 'yes' if lock.reentrant() else 'no')
 	print "</table>"
+
+	print "<h3>Counters</h3>"
+	print "<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\">"
+	print "<tr><th class=\"main\">Name</th><th>Count</th></tr>"
+	for (name, counter) in sorted(counters.iteritems()):
+		print "<tr><td>%s</td><td>%d</td></tr>" % (name, counter.count)
+	print "</table>"
+
+	print "</div><br><br>"
 
 @admin('admin/test', 'Test pages', 'test-pages')
 def adminTest(handler, request):
@@ -704,18 +702,30 @@ def adminCron(handler, request):
 		print "</form>"
 	print "<br><br>"
 
-@post('admin/cron/run')
-def adminCronPost(handler, request, p_name):
+@post('admin/cron/run', statics = 'admin-cron')
+def adminCronRun(handler, request, p_name):
 	handler.title('Run cron job')
 	requireAdmin(handler)
 
+	print "<script type=\"text/javascript\">"
+	print "job_name = %s;" % toJS(p_name)
+	print "</script>"
+
+	print "<div id=\"output\"></div>"
+
+@post('admin/cron/run-bg')
+def adminCronRunBG(handler, request, p_name):
+	request['wrappers'] = False
+
 	for job in Cron.getJobs():
 		if job.name == p_name:
-			job.run()
+			bg(job.run)
 			Event.cron(handler, p_name)
-			redirect('/admin/cron')
+			request['code'] = 299
+			print "Job started"
+			return
 
-	ErrorBox.die("Unknown job: %s" % stripTags(p_name))
+	print "Unknown job: %s" % stripTags(p_name)
 
 @post('admin/build')
 def adminBuildModePost(handler, request, p_mode):

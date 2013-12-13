@@ -10,7 +10,7 @@ from rorn.ResponseWriter import ResponseWriter
 from rorn.Session import sessions
 
 from DB import db
-from Lock import getLock
+from HTTPServer import server
 from utils import *
 
 # Regular expression that matches 'YYYY-MM-DD HH:MM:SS', where # is a digit
@@ -57,14 +57,16 @@ class CronJob:
 
 	def run(self):
 		writer = ResponseWriter()
+		lock = server().block_requests()
 		try:
-			with getLock('global'):
-				self.fn()
+			self.fn()
 			self.log = writer.done()
 		except Exception, e:
 			writer.done()
 			self.log = "<div style=\"font-weight: bold; color: #f00\">%s</div>" % stripTags(str(e))
-		self.lastrun = getNow()
+		finally:
+			self.lastrun = getNow()
+			lock.release()
 
 	def __str__(self):
 		return self.name

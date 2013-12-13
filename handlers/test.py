@@ -29,10 +29,10 @@ def code(handler, request, filename, line):
 def test(handler, request):
 	handler.title('Test')
 	print "<form method=\"post\" action=\"/test\">"
-	print "<input type=\"hidden\" name=\"test\" value=\"one\">"
-	print "<input type=\"hidden\" name=\"test\" value=\"two\">"
-	print "<input type=\"hidden\" name=\"test\" value=\"\">"
-	print "<input type=\"hidden\" name=\"test\" value=\"three\">"
+	print "<input type=\"hidden\" name=\"test[]\" value=\"one\">"
+	print "<input type=\"hidden\" name=\"test[]\" value=\"two\">"
+	print "<input type=\"hidden\" name=\"test[]\" value=\"\">"
+	print "<input type=\"hidden\" name=\"test[]\" value=\"three\">"
 	print "<input type=\"submit\" value=\"Submit\">"
 	print "</form>"
 

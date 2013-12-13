@@ -3,18 +3,15 @@ import os
 from os.path import abspath, dirname
 from resource import getrlimit, RLIMIT_NOFILE, RLIM_INFINITY
 import signal
-import socket
 import sys
 from threading import currentThread
 
 os.chdir(dirname(abspath(__file__)))
 
-from BaseHTTPServer import HTTPServer
-from HTTPHandler import HTTPHandler
-
 from Log import console
 from DB import db
 from Cron import Cron
+from HTTPServer import server as getServer, ServerError
 from Options import option, parse as parseOptions
 from Settings import PORT, settings
 from Update import check
@@ -27,9 +24,9 @@ parseOptions()
 check()
 
 try:
-	server = HTTPServer(('', PORT), HTTPHandler)
-except socket.error, (errno, msg):
-	print "Unable to open port %d: %s" % (PORT, msg)
+	server = getServer()
+except ServerError, e:
+	console('server', e.message)
 	exit(1)
 
 Cron.start()

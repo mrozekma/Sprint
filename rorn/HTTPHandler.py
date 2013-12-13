@@ -253,6 +253,7 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 				else:
 					items.append((k, form[k].value))
 			data = self.parseQueryItems(items)
+		except DoneRendering: pass
 		except TypeError: pass # Happens with empty forms
 		self.do_HEAD('post', data)
 		self.wfile.write(self.response)

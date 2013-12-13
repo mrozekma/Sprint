@@ -288,6 +288,10 @@ def su(context):
 		fail("You need the Dev privilege")
 	return ('admin', '#')
 
+@command('info', mode = 'admin')
+def adminInfo(context):
+	redirect("/admin/info")
+
 @command('settings', mode = 'admin')
 def adminSettings(context):
 	redirect("/admin/settings")

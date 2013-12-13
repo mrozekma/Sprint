@@ -6,6 +6,7 @@ from os.path import abspath, isabs, isfile
 
 from ResponseWriter import ResponseWriter
 from rorn.Box import Box, ErrorBox
+from rorn.Lock import synchronized
 from utils import *
 
 def showCode(filename, line, around = None):
@@ -20,10 +21,7 @@ def showCode(filename, line, around = None):
 	with open(parsedFilename) as f:
 		data = f.read()
 
-	target = StringIO()
-	SyntaxHighlighter.PythonHTMLGenerator().generate_html(target, data)
-
-	lines = target.getvalue().split('<br/>')
+	lines = highlightCode(data).split('<br/>')
 	if line < 1:
 		line = 1
 	elif line > len(lines):
@@ -35,6 +33,7 @@ def showCode(filename, line, around = None):
 	lines = "<table class=\"code_default dark\">\n%s\n</table>" % '\n'.join(lines)
 	print lines
 
+@synchronized('silvercity')
 def highlightCode(text):
 	target = StringIO()
 	SyntaxHighlighter.PythonHTMLGenerator().generate_html(target, text)

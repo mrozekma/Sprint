@@ -1,17 +1,18 @@
 from datetime import datetime
 from os.path import isfile
 
-from rorn.HTTPHandler import HTTPHandler as ParentHandler
-from rorn.ResponseWriter import ResponseWriter
-
 from wrappers import header, footer
 from DB import db
 from User import User
 from Event import Event
+from HTTPServer import server
 from Log import LogEntry, console
-from Lock import getLock
 from LoadValues import bricked
 from utils import *
+
+from rorn.HTTPHandler import HTTPHandler as ParentHandler
+from rorn.Lock import getLock
+from rorn.ResponseWriter import ResponseWriter
 
 class HTTPHandler(ParentHandler):
 	def __init__(self, request, address, server):
@@ -21,9 +22,12 @@ class HTTPHandler(ParentHandler):
 		user = self.session['user'].username if self.session and self.session['user'] else self.address_string()
 		console('rorn', "%s(%s) %s", user or 'logged out', self.address_string(), fmt % args)
 
-	def do_HEAD(self, method = 'get', postData = {}):
-		with getLock('global'):
-			ParentHandler.do_HEAD(self, method, postData)
+	def do_POST(self):
+		lock = server().block_requests(expected = 1)
+		try:
+			ParentHandler.do_POST(self)
+		finally:
+			lock.release()
 
 	def makeRequest(self):
 		return dict(ParentHandler.makeRequest(self).items() + {

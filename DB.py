@@ -8,8 +8,9 @@ from time import sleep
 from StringIO import StringIO
 
 from LoadValues import brick
-from Lock import getLock
 from utils import stripTags
+
+from rorn.Lock import synchronized
 
 filename = 'db'
 
@@ -52,12 +53,16 @@ class DiskQueue(Thread):
 
 	def flush(self):
 		if self.size > 0:
-			with getLock('global'):
-				from Log import console
+			from HTTPServer import server
+			from Log import console
+			lock = server().block_requests()
+			try:
 				console('db', "Writing %d %s to disk", self.size, 'entry' if self.size == 1 else 'entries')
 				db().counts['flush'] += 1
 				self.conn.commit()
 				self.cursor.close()
+			finally:
+				lock.release()
 		self.cursor, self.size, self.lastFlush = None, 0, datetime.now()
 
 class DB:
@@ -82,44 +87,36 @@ class DB:
 		self.conn.row_factory = Row
 		self.counts = dict((k, 0) for k in ('select', 'update', 'total', 'flush'))
 
+	@synchronized('db')
 	def cursor(self, expr = None, *args):
-		cur = self.conn.cursor()
-		if expr:
-			cur.execute(expr, args)
+			cur = self.conn.cursor()
+			if expr:
+				cur.execute(expr, args)
+			return cur
 
-			# Attempt to detect certain types of operations to update the counts
-			# Not really important if this misses things
-			if expr.startswith('SELECT'):
-				self.counts['select'] += 1
-			elif expr.startswith('INSERT') or expr.startswith('UPDATE'):
-				self.counts['update'] += 1
-			self.counts['total'] += 1
-
-		return cur
-
+	@synchronized('db')
 	def selectRow(self, expr, *args):
-		# print "Executing `%s' with bound args `%s'" % (expr, args)
 		cur = self.cursor(expr, *args)
 		for row in cur:
 			yield row
 		cur.close()
-		raise StopIteration
 
+	@synchronized('db')
 	def select(self, expr, *args):
 		self.counts['select'] += 1
 		self.counts['total'] += 1
 		for row in self.selectRow(expr, *args):
 			yield dict([(k, row[k]) for k in row.keys()])
-		raise StopIteration
 
+	@synchronized('db')
 	def matches(self, expr, *args):
 		cur = self.cursor(expr, *args)
 		rtn = not not cur.fetchone()
 		cur.close()
 		return rtn
 
+	@synchronized('db')
 	def update(self, expr, *args):
-		# print "Updating `%s' with bound args `%s'" % (expr, args)
 		self.counts['update'] += 1
 		self.counts['total'] += 1
 
