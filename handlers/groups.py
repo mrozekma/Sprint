@@ -15,7 +15,7 @@ from Event import Event
 from utils import *
 
 @get('groups/new')
-def newGroup(handler, request, after):
+def newGroup(handler, after):
 	handler.title('New Group')
 	requirePriv(handler, 'User')
 	afterID = int(after)
@@ -53,14 +53,14 @@ def newGroup(handler, request, after):
 	print "</form>"
 
 @post('groups/new')
-def newGroupPost(handler, request, p_group, p_name):
+def newGroupPost(handler, p_group, p_name):
 	def die(msg):
 		print msg
 		done()
 
 	handler.title('New Group')
 	requirePriv(handler, 'User')
-	request['wrappers'] = False
+	handler.wrappers = False
 
 	predid = to_int(p_group, 'group', die)
 	pred = Group.load(predid)
@@ -72,7 +72,7 @@ def newGroupPost(handler, request, p_group, p_name):
 	group = Group(pred.sprint.id, p_name, pred.seq + 1)
 	group.save()
 
-	request['code'] = 299
+	handler.responseCode = 299
 	delay(handler, """
 <script type=\"text/javascript\">
 $(document).ready(function() {
@@ -83,7 +83,7 @@ $(document).ready(function() {
 	Event.newGroup(handler, group)
 
 @get('groups/(?P<id>[0-9]+)')
-def editGroup(handler, request, id):
+def editGroup(handler, id):
 	requirePriv(handler, 'User')
 	handler.title('Manage Group')
 
@@ -155,7 +155,7 @@ def editGroup(handler, request, id):
 		print "</form>"
 
 @post('groups/(?P<id>[0-9]+)/rename')
-def renameGroupPost(handler, request, id, p_name):
+def renameGroupPost(handler, id, p_name):
 	def die(msg):
 		print msg
 		done()
@@ -176,14 +176,14 @@ def renameGroupPost(handler, request, id, p_name):
 	redirect("/sprints/%d#group%d" % (group.sprintid, group.id))
 
 @post('groups/(?P<id>[0-9]+)/goal')
-def assignGroupGoalPost(handler, request, id, p_goal):
+def assignGroupGoalPost(handler, id, p_goal):
 	def die(msg):
 		print msg
 		done()
 
 	handler.title('Manage Group')
 	requirePriv(handler, 'User')
-	request['wrappers'] = False
+	handler.wrappers = False
 
 	group = Group.load(id)
 	if not group:
@@ -213,14 +213,14 @@ def assignGroupGoalPost(handler, request, id, p_goal):
 	redirect("/sprints/%d#group%d" % (group.sprintid, group.id))
 
 @post('groups/(?P<id>[0-9]+)/delete')
-def deleteGroupPost(handler, request, id, p_newGroup = None):
+def deleteGroupPost(handler, id, p_newGroup = None):
 	def die(msg):
 		print msg
 		done()
 
 	handler.title('Manage Group')
 	requirePriv(handler, 'User')
-	request['wrappers'] = False
+	handler.wrappers = False
 
 	group = Group.load(id)
 	if not group:

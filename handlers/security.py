@@ -10,7 +10,7 @@ from Privilege import requirePriv
 from utils import *
 
 @post('security/two-factor')
-def twoFactorAuthentication(handler, request, p_action):
+def twoFactorAuthentication(handler, p_action):
 	handler.title('Two-Factor Authentication')
 	requirePriv(handler, 'User')
 

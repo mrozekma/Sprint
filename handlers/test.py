@@ -19,14 +19,14 @@ from Button import *
 from utils import *
 
 @get('code')
-def code(handler, request, filename, line):
+def code(handler, filename, line):
 	handler.title('Code')
 	admin(handler)
 
 	showCode(filename, int(line), 2)
 
 @get('test')
-def test(handler, request):
+def test(handler):
 	handler.title('Test')
 	print "<form method=\"post\" action=\"/test\">"
 	print "<input type=\"hidden\" name=\"test[]\" value=\"one\">"
@@ -37,20 +37,20 @@ def test(handler, request):
 	print "</form>"
 
 @post('test')
-def testPost(handler, request, p_test):
+def testPost(handler, p_test):
 	print p_test
 
 @get('test/(?P<num>[0-9]+)/regex')
-def testRegex(handler, request, num):
+def testRegex(handler, num):
 	handler.title('Test Regex')
 	print num
 
 @get('test2')
-def test2(handler, request):
+def test2(handler):
 	raise Exception("Lorem ipsum dolor sit amet, consectetur adipiscing elit")
 
 @get('chosen')
-def chosen(handler, request):
+def chosen(handler):
 	handler.title('Test')
 	from Privilege import dev
 	dev(handler)
@@ -66,9 +66,9 @@ def chosen(handler, request):
 
 if plottingLib:
 	@get('graph1')
-	def test(handler, request):
-		request['wrappers'] = False
-		request['contentType'] = 'image/png'
+	def test(handler):
+		handler.wrappers = False
+		handler.contentType = 'image/png'
 
 		plt.clf()
 		plt.cla()
@@ -85,9 +85,9 @@ if plottingLib:
 		print w.data
 
 	@get('graph2')
-	def graph2(handler, request):
-		request['wrappers'] = False
-		request['contentType'] = 'image/png'
+	def graph2(handler):
+		handler.wrappers = False
+		handler.contentType = 'image/png'
 
 		plt.clf()
 		plt.cla()
@@ -103,7 +103,7 @@ if plottingLib:
 		print w.data
 
 	@get('graph3')
-	def graph3(handler, request):
+	def graph3(handler):
 		plt.clf()
 		plt.cla()
 		fig = figure()
@@ -114,12 +114,12 @@ if plottingLib:
 		w = ResponseWriter(False, False)
 		w.clear()
 		plt.savefig(w)
-		request['wrappers'] = False
-		request['contentType'] = 'image/png'
+		handler.wrappers = False
+		handler.contentType = 'image/png'
 		print w.data
 
 	@get('graph4')
-	def graph4(handler, request):
+	def graph4(handler):
 		handler.title("Graph 4")
 
 		print "<script type=\"text/javascript\" src=\"/static/highcharts/js/highcharts.js\"></script>"
@@ -177,7 +177,7 @@ console.log(chart);
 		print "<div id=\"foobar\"></div>"
 
 @get('hours-test')
-def hoursTest(handler, request):
+def hoursTest(handler):
 	handler.title('Hours Test')
 
 	from Sprint import Sprint
@@ -255,7 +255,7 @@ console.log(chart);
 	print "<div id=\"chart\"></div>"
 
 @get('icons')
-def icons(handler, request):
+def icons(handler):
 	handler.title('Icons')
 	admin(handler)
 
@@ -280,8 +280,8 @@ def icons(handler, request):
 			print "<img src=\"%s\" title=\"%s\">" % (item.replace('/home/mrozekma/icons', '/icons/show'), item)
 
 @get('icons/show/(?P<path>.*)')
-def iconsShow(handler, request, path):
-	request['wrappers'] = False
+def iconsShow(handler, path):
+	handler.wrappers = False
 	admin(handler)
 
 	filename = stripTags(path)
@@ -293,13 +293,13 @@ def iconsShow(handler, request, path):
 
 	ext = filename[filename.rfind('.')+1:]
 	if ext in types:
-		request['contentType'] = types[ext]
+		handler.contentType = types[ext]
 
 	with open("/home/mrozekma/icons/" + filename) as f:
 		print f.read()
 
 @get('test/bootstrap')
-def testBootstrap(handler, request):
+def testBootstrap(handler):
 	handler.title('Bootstrap')
 	admin(handler)
 
@@ -323,7 +323,7 @@ def testBootstrap(handler, request):
 		print "<span class=\"badge badge-%s\">%s</span>&nbsp;" % (type, type)
 
 @get('test/boxes')
-def testBoxes(handler, request):
+def testBoxes(handler):
 	handler.title('Boxes')
 	admin(handler)
 
@@ -340,7 +340,7 @@ def testBoxes(handler, request):
 	print InfoBox("Close", "This box can be closed", close = True)
 
 @get('test/savebutton')
-def testSaveButton(handler, request):
+def testSaveButton(handler):
 	handler.title('Save Button')
 	admin(handler)
 
@@ -355,14 +355,14 @@ def testSaveButton(handler, request):
 	print "</form>"
 
 @post('test/savebutton')
-def testSaveButtonPost(handler, request):
+def testSaveButtonPost(handler):
 	handler.title('Save Button')
 	admin(handler)
 
 	print "Post"
 
 @get('test/markdown')
-def testMarkdown(handler, request):
+def testMarkdown(handler):
 	handler.title('Markdown')
 	admin(handler)
 
@@ -399,7 +399,7 @@ table.tests > td {
 	print "</table>"
 
 @get('test/querystr')
-def testQueryStr(handler, request, a = None, b = None, c = None, d = None):
+def testQueryStr(handler, a = None, b = None, c = None, d = None):
 	handler.title('Query String')
 	admin(handler)
 	from pprint import pprint
@@ -413,142 +413,3 @@ def testQueryStr(handler, request, a = None, b = None, c = None, d = None):
 	sys.stdout.write("d = ")
 	pprint(d)
 	print "</pre>"
-
-# @get('test')
-# def test(handler, request):
-	# print """
-# <style type=\"text/css\">
-# .b {font-weight: bold}
-# </style>
-
-# <script type="text/javascript">
-# $(document).ready(function() {
-	# four = $('.four');
-    # two = four.prevAll('.two:last');
-    # two.addClass('b');
-# });
-# </script>"""
-	# print "<div class=\"one\">one</div>"
-	# print "<div class=\"two\">two</div>"
-	# print "<div class=\"three\">three</div>"
-	# print "<div class=\"four\">four</div>"
-	# print "<div class=\"five\">five</div>"
-	# print "<div class=\"two\">two</div>"
-
-# @get('test')
-# def test(handler, request):
-	# print """
-# <link href="/static/foo/stylesheets/jquery.treeTable.css" rel="stylesheet" type="text/css" />
-# <!-- <script type="text/javascript" src="/static/foo/javascripts/jquery.treeTable.js"></script> -->
-# <script src="/static/jquery.tablednd_0_5.js" type="text/javascript"></script>
-# <script type="text/javascript">
-# $(document).ready(function() {
-	# $('#test').treeTable({
-		# initialState: 'expanded'
-	# });
-	# $('#test').tableDnD({
-		# onDragStart: function(tbl, row) {
-			# if($(row).hasClass('child-of-node-1')) {
-				# // $('table tr').addClass('nodrop');
-				# // $('.child-of-node-1').removeClass('nodrop');
-				# // $('#log').html("Started");
-			# } else {
-				# // $('#node-1, .child-of-node-1').addClass('nodrop');
-				# // $('.child-of-node-1').hide();
-			# }
-		# },
-
-		# onDrop: function(tbl, row) {
-			# // $('table tr').removeClass('nodrop');
-			# $('.child-of-node-1').show();
-			# if($(row).attr('id') == 'node-1') {
-				# $('.child-of-node-1').insertAfter(row);
-			# }
-		# }
-	# });
-
-	# $('#add').click(function() {
-		# $('#node-5').addClass('child-of-node-1');
-	# });
-# });
-# </script>
-
-# <div id="log">x</div>
-# <button id="add">Add child class to five</button>
-
-# <table id="test">
-# <tr id="node-1"><td>one</td><td>two</td></tr>
-# <tr id="node-2" class="child-of-node-1"><td>three lorem ipsum</td><td>four</td></tr>
-# <tr id="node-3" class="child-of-node-1"><td>seven</td><td>eight</td></tr>
-# <tr id="node-4" class="child-of-node-1"><td>nine</td><td>ten</td></tr>
-# <tr id="node-5"><td>five</td><td>six</td></tr>
-# <tr id="node-6"><td>eleven</td><td>twelve</td></tr>
-# <tr id="node-7"><td>thirteen</td><td>fourteen</td></tr>
-# <tr id="node-8"><td>fifteen</td><td>sixteen</td></tr>
-# </table>
-# """
-
-# @get('test')
-# def test(handler, request, ajax = False):
-	# if ajax:
-		# request['wrappers'] = False
-		# request['code'] = 299
-		# print "woo"
-		# done()
-
-	# print """
-# <script type="text/javascript">
-# $(document).ready(function() {
-	# $('#foo').click(function() {
-		# $.ajax({
-			# url: '/test?ajax',
-			# success: function(data, text, request) {
-				# alert(request.status);
-				# alert(data);
-			# }
-		# });
-	# });
-# });
-# </script>
-
-# <button id="foo">Test</button>
-# """
-
-"""
-@get('test')
-def test(handler, request, foo, bar):
-	print "foo = %s<br>" % foo
-	print "bar = %s<br>" % bar
-"""
-
-"""
-@get('test')
-def test(handler, request):
-	if len(request['path']) != 1:
-		print ErrorBox('Fail', "%s: %s" % (len(request), request))
-		done()
-
-	test(handler, request, int(request['path'][0]))
-
-def test(handler, request, id):
-	print id
-	print "<hr>"
-
-	print Button('test', '#')
-	print Button('mini', '#').mini()
-	print Button('selected', '#').selected()
-	print Button('positive', '#').positive()
-	print Button('negative', '#').negative()
-	# tasks = Task.loadAll()
-	# for task in tasks:
-		# print "%s<br>" % task.id
-		# print "%s<br>" % task.revision
-		# print "%s<br>" % task.sprint
-		# print "%s<br>" % task.creator
-		# print "%s<br>" % ', '.join(map(str, task.assigned))
-		# print "%s<br>" % task.name
-		# print "%s<br>" % task.timestamp
-		# print "<hr>"
-	# tasks[0].name = 'web-revision'
-	# tasks[0].revise()
-"""

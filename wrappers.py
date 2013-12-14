@@ -14,7 +14,7 @@ from User import User
 from Message import Message
 from utils import *
 
-def header(handler, path, includes):
+def header(handler, includes):
 	print "<!DOCTYPE html>"
 	print "<html>"
 	print "<head>"
@@ -72,7 +72,7 @@ def header(handler, path, includes):
 	print "</script>"
 	print "<script src=\"/static/less.js\" type=\"text/javascript\"></script>"
 
-	changes = list(getChanges(handler, path))
+	changes = list(getChanges(handler, handler.path))
 	if changes:
 		print "<script src=\"/static/changelog.js\"></script>"
 		print "<script type=\"text/javascript\">"
@@ -120,7 +120,7 @@ def header(handler, path, includes):
 			print "</div>"
 
 	print "<div class=\"topmenu\">"
-	print menu.render(handler, path)
+	print menu.render(handler, handler.path)
 	print "</div>"
 	print "</div>"
 	print "</div>"
@@ -136,7 +136,7 @@ def header(handler, path, includes):
 
 	print "<h1>$bodytitle$</h1>"
 
-def footer(handler, path):
+def footer(handler):
 	print "</div>"
 	print "<br style=\"clear:both\">"
 	print "</div>"

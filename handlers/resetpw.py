@@ -19,13 +19,13 @@ def printResetForm(handler, user, key = None):
 	print "</form>"
 
 @get('resetpw')
-def resetPassword(handler, request):
+def resetPassword(handler):
 	handler.title('Reset password')
 	requirePriv(handler, 'User')
 	redirect("/resetpw/%s" % handler.session['user'].username)
 
 @get('resetpw/(?P<username>[^/]+)')
-def resetUserPassword(handler, request, username, key = None):
+def resetUserPassword(handler, username, key = None):
 	handler.title('Reset password')
 
 	user = User.load(username = username)
@@ -45,7 +45,7 @@ def resetUserPassword(handler, request, username, key = None):
 		ErrorBox.die('Reset Password', 'Invalid reset key')
 
 @post('resetpw/(?P<username>[^/]+)')
-def resetUserPasswordPost(handler, request, username, key, p_newPassword, p_newPassword2):
+def resetUserPasswordPost(handler, username, key, p_newPassword, p_newPassword2):
 	handler.title('Reset password')
 
 	user = User.load(username = username)

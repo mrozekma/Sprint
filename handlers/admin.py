@@ -41,7 +41,7 @@ def admin(url, name, icon, **kw):
 	return wrap
 
 @get('admin', statics = 'admin')
-def adminIndex(handler, request):
+def adminIndex(handler):
 	handler.title('Admin')
 	requireAdmin(handler)
 
@@ -49,7 +49,7 @@ def adminIndex(handler, request):
 		print "<div class=\"admin-list-entry\"><a href=\"%(url)s\"><img class=\"admin-icon\" src=\"/static/images/admin-%(icon)s.png\"></a><br>%(name)s</div>" % page
 
 @admin('admin/info', 'Information', 'info')
-def adminInfo(handler, request):
+def adminInfo(handler):
 	handler.title('Information')
 	requireAdmin(handler)
 
@@ -92,7 +92,7 @@ def adminInfo(handler, request):
 	print "</div><br><br>"
 
 @admin('admin/test', 'Test pages', 'test-pages')
-def adminTest(handler, request):
+def adminTest(handler):
 	handler.title('Test pages')
 	requireAdmin(handler)
 
@@ -111,7 +111,7 @@ def adminTest(handler, request):
 				found = 0
 
 @admin('admin/settings', 'Settings', 'settings')
-def adminSettings(handler, request):
+def adminSettings(handler):
 	handler.title('Settings')
 	requireAdmin(handler)
 	undelay(handler)
@@ -146,7 +146,7 @@ def adminSettings(handler, request):
 	print "</table>"
 
 @post('admin/settings')
-def adminSettingsPost(handler, request, p_emailDomain, p_systemMessage, p_bugzillaURL, p_redis, p_kerberosRealm):
+def adminSettingsPost(handler, p_emailDomain, p_systemMessage, p_bugzillaURL, p_redis, p_kerberosRealm):
 	handler.title('Settings')
 	requireAdmin(handler)
 
@@ -189,7 +189,7 @@ def adminSettingsPost(handler, request, p_emailDomain, p_systemMessage, p_bugzil
 	redirect('/admin/settings')
 
 @admin('admin/users', 'Users', 'users')
-def adminUsers(handler, request):
+def adminUsers(handler):
 	handler.title('User Management')
 	requireAdmin(handler)
 
@@ -224,7 +224,7 @@ def adminUsers(handler, request):
 	print "<div class=\"clear\"></div>"
 
 @post('admin/users')
-def adminUsersPost(handler, request, p_action, p_username, p_privileges = []):
+def adminUsersPost(handler, p_action, p_username, p_privileges = []):
 	handler.title('User Management')
 	requireAdmin(handler)
 
@@ -284,7 +284,7 @@ def adminUsersPost(handler, request, p_action, p_username, p_privileges = []):
 			break
 
 @admin('admin/projects', 'Projects', 'projects', statics = 'admin-projects')
-def adminProjects(handler, request):
+def adminProjects(handler):
 	handler.title('Project Management')
 	requireAdmin(handler)
 
@@ -311,7 +311,7 @@ def adminProjects(handler, request):
 		print "<a href=\"/admin/projects/%d\">%s</a><br>" % (project.id, project.safe.name)
 
 @post('admin/projects')
-def adminProjectsPost(handler, request, p_name):
+def adminProjectsPost(handler, p_name):
 	handler.title('Project Management')
 	requireAdmin(handler)
 
@@ -325,7 +325,7 @@ def adminProjectsPost(handler, request, p_name):
 	redirect('/')
 
 @get('admin/projects/(?P<id>[0-9]+)', statics = ['admin', 'admin-projects'])
-def adminProjectsManage(handler, request, id):
+def adminProjectsManage(handler, id):
 	handler.title('Manage Project')
 	requireAdmin(handler)
 	project = Project.load(int(id))
@@ -376,7 +376,7 @@ def adminProjectsManage(handler, request, id):
 	print "</form><br>"
 
 @post('admin/projects/(?P<id>[0-9]+)/move-sprints')
-def adminProjectsMoveSprintsPost(handler, request, id, p_newproject, p_sprintid = None):
+def adminProjectsMoveSprintsPost(handler, id, p_newproject, p_sprintid = None):
 	handler.title('Move Sprints')
 	requireAdmin(handler)
 	project = Project.load(int(id))
@@ -403,7 +403,7 @@ def adminProjectsMoveSprintsPost(handler, request, id, p_newproject, p_sprintid 
 	redirect("/admin/projects/%d" % project.id)
 
 @post('admin/projects/(?P<id>[0-9]+)/edit')
-def adminProjectsEditPost(handler, request, id, p_name):
+def adminProjectsEditPost(handler, id, p_name):
 	handler.title('Edit Project')
 	requireAdmin(handler)
 	project = Project.load(int(id))
@@ -415,7 +415,7 @@ def adminProjectsEditPost(handler, request, id, p_name):
 	redirect("/admin/projects/%d" % project.id)
 
 @post('admin/projects/(?P<id>[0-9]+)/delete')
-def adminProjectsDeletePost(handler, request, id, p_newproject = None):
+def adminProjectsDeletePost(handler, id, p_newproject = None):
 	handler.title('Delete Project')
 	requireAdmin(handler)
 	project = Project.load(int(id))
@@ -439,7 +439,7 @@ def adminProjectsDeletePost(handler, request, id, p_newproject = None):
 	redirect("/admin/projects")
 
 @admin('admin/sessions', 'Sessions', 'sessions')
-def adminSessions(handler, request, username = None):
+def adminSessions(handler, username = None):
 	handler.title("Sessions for %s" % stripTags(username) if username else "Sessions")
 	requireAdmin(handler)
 
@@ -476,7 +476,7 @@ def adminSessions(handler, request, username = None):
 	print "</table>"
 
 @post('admin/sessions')
-def adminSessionsPost(handler, request, p_key, p_action, p_value = None):
+def adminSessionsPost(handler, p_key, p_action, p_value = None):
 	handler.title('Sessions')
 	requireAdmin(handler)
 	print "<script src=\"/static/admin-sessions.js\" type=\"text/javascript\"></script>"
@@ -512,7 +512,7 @@ def adminSessionsPost(handler, request, p_key, p_action, p_value = None):
 		break
 
 @admin('admin/privileges', 'Privileges', 'privileges')
-def adminPrivileges(handler, request, username = None):
+def adminPrivileges(handler, username = None):
 	handler.title("Privileges")
 	requireAdmin(handler)
 	undelay(handler)
@@ -550,7 +550,7 @@ def adminPrivileges(handler, request, username = None):
 	print "</form>"
 
 @post('admin/privileges')
-def adminPrivilegesPost(handler, request, p_grant):
+def adminPrivilegesPost(handler, p_grant):
 	handler.title("Privileges")
 	requireAdmin(handler)
 	p_grant = dict((name, privs.keys()) for name, privs in p_grant.iteritems())
@@ -578,7 +578,7 @@ def adminPrivilegesPost(handler, request, p_grant):
 	print "Done"
 
 @admin('admin/repl', 'REPL', 'repl')
-def adminRepl(handler, request):
+def adminRepl(handler):
 	handler.title('Python REPL')
 	requireAdmin(handler)
 	print "<script src=\"/static/admin-repl.js\" type=\"text/javascript\"></script>"
@@ -594,13 +594,13 @@ def adminRepl(handler, request):
 	print "<input type=\"text\" id=\"input\" class=\"defaultfocus\">"
 
 @post('admin/repl')
-def adminReplPost(handler, request, p_code):
+def adminReplPost(handler, p_code):
 	def makeStr(v):
 		if isinstance(v, list):
 			return "<ul>%s</ul>" % ''.join("<li>%s</li>" % item for item in v)
 		return str(v)
 
-	request['wrappers'] = False
+	handler.wrappers = False
 
 	p_code = re.sub('^!([A-Za-z]+)$', 'from \\1 import \\1', p_code)
 	match = re.match('!([A-Za-z ]+)$', p_code)
@@ -609,7 +609,7 @@ def adminReplPost(handler, request, p_code):
 		res = []
 		for part in parts:
 			w = ResponseWriter()
-			adminReplPost(handler, request, "!%s" % part)
+			adminReplPost(handler, "!%s" % part)
 			res.append(fromJS(w.done()))
 		print toJS(res)
 		done()
@@ -631,7 +631,7 @@ def adminReplPost(handler, request, p_code):
 	print toJS({'code': highlightCode(p_code), 'stdout': stdout, 'stderr': stderr, 'vars': vars})
 
 @admin('admin/time', 'Mock time', 'time')
-def adminTime(handler, request):
+def adminTime(handler):
 	handler.title('Mock time')
 	requireAdmin(handler)
 	print "<link href=\"/static/jquery.ui.timepicker.css\" rel=\"stylesheet\" type=\"text/css\" />"
@@ -662,7 +662,7 @@ def adminTime(handler, request):
 	print "</form>"
 
 @post('admin/time')
-def adminTimePost(handler, request, p_date, p_time):
+def adminTimePost(handler, p_date, p_time):
 	handler.title('Mock time')
 	requireAdmin(handler)
 
@@ -684,11 +684,11 @@ def adminTimePost(handler, request, p_date, p_time):
 	except ValueError, e:
 		ErrorBox.die(e.message)
 
-	request['wrappers'] = False
+	handler.wrappers = False
 	redirect('/admin/time')
 
 @admin('admin/cron', 'Cron jobs', 'cron')
-def adminCron(handler, request):
+def adminCron(handler):
 	handler.title('Cron jobs')
 	requireAdmin(handler)
 
@@ -703,7 +703,7 @@ def adminCron(handler, request):
 	print "<br><br>"
 
 @post('admin/cron/run', statics = 'admin-cron')
-def adminCronRun(handler, request, p_name):
+def adminCronRun(handler, p_name):
 	handler.title('Run cron job')
 	requireAdmin(handler)
 
@@ -714,35 +714,35 @@ def adminCronRun(handler, request, p_name):
 	print "<div id=\"output\"></div>"
 
 @post('admin/cron/run-bg')
-def adminCronRunBG(handler, request, p_name):
-	request['wrappers'] = False
+def adminCronRunBG(handler, p_name):
+	handler.wrappers = False
 
 	for job in Cron.getJobs():
 		if job.name == p_name:
 			bg(job.run)
 			Event.cron(handler, p_name)
-			request['code'] = 299
+			handler.responseCode = 299
 			print "Job started"
 			return
 
 	print "Unknown job: %s" % stripTags(p_name)
 
 @post('admin/build')
-def adminBuildModePost(handler, request, p_mode):
+def adminBuildModePost(handler, p_mode):
 	if p_mode == 'development':
 		setDevMode(True)
 	elif p_mode == 'production':
 		setDevMode(False)
 
 @post('admin/unimpersonate')
-def adminUnimpersonatePost(handler, request):
+def adminUnimpersonatePost(handler):
 	if 'impersonator' in handler.session:
 		handler.session['user'] = handler.session['impersonator']
 		del handler.session['impersonator']
 		Event.impersonate(handler, None)
 
 @admin('admin/log', 'Log', 'log')
-def adminLog(handler, request, page = 1, users = None, types = None):
+def adminLog(handler, page = 1, users = None, types = None):
 	PAGE_LEN = 100
 	PAGINATION_BOXES = 12
 

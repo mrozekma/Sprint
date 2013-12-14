@@ -78,11 +78,11 @@ def drawNavArrows(sprint, tab):
 	print "</div></div>"
 
 @get('sprints')
-def sprint(handler, request):
+def sprint(handler):
 	redirect('/projects')
 
 @get('sprints/(?P<id>[0-9]+)', statics = 'sprints-backlog')
-def showBacklog(handler, request, id, search = None, devEdit = False):
+def showBacklog(handler, id, search = None, devEdit = False):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
@@ -374,12 +374,12 @@ def printTask(handler, task, days, group = None, highlight = False, editable = T
 	print "</tr>"
 
 @post('sprints/(?P<sprintid>[0-9]+)')
-def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
+def sprintPost(handler, sprintid, p_id, p_rev_id, p_field, p_value):
 	def die(msg):
 		print msg
 		done()
 
-	request['wrappers'] = False
+	handler.wrappers = False
 	p_id = int(p_id)
 	p_rev_id = int(p_rev_id)
 
@@ -460,11 +460,11 @@ def sprintPost(handler, request, sprintid, p_id, p_rev_id, p_field, p_value):
 	# 299 - good
 	# 298 - warning
 	# 200 - error
-	request['code'] = 299
+	handler.responseCode = 299
 	print task.revision
 
 @get('sprints/active')
-def findActiveSprint(handler, request, project = None, search = None):
+def findActiveSprint(handler, project = None, search = None):
 	handler.title('Active Sprint')
 	requirePriv(handler, 'User')
 	if project:
@@ -492,7 +492,7 @@ def findActiveSprint(handler, request, project = None, search = None):
 			break
 
 @get('sprints/(?P<id>[0-9]+)/info', statics = 'sprints-info')
-def showInfo(handler, request, id):
+def showInfo(handler, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
@@ -558,12 +558,12 @@ def showInfo(handler, request, id):
 	print "</form>"
 
 @post('sprints/info')
-def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None, p_members = None, p_clear = []):
+def sprintInfoPost(handler, id, p_name, p_end, p_goals, p_start = None, p_members = None, p_clear = []):
 	def die(msg):
 		print msg
 		done()
 
-	request['wrappers'] = False
+	handler.wrappers = False
 
 	if not handler.session['user']:
 		die("You must be logged in to modify sprint info")
@@ -684,13 +684,13 @@ def sprintInfoPost(handler, request, id, p_name, p_end, p_goals, p_start = None,
 	for task in changedTasks:
 		task.saveRevision(handler.session['user'])
 
-	request['code'] = 299
+	handler.responseCode = 299
 	delay(handler, SuccessBox("Updated info", close = 3, fixed = True))
 	Event.sprintInfoUpdate(handler, sprint, changes)
 
 
 @get('sprints/(?P<id>[0-9]+)/metrics', statics = 'sprints')
-def showMetrics(handler, request, id):
+def showMetrics(handler, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
@@ -737,7 +737,7 @@ def showMetrics(handler, request, id):
 	print "<br><br>"
 
 @get('sprints/(?P<id>[0-9]+)/history', statics = 'sprints-history')
-def showSprintHistory(handler, request, id, assigned = None):
+def showSprintHistory(handler, id, assigned = None):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
@@ -779,7 +779,7 @@ def showSprintHistory(handler, request, id, assigned = None):
 	print "<br>"
 
 @get('sprints/(?P<id>[0-9]+)/availability', statics = 'sprints-availability')
-def showAvailability(handler, request, id):
+def showAvailability(handler, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
@@ -846,12 +846,12 @@ def showAvailability(handler, request, id):
 	print "</form>"
 
 @post('sprints/(?P<id>[0-9]+)/availability')
-def sprintAvailabilityPost(handler, request, id, p_hours):
+def sprintAvailabilityPost(handler, id, p_hours):
 	def die(msg):
 		print msg
 		done()
 
-	request['wrappers'] = False
+	handler.wrappers = False
 
 	if not handler.session['user']:
 		die("You must be logged in to modify sprint info")
@@ -879,12 +879,12 @@ def sprintAvailabilityPost(handler, request, id, p_hours):
 
 		avail.set(user, time, hours)
 
-	request['code'] = 299
+	handler.responseCode = 299
 	delay(handler, SuccessBox("Updated availability", close = 3, fixed = True))
 	Event.sprintAvailUpdate(handler, sprint)
 
 @get('sprints/(?P<id>[0-9]+)/checklist', statics = 'sprints-checklist')
-def showSprintChecklist(handler, request, id):
+def showSprintChecklist(handler, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
@@ -971,7 +971,7 @@ def showSprintChecklist(handler, request, id):
 	print "</div>"
 
 @get('sprints/(?P<id>[0-9]+)/results', statics = 'sprints')
-def showSprintResults(handler, request, id):
+def showSprintResults(handler, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
@@ -1004,7 +1004,7 @@ def showSprintResults(handler, request, id):
 	print "</ul>"
 
 @get('sprints/(?P<id>[0-9]+)/retrospective', statics = 'sprints-retrospective')
-def showSprintRetrospective(handler, request, id):
+def showSprintRetrospective(handler, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
@@ -1055,7 +1055,7 @@ def showSprintRetrospective(handler, request, id):
 	print "</div>"
 
 @post('sprints/(?P<id>[0-9]+)/retrospective/start')
-def sprintRetrospectiveStart(handler, request, id):
+def sprintRetrospectiveStart(handler, id):
 	if not handler.session['user']:
 		ErrorBox.die('Forbidden', "You must be logged in to modify sprint info")
 
@@ -1069,12 +1069,12 @@ def sprintRetrospectiveStart(handler, request, id):
 	redirect("/sprints/%d/retrospective" % sprint.id)
 
 @post('sprints/(?P<sprintid>[0-9]+)/retrospective/render')
-def sprintRetrospectiveRender(handler, request, sprintid, p_id, p_catid, p_body = None, p_good = None):
+def sprintRetrospectiveRender(handler, sprintid, p_id, p_catid, p_body = None, p_good = None):
 	def die(msg):
 		print msg
 		done()
 
-	request['wrappers'] = False
+	handler.wrappers = False
 	if p_id != 'new':
 		p_id = to_int(p_id, 'id', die)
 	p_catid = to_int(p_catid, 'catid', die)
@@ -1102,17 +1102,17 @@ def sprintRetrospectiveRender(handler, request, sprintid, p_id, p_catid, p_body 
 
 		if entry.body == '':
 			entry.delete()
-			request['code'] = 299
+			handler.responseCode = 299
 			print toJS({'id': entry.id, 'deleted': True});
 			return
 
 	entry.save()
-	request['code'] = 299
+	handler.responseCode = 299
 	print toJS({'id': entry.id, 'body': Markdown.render(entry.body), 'good': entry.good})
 
 
 @get('sprints/new')
-def newSprint(handler, request, project):
+def newSprint(handler, project):
 	id = int(project)
 	handler.title('New Sprint')
 	requirePriv(handler, 'User')
@@ -1155,12 +1155,12 @@ def newSprint(handler, request, project):
 	print "</form>"
 
 @post('sprints/new')
-def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members = None):
+def newSprintPost(handler, p_project, p_name, p_start, p_end, p_members = None):
 	def die(msg):
 		print msg
 		done()
 
-	request['wrappers'] = False
+	handler.wrappers = False
 
 	project = Project.load(p_project)
 	if not project:
@@ -1207,12 +1207,12 @@ def newSprintPost(handler, request, p_project, p_name, p_start, p_end, p_members
 	# Make the standard set of sprint goals
 	Goal.newSet(sprint)
 
-	request['code'] = 299
+	handler.responseCode = 299
 	print "/sprints/%d" % sprint.id
 	Event.newSprint(handler, sprint)
 
 @get('sprints/export')
-def exportSprints(handler, request, project):
+def exportSprints(handler, project):
 	id = int(project)
 	handler.title('Export Sprint')
 	requirePriv(handler, 'User')
@@ -1248,7 +1248,7 @@ def exportSprints(handler, request, project):
 	print Button('Export', id = 'export-button').positive()
 
 @get('sprints/export/render')
-def exportRender(handler, request, sprints, format):
+def exportRender(handler, sprints, format):
 	ids = map(int, sprints.split(','))
 	sprints = map(Sprint.load, ids)
 
@@ -1260,5 +1260,5 @@ def exportRender(handler, request, sprints, format):
 	for sprint in sprints:
 		export.process(sprint)
 
-	request['wrappers'] = False
-	request['forceDownload'] = "%s.%s" % (sprints[0].name if len(sprints) == 1 else 'sprints', export.getExtension())
+	handler.wrappers = False
+	handler.forceDownload = "%s.%s" % (sprints[0].name if len(sprints) == 1 else 'sprints', export.getExtension())

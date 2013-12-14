@@ -31,8 +31,8 @@ def fail(str):
 	raise CommandError(str)
 
 @post('shell/run')
-def run(handler, request, p_command, p_path, p_mode = ''):
-	request['wrappers'] = False
+def run(handler, p_command, p_path, p_mode = ''):
+	handler.wrappers = False
 
 	if not handler.session['user']:
 		print toJS({'error': 'You must be logged in to use the shell'})

@@ -4,7 +4,7 @@ from Note import Note
 from utils import *
 
 @get('help/search')
-def helpSearch(handler, request):
+def helpSearch(handler):
 	handler.title("Search")
 
 	print "Searching is a combination of miscellaneous filters and a free-form task name fuzzy search. The search operators are:<br>"
@@ -23,7 +23,7 @@ def helpSearch(handler, request):
 	print "The number of matching tasks is shown on the backlog dateline. The <img class=\"bumpdown\" src=\"/static/images/save.png\"> icon saves the search for future use, while the <img class=\"bumpdown\" src=\"/static/images/cross.png\"> icon cancels the search and shows all tasks"
 
 @get('help/markdown')
-def helpMarkdown(handler, request):
+def helpMarkdown(handler):
 	handler.title("Markdown")
 
 	print "<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/prettify/sunburst.css\">"

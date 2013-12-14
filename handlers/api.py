@@ -5,13 +5,13 @@ from Sprint import Sprint
 from utils import *
 
 @get('api/projects/(?P<id>[0-9]+)/active/(?P<action>[^/]+)')
-def apiProjectActive(handler, request, id, action):
+def apiProjectActive(handler, id, action):
 	def die(msg):
 		print toJS({'error': msg})
 		done()
 
 	id = int(id)
-	request['wrappers'] = False
+	handler.wrappers = False
 
 	project = Project.load(id)
 	if not project:
@@ -24,13 +24,13 @@ def apiProjectActive(handler, request, id, action):
 		die('No active sprints found')
 
 @get('api/sprints/(?P<id>[0-9]+)/info')
-def apiSprintInfo(handler, request, id):
+def apiSprintInfo(handler, id):
 	def die(msg):
 		print toJS({'error': msg})
 		done()
 
 	id = int(id)
-	request['wrappers'] = False
+	handler.wrappers = False
 
 	sprint = Sprint.load(id)
 	if not sprint:
@@ -49,12 +49,12 @@ def apiSprintInfo(handler, request, id):
 			})
 
 @get('api/sprints/list')
-def apiSprintsList(handler, request, calendar = False, start = None, end = None, _ = None):
+def apiSprintsList(handler, calendar = False, start = None, end = None, _ = None):
 	def die(msg):
 		print toJS({'error': msg})
 		done()
 
-	request['wrappers'] = False
+	handler.wrappers = False
 	start = int(start) if start else None
 	end = int(end) if end else None
 

@@ -16,6 +16,8 @@ from rorn.ResponseWriter import ResponseWriter
 
 class HTTPHandler(ParentHandler):
 	def __init__(self, request, address, server):
+		self.wrappers = True
+		self.log = True
 		ParentHandler.__init__(self, request, address, server)
 
 	def log_message(self, fmt, *args):
@@ -29,39 +31,34 @@ class HTTPHandler(ParentHandler):
 		finally:
 			lock.release()
 
-	def makeRequest(self):
-		return dict(ParentHandler.makeRequest(self).items() + {
-			'wrappers': True,
-			'log': True
-		}.items())
-
-	def invokeHandler(self, handler, request, query):
-		if request['log']:
+	def invokeHandler(self, handler, query):
+		if self.log:
 			filename = handler['fn'].func_code.co_filename
 			if filename.startswith(basePath()):
 				filename = filename[len(basePath())+1:]
-			request['log'] = LogEntry('rorn.handle', "%s %s" % (request['method'].upper(), request['path']), userid = self.session['user'].id if self.session['user'] else None, ip = self.client_address[0], location = "%s(%s:%d)" % (handler['fn'].func_code.co_name, filename, handler['fn'].func_code.co_firstlineno))
+			self.log = LogEntry('rorn.handle', "%s %s" % (self.method.upper(), self.path), userid = self.session['user'].id if self.session['user'] else None, ip = self.client_address[0], location = "%s(%s:%d)" % (handler['fn'].func_code.co_name, filename, handler['fn'].func_code.co_firstlineno))
 			Event.pageHandle(self, handler['fn'])
 
-		return super(HTTPHandler, self).invokeHandler(handler, request, query)
+		return super(HTTPHandler, self).invokeHandler(handler, query)
 
-	def requestDone(self, request):
-		if isinstance(request['log'], LogEntry):
-			request['log'].save()
+	def requestDone(self):
+		if isinstance(self.log, LogEntry):
+			self.log.save()
 
-		if request['wrappers']:
+		if self.wrappers:
 			types = ['less', 'css', 'js']
 			includes = {type: [] for type in types}
-			if 'handler' in request and 'statics' in request['handler']:
-				for key in ensureList(request['handler']['statics']):
+			handler = getattr(self, 'handler', None)
+			if handler and 'statics' in handler:
+				for key in ensureList(handler['statics']):
 					for type in types:
 						if isfile("static/%s.%s" % (key, type)):
 							includes[type].append("/static/%s.%s" % (key, type))
 
 			writer = ResponseWriter()
-			header(self, request['path'], includes)
+			header(self, includes)
 			print self.response
-			footer(self, request['path'])
+			footer(self)
 			self.response = writer.done()
 
 	def processingRequest(self):

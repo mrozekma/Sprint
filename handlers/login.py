@@ -14,7 +14,7 @@ from Event import Event
 from utils import *
 
 @get('login')
-def login(handler, request, redir = '/'):
+def login(handler, redir = '/'):
 	handler.title('Login')
 	if handler.session['user']:
 		redirect(redir)
@@ -22,7 +22,7 @@ def login(handler, request, redir = '/'):
 		print LoginBox(redir)
 
 @post('login')
-def loginPost(handler, request, p_username, p_password, p_verification, p_redir):
+def loginPost(handler, p_username, p_password, p_verification, p_redir):
 	def die(msg):
 		print ErrorBox("Login Failed", msg)
 		print LoginBox(p_redir)
@@ -60,13 +60,13 @@ def loginPost(handler, request, p_username, p_password, p_verification, p_redir)
 	redirect(p_redir)
 
 @get('logout')
-def logout(handler, request):
+def logout(handler):
 	print "<form method=\"post\" action=\"/logout\">"
 	print Button('Logout', type = 'submit').negative()
 	print "</form>"
 
 @post('logout')
-def logoutPost(handler, request):
+def logoutPost(handler):
 	if handler.session['user']:
 		del handler.session['user']
 		if 'impersonator' in handler.session:

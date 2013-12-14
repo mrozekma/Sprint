@@ -22,7 +22,7 @@ from relativeDates import timesince
 from utils import *
 
 @get('users')
-def users(handler, request):
+def users(handler):
 	handler.title('Users')
 
 	users = User.loadAll(orderby = 'username')
@@ -33,7 +33,7 @@ def users(handler, request):
 	print "<div class=\"clear\"></div>"
 
 @get("users/(?P<username>%s)" % USERNAME_PATTERN)
-def user(handler, request, username):
+def user(handler, username):
 	user = User.load(username = username)
 	if not user:
 		ErrorBox.die('User', "No user named <b>%s</b>" % stripTags(username))
@@ -140,7 +140,7 @@ def user(handler, request, username):
 		print "Not a member of any active sprints"
 
 @get("users/(?P<username>%s)/tasks" % USERNAME_PATTERN)
-def userTasks(handler, request, username):
+def userTasks(handler, username):
 	handler.title('User tasks')
 	user = User.load(username = username)
 	if not user:
@@ -153,12 +153,12 @@ def userTasks(handler, request, username):
 	redirect("/tasks/%s" % ','.join(map(str, tasks)))
 
 @get("users/(?P<username>%s)/avatar" % USERNAME_PATTERN)
-def userAvatarShow(handler, request, username, size = 80):
+def userAvatarShow(handler, username, size = 80):
 	def die(msg):
 		print msg
 		done()
 
-	request['wrappers'] = False
+	handler.wrappers = False
 	size = to_int(size, 'size', die)
 	user = User.load(username = username)
 	if not user:
@@ -172,10 +172,10 @@ def userAvatarShow(handler, request, username, size = 80):
 	out = StringIO()
 	image.save(out, 'png')
 	print out.getvalue()
-	request['contentType'] = 'image/png'
+	handler.contentType = 'image/png'
 
 @get("users/(?P<username>%s)/avatar/set" % USERNAME_PATTERN)
-def userAvatarSet(handler, request, username):
+def userAvatarSet(handler, username):
 	handler.title('Set avatar')
 	requirePriv(handler, 'User')
 	user = User.load(username = username)
@@ -204,7 +204,7 @@ def userAvatarSet(handler, request, username):
 		print "</form>"
 
 @post("users/(?P<username>%s)/avatar/set" % USERNAME_PATTERN)
-def userAvatarSet(handler, request, username, p_data):
+def userAvatarSet(handler, username, p_data):
 	handler.title('Set avatar')
 	requirePriv(handler, 'User')
 	user = User.load(username = username)
@@ -227,7 +227,7 @@ def userAvatarSet(handler, request, username, p_data):
 	redirect("/users/%s" % user.username)
 
 @post("users/(?P<username>%s)/avatar/remove" % USERNAME_PATTERN)
-def userAvatarRemove(handler, request, username):
+def userAvatarRemove(handler, username):
 	handler.title('Remove avatar')
 	requirePriv(handler, 'User')
 	user = User.load(username = username)

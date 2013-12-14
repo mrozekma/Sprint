@@ -14,7 +14,7 @@ tabs['inbox'] = '/messages/inbox'
 tabs['sent'] = '/messages/sent'
 
 @get('messages/inbox', statics = 'messages')
-def inbox(handler, request):
+def inbox(handler):
 	handler.title('Messages')
 	requirePriv(handler, 'User')
 
@@ -33,7 +33,7 @@ def inbox(handler, request):
 			message.save()
 
 @get('messages/sent', statics = 'messages')
-def sent(handler, request):
+def sent(handler):
 	handler.title('Messages')
 	requirePriv(handler, 'User')
 
@@ -72,10 +72,10 @@ def printMessage(message, inbox):
 
 
 @post('messages/send')
-def send(handler, request, p_userid, p_body, dryrun = False):
+def send(handler, p_userid, p_body, dryrun = False):
 	handler.title('Send message')
 	if dryrun:
-		request['wrappers'] = False
+		handler.wrappers = False
 	requirePriv(handler, 'User')
 
 	targetID = int(p_userid)
@@ -94,7 +94,7 @@ def send(handler, request, p_userid, p_body, dryrun = False):
 		redirect('/messages/sent')
 
 @post('messages/(?P<id>[0-9]+)/delete')
-def deleteMessage(handler, request, id, p_x = None, p_y = None):
+def deleteMessage(handler, id, p_x = None, p_y = None):
 	handler.title('Delete message')
 	requirePriv(handler, 'User')
 

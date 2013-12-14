@@ -38,12 +38,14 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 		self.session = None
 		self.replacements = {}
 		self.title(None)
+		self.contentType = 'text/html'
+		self.forceDownload = False
+		self.responseCode = 200
 		BaseHTTPRequestHandler.__init__(self, request, address, server)
 
 	def buildResponse(self, method, postData):
+		self.method = method
 		writer = ResponseWriter()
-		request = self.makeRequest()
-		request['method'] = method
 
 		try: # raise DoneRendering; starts here to catch self.error calls
 			path = self.path
@@ -68,22 +70,22 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 			path = path[1:]
 			if len(path) and path[-1] == '/': path = path[:-1]
 			path = unquote(path)
-			handler = None
+			self.handler = None
 			for pattern in handlers[method]:
 				match = pattern.match(path)
 				if match:
-					handler = request['handler'] = handlers[method][pattern]
+					self.handler = handlers[method][pattern]
 					for k, v in match.groupdict().items():
 						if k in query:
 							self.error("Invalid request", "Duplicate key in request: %s" % k)
 						query[k] = v
 					break
 
-			if not handler:
+			if not self.handler:
 				self.error("Invalid request", "Unknown %s action <b>%s</b>" % (method.upper(), path if path != '' else "No empty action handler"))
 
 			given = query.keys()
-			expected, _, _, defaults = getargspec(handler['fn'])
+			expected, _, _, defaults = getargspec(self.handler['fn'])
 			defaults = defaults or []
 
 			givenS, expectedS = set(given), set(expected)
@@ -100,11 +102,11 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 			if len(under):
 				self.error("Invalid request", "Missing expected request argument%s: %s" % ('s' if len(under) > 1 else '', ', '.join(under)))
 
-			request['path'] = '/' + path
+			self.path = '/' + path
 			self.replace('{{path}}', path)
 			self.replace('{{get-args}}', queryStr or '')
 
-			self.invokeHandler(handler, request, query)
+			self.invokeHandler(self.handler, query)
 		except DoneRendering: pass
 		except OperationalError, e:
 			writer.clear()
@@ -133,13 +135,11 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 			showCode(filename, line, 5)
 
 		self.response = writer.done()
-		self.requestDone(request)
+		self.requestDone()
 		# self.leftMenu.clear()
 
 		for (fromStr, toStr, count) in self.replacements.values():
 			self.response = self.response.replace(fromStr, toStr, count)
-
-		return request
 
 	def parseQueryString(self, query):
 		# Adapted from urlparse.parse_qsl
@@ -200,20 +200,20 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 	def replace(self, fromStr, toStr, count = -1):
 		self.replacements[fromStr] = (fromStr, toStr, count)
 
-	def sendHead(self, code, contentType = 'application/octet-stream', forceDownload = False, additionalHeaders = {}, includeCookie = True):
+	def sendHead(self, additionalHeaders = {}, includeCookie = True):
 		headers = {
-			'Content-type': contentType,
+			'Content-type': self.contentType,
 			'Content-Length': str(len(self.response)),
 			'Last-Modified': self.date_time_string(),
 		}
 		if self.session:
 			headers['Set-Cookie'] = 'session=%s; expires=%s; path=/' % (self.session.key, timestamp())
-		if forceDownload:
+		if self.forceDownload:
 			headers['Content-disposition'] = "attachment; filename=%s" % forceDownload
 
 		headers.update(additionalHeaders)
 
-		self.send_response(code)
+		self.send_response(self.responseCode)
 		for name, value in headers.iteritems():
 			self.send_header(name, value)
 		self.end_headers()
@@ -223,7 +223,7 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 			BaseHTTPRequestHandler.handle_one_request(self)
 		except:
 			self.response = str(FrameworkException(sys.exc_info()))
-			self.sendHead(200, 'text/html', False)
+			self.sendHead(includeCookie = False)
 			self.wfile.write(self.response)
 			raise
 
@@ -232,11 +232,12 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 		self.processingRequest()
 
 		try:
-			request = self.buildResponse(method, postData)
-			self.sendHead(request['code'], request['contentType'], request['forceDownload'])
+			self.buildResponse(method, postData)
+			self.sendHead()
 		except Redirect as r:
+			self.responseCode = 302
 			self.response = ''
-			self.sendHead(302, additionalHeaders = {'Location': r.target})
+			self.sendHead(additionalHeaders = {'Location': r.target})
 
 	def do_GET(self):
 		self.do_HEAD('get')
@@ -267,15 +268,7 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 
 	def processingRequest(self): pass
 
-	def makeRequest(self):
-		return {
-			'path': '',
-			'contentType': 'text/html',
-			'forceDownload': False,
-			'code': 200
-		}
+	def invokeHandler(self, handler, query):
+		handler['fn'](handler = self, **query)
 
-	def invokeHandler(self, handler, request, query):
-		handler['fn'](handler = self, request = request, **query)
-
-	def requestDone(self, request): pass
+	def requestDone(self): pass

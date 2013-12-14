@@ -3,9 +3,9 @@ from os.path import isfile
 from utils import *
 
 @get('static/(?P<path>.+)')
-def static(handler, request, path, v = None):
-	request['wrappers'] = False
-	request['log'] = False
+def static(handler, path, v = None):
+	handler.wrappers = False
+	handler.log = False
 
 	filename = stripTags(path)
 	types = {
@@ -20,7 +20,7 @@ def static(handler, request, path, v = None):
 
 	ext = filename[filename.rfind('.')+1:]
 	if ext in types:
-		request['contentType'] = types[ext]
+		handler.contentType = types[ext]
 
 	with open("static/" + filename) as f:
 		sys.stdout.write(f.read())

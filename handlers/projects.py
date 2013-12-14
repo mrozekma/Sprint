@@ -15,7 +15,7 @@ from utils import *
 @get('', statics = 'projects')
 @get('projects', statics = 'projects')
 @get('projects/list', statics = 'projects')
-def projectsList(handler, request):
+def projectsList(handler):
 	undelay(handler)
 
 	print "<div class=\"project-list\">"
@@ -94,7 +94,7 @@ def projectsList(handler, request):
 	print "</div>"
 
 @get('projects/calendar')
-def projectsCalendar(handler, request):
+def projectsCalendar(handler):
 	undelay(handler)
 
 	print "<link href=\"/static/fullcalendar.css\" rel=\"stylesheet\" type=\"text/css\" />"

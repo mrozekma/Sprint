@@ -28,7 +28,7 @@ from utils import *
 from handlers.sprints import tabs as sprintTabs
 
 @get('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)', statics = 'tasks')
-def task(handler, request, ids):
+def task(handler, ids):
 	requirePriv(handler, 'User')
 	Chart.include()
 
@@ -155,7 +155,7 @@ tabs['many'] = '/tasks/new/many?group=%d'
 tabs['import'] = '/tasks/new/import?group=%d'
 
 @get('tasks/new')
-def newTaskGeneric(handler, request, group, assigned = None):
+def newTaskGeneric(handler, group, assigned = None):
 	url = '/tasks/new/single'
 	url += "?group=%s" % group
 	if assigned:
@@ -163,7 +163,7 @@ def newTaskGeneric(handler, request, group, assigned = None):
 	redirect(url)
 
 @get('tasks/new/single', statics = 'tasks-new')
-def newTaskSingle(handler, request, group, assigned = ''):
+def newTaskSingle(handler, group, assigned = ''):
 	handler.title("New Task")
 	requirePriv(handler, 'User')
 	id = int(group)
@@ -230,13 +230,13 @@ def newTaskSingle(handler, request, group, assigned = ''):
 	print "</form>"
 
 @post('tasks/new/single')
-def newTaskPost(handler, request, p_group, p_name, p_goal, p_status, p_hours, p_assigned = []):
+def newTaskPost(handler, p_group, p_name, p_goal, p_status, p_hours, p_assigned = []):
 	def die(msg):
 		print msg
 		done()
 
 	requirePriv(handler, 'User')
-	request['wrappers'] = False
+	handler.wrappers = False
 
 	groupid = to_int(p_group, 'group', die)
 	group = Group.load(groupid)
@@ -273,7 +273,7 @@ def newTaskPost(handler, request, p_group, p_name, p_goal, p_status, p_hours, p_
 	task.assigned += assigned
 	task.save()
 
-	request['code'] = 299
+	handler.responseCode = 299
 	delay(handler, """
 <script type=\"text/javascript\">
 $(document).ready(function() {
@@ -284,7 +284,7 @@ $(document).ready(function() {
 	Event.newTask(handler, task)
 
 @get('tasks/new/many', statics = 'tasks-new')
-def newTaskMany(handler, request, group):
+def newTaskMany(handler, group):
 	handler.title("New Tasks")
 	requirePriv(handler, 'User')
 	id = int(group)
@@ -345,12 +345,12 @@ def newTaskMany(handler, request, group):
 	print "</form>"
 
 @post('tasks/new/many')
-def newTaskMany(handler, request, group, p_body, dryrun = False):
+def newTaskMany(handler, group, p_body, dryrun = False):
 	def die(msg):
 		print msg
 		done()
 
-	request['wrappers'] = False
+	handler.wrappers = False
 	requirePriv(handler, 'User')
 	id = int(group)
 
@@ -443,7 +443,7 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 				tasks[group].append((name, assigned, status, hours))
 
 	if dryrun:
-		request['log'] = False
+		handler.log = False
 		numTasks = sum(len(taskSet) for taskSet in tasks.values())
 		taskHours = sum(hours for taskSet in tasks.values() for name, assigned, status, hours in taskSet)
 		avail = Availability(sprint)
@@ -510,10 +510,10 @@ def newTaskMany(handler, request, group, p_body, dryrun = False):
 			delay(handler, SuccessBox("Added %d %s" % (numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3, fixed = True))
 		else:
 			delay(handler, WarningBox("No changes", close = 3, fixed = True))
-		request['code'] = 299
+		handler.responseCode = 299
 
 @get('tasks/new/import', statics = 'tasks-import')
-def newTaskImport(handler, request, group, source = None):
+def newTaskImport(handler, group, source = None):
 	handler.title("New Tasks")
 	requirePriv(handler, 'User')
 	id = int(group)
@@ -588,7 +588,7 @@ def newTaskImport(handler, request, group, source = None):
 		print "</form><br><br>"
 
 @post('tasks/new/many/upload')
-def newTaskManyUpload(handler, request, group, p_data):
+def newTaskManyUpload(handler, group, p_data):
 	requirePriv(handler, 'User')
 
 	# Vague sanity check that this is actually text, from http://stackoverflow.com/a/7392391/309308
@@ -601,7 +601,7 @@ def newTaskManyUpload(handler, request, group, p_data):
 	redirect("/tasks/new/many?group=%s" % group)
 
 @post('tasks/new/import')
-def newTaskImportPost(handler, request, group, source, p_group, p_name, p_hours, p_assigned, p_included = ''):
+def newTaskImportPost(handler, group, source, p_group, p_name, p_hours, p_assigned, p_included = ''):
 	handler.title("Import Tasks")
 	requirePriv(handler, 'User')
 
@@ -663,7 +663,7 @@ def newTaskImportPost(handler, request, group, source, p_group, p_name, p_hours,
 	redirect("/sprints/%d" % sprint.id)
 
 @get('tasks/distribute', statics = 'tasks-distribute')
-def distribute(handler, request, sprint):
+def distribute(handler, sprint):
 	handler.title('Distribute Tasks')
 	sprintid = int(sprint)
 	sprint = Sprint.load(sprintid)
@@ -717,15 +717,15 @@ def distribute(handler, request, sprint):
 	print "<div class=\"clear\"></div><br><br>"
 
 @post('tasks/distribute/update')
-def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_task = None):
+def distributeUpdate(handler, p_sprint, p_targetUser = None, p_task = None):
 	def die(msg):
 		print toJS({'error': msg})
 		done()
 
 	handler.title("Distribute Tasks")
 	requirePriv(handler, 'Write')
-	request['wrappers'] = False
-	request['contentType'] = 'application/json'
+	handler.wrappers = False
+	handler.contentType = 'application/json'
 
 	sprintid = int(p_sprint)
 	sprint = Sprint.load(sprintid)
@@ -803,10 +803,10 @@ def distributeUpdate(handler, request, p_sprint, p_targetUser = None, p_task = N
 	print toJS(m)
 
 @post('tasks/(?P<taskid>[0-9]+)/notes/new')
-def newNotePost(handler, request, taskid, p_body, dryrun = False):
+def newNotePost(handler, taskid, p_body, dryrun = False):
 	handler.title('New Note')
 	if dryrun:
-		request['wrappers'] = False
+		handler.wrappers = False
 	requirePriv(handler, 'User')
 
 	taskid = int(taskid)
@@ -826,7 +826,7 @@ def newNotePost(handler, request, taskid, p_body, dryrun = False):
 		redirect("/tasks/%d#note%d" % (task.id, note.id))
 
 @post('tasks/(?P<taskid>[0-9]+)/notes/(?P<id>[0-9]+)/modify')
-def newNoteModify(handler, request, taskid, id, p_action):
+def newNoteModify(handler, taskid, id, p_action):
 	handler.title('New Note')
 	requirePriv(handler, 'User')
 
@@ -853,13 +853,13 @@ def newNoteModify(handler, request, taskid, id, p_action):
 	redirect("/tasks/%d" % task.id)
 
 @get('tasks/mine')
-def tasksMine(handler, request):
+def tasksMine(handler):
 	handler.title("My tasks")
 	requirePriv(handler, 'User')
 	redirect("/users/%s/tasks" % handler.session['user'].username)
 
 @get('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)/edit', statics = 'tasks-edit')
-def taskEdit(handler, request, ids):
+def taskEdit(handler, ids):
 	handler.title("Edit tasks")
 	requirePriv(handler, 'Write')
 
@@ -920,7 +920,7 @@ def taskEdit(handler, request, ids):
 	print "</form>"
 
 @post('tasks/(?P<ids>[0-9]+(?:,[0-9]+)*)/edit')
-def taskEditPost(handler, request, ids, p_hours, p_status, p_goal, p_assigned = [], p_include = {}):
+def taskEditPost(handler, ids, p_hours, p_status, p_goal, p_assigned = [], p_include = {}):
 	handler.title("Edit tasks")
 	requirePriv(handler, 'Write')
 

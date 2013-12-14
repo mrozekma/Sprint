@@ -14,7 +14,7 @@ tabs['yours'] = '/search/saved'
 tabs['others'] = '/search/saved/others'
 
 @get('search/saved')
-def searchSaved(handler, request):
+def searchSaved(handler):
 	handler.title('Saved Searches')
 	requirePriv(handler, 'User')
 	print tabs.where('yours')
@@ -43,7 +43,7 @@ def searchSaved(handler, request):
 	newSearchForm()
 
 @get('search/saved/others')
-def searchSavedOthers(handler, request):
+def searchSavedOthers(handler):
 	handler.title('Saved Searches')
 	requirePriv(handler, 'User')
 	print tabs.where('others')
@@ -78,7 +78,7 @@ def searchSavedOthers(handler, request):
 			print "</div>"
 
 @get('search/saved/new')
-def newSavedSearch(handler, request, sprintid = None, name = '', query = ''):
+def newSavedSearch(handler, sprintid = None, name = '', query = ''):
 	handler.title('New Search')
 	requirePriv(handler, 'User')
 	newSearchForm(sprintid, name, query)
@@ -115,19 +115,19 @@ $(document).ready(function() {
 	print "</form>"
 
 @post('search/saved/new')
-def newSavedSearchPost(handler, request, p_name, p_query, p_public = False, p_sprintid = None):
+def newSavedSearchPost(handler, p_name, p_query, p_public = False, p_sprintid = None):
 	# def die(msg):
 		# print msg
 		# done()
 
 	handler.title('New Search')
 	requirePriv(handler, 'User')
-	request['wrappers'] = False
+	handler.wrappers = False
 
 	search = SavedSearch(handler.session['user'].id, p_name, p_query, bool(p_public))
 	search.save()
 
-	request['code'] = 299
+	handler.responseCode = 299
 	delay(handler, SuccessBox("Saved search <b>%s</b>" % search.safe.name, close = 3, fixed = True))
 	if p_sprintid:
 		print "/search/saved/%d/run/%s" % (search.id, p_sprintid)
@@ -135,7 +135,7 @@ def newSavedSearchPost(handler, request, p_name, p_query, p_public = False, p_sp
 		print "/search/saved"
 
 @post('search/saved/(?P<id>[0-9]+)/update')
-def updateSavedSearch(handler, request, id, p_action, p_name, p_query, p_share = False):
+def updateSavedSearch(handler, id, p_action, p_name, p_query, p_share = False):
 	handler.title('Update Search')
 	requirePriv(handler, 'User')
 
@@ -162,7 +162,7 @@ def updateSavedSearch(handler, request, id, p_action, p_name, p_query, p_share =
 	redirect('/search/saved')
 
 @post('search/saved/(?P<id>[0-9]+)/(?P<action>(?:un)?follow)')
-def updateSavedSearch(handler, request, id, action):
+def updateSavedSearch(handler, id, action):
 	handler.title('Update Search')
 	requirePriv(handler, 'User')
 
@@ -188,11 +188,11 @@ def updateSavedSearch(handler, request, id, action):
 	redirect('/search/saved/others')
 
 @get('search/saved/(?P<id>[0-9]+)/run')
-def searchRunActive(handler, request, id):
-	searchRunSprint(handler, request, id, 'active')
+def searchRunActive(handler, id):
+	searchRunSprint(handler, id, 'active')
 
 @get('search/saved/(?P<id>[0-9]+)/run/(?P<sprintid>[0-9]+)')
-def searchRunSprint(handler, request, id, sprintid):
+def searchRunSprint(handler, id, sprintid):
 	handler.title('Run Search')
 	requirePriv(handler, 'User')
 
@@ -205,9 +205,9 @@ def searchRunSprint(handler, request, id, sprintid):
 	redirect("/sprints/%s?search=%s" % (sprintid, search.query))
 
 @get('search/saved/menubox')
-def searchSavedMenubox(handler, request):
-	request['wrappers'] = False
-	request['log'] = False
+def searchSavedMenubox(handler):
+	handler.wrappers = False
+	handler.log = False
 	if not handler.session['user']: return
 
 	yours = [{'name': search.name, 'id': search.id, 'query': search.query} for search in SavedSearch.loadAll(userid = handler.session['user'].id)]

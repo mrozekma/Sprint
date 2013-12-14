@@ -17,7 +17,7 @@ backlogStyles = ['show', 'dim', 'hide']
 messageTypes = [('sprintMembership', "Added to a sprint"), ('taskAssigned', "Assigned a task"), ('noteRelated', "Someone added a note on a task you own or have a note on"), ('noteMention', "Mentioned in a note"), ('priv', "Granted a privilege")]
 
 @get('prefs')
-def prefs(handler, request):
+def prefs(handler):
 	handler.title('Preferences')
 	requirePriv(handler, 'User')
 
@@ -61,12 +61,12 @@ def prefs(handler, request):
 	print "</form>"
 
 @post('prefs')
-def prefsPost(handler, request, p_default_tab, p_backlog_style, p_messages = []):
+def prefsPost(handler, p_default_tab, p_backlog_style, p_messages = []):
 	def die(msg):
 		print msg
 		done()
 
-	request['wrappers'] = False
+	handler.wrappers = False
 
 	if not handler.session['user']:
 		die("You must be logged in to modify preferences")
@@ -83,15 +83,15 @@ def prefsPost(handler, request, p_default_tab, p_backlog_style, p_messages = [])
 	prefs.messages = dict((name, name in p_messages.keys()) for name, desc in messageTypes)
 	prefs.save()
 
-	request['code'] = 299
+	handler.responseCode = 299
 	print "Saved changes"
 	Event.prefs(handler)
 
 @get('prefs/backlog.less')
-def prefsStyle(handler, request):
-	request['wrappers'] = False
-	request['log'] = False
-	request['contentType'] = 'text/css'
+def prefsStyle(handler):
+	handler.wrappers = False
+	handler.log = False
+	handler.contentType = 'text/css'
 	if not handler.session['user']: return
 	prefs = handler.session['user'].getPrefs()
 
