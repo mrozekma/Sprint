@@ -10,7 +10,7 @@ import traceback
 
 from Session import Session, timestamp
 from Box import Box, ErrorBox
-from code import showCode, highlightCode
+from code import showCode
 from ResponseWriter import ResponseWriter
 from FrameworkException import FrameworkException
 from utils import *
@@ -44,6 +44,7 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 		BaseHTTPRequestHandler.__init__(self, request, address, server)
 
 	def buildResponse(self, method, postData):
+		self.handler = None
 		self.method = method
 		writer = ResponseWriter()
 
@@ -70,7 +71,6 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 			path = path[1:]
 			if len(path) and path[-1] == '/': path = path[:-1]
 			path = unquote(path)
-			self.handler = None
 			for pattern in handlers[method]:
 				match = pattern.match(path)
 				if match:
@@ -115,24 +115,7 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 		except Redirect: raise
 		except:
 			writer.start()
-			self.title('Unhandled Error')
-
-			writer2 = ResponseWriter()
-			base = basePath()
-			lpad = len(base) + 1
-			print "<br>"
-			print "<div class=\"code_default light\" style=\"padding: 4px\">"
-			for filename, line, fn, stmt in traceback.extract_tb(sys.exc_info()[2]):
-				print "<div class=\"code_header\">%s:%s(%d)</div>" % (filename[lpad:] if filename.startswith(base) else "<i>%s</i>" % filename.split('/')[-1], fn, line)
-				print "<div style=\"padding: 0px 0px 10px 20px\">"
-				print highlightCode(stmt)
-				print "</div>"
-			print "</div>"
-			# traceback.print_tb(sys.exc_info()[2], None, writer2)
-			ex = writer2.done()
-
-			print Box('Unhandled Error', "<b>%s: %s</b><br>%s" % (sys.exc_info()[0].__name__, sys.exc_info()[1], ex), clr = 'red')
-			showCode(filename, line, 5)
+			self.unhandledError()
 
 		self.response = writer.done()
 		self.requestDone()
@@ -272,3 +255,9 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 		handler['fn'](handler = self, **query)
 
 	def requestDone(self): pass
+
+	def unhandledError(self):
+		self.title('Unhandled Error')
+		print Box('Unhandled Error', formatException(), clr = 'red')
+		filename, line, fn, stmt = traceback.extract_tb(sys.exc_info()[2])[-1]
+		showCode(filename, line, 5)

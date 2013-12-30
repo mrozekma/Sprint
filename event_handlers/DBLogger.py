@@ -7,6 +7,9 @@ class DBLogger(EventHandler):
 		# Logged in HTTPHandler
 		pass
 
+	def error(self, handler, description):
+		log(handler, 'error', description)
+
 	def login(self, handler, user, success, text = None):
 		log(handler, 'user.login', "Login %s for user %s%s" % ('succeeded' if success else 'failed', user.username if user else '(none)', (": %s" % text) if text else ''))
 

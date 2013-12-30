@@ -1,5 +1,6 @@
 from datetime import datetime
 from os.path import isfile
+import traceback
 
 from wrappers import header, footer
 from DB import db
@@ -82,6 +83,10 @@ class HTTPHandler(ParentHandler):
 	def title(self, title):
 		self.replace('$title$', "%s - Sprint" % title if title else "Sprint", 1)
 		self.replace('$bodytitle$', title if title else "Sprint", 1)
+
+	def unhandledError(self):
+		super(HTTPHandler, self).unhandledError()
+		Event.error(self, "<div style=\"white-space: normal\">%s</div>" % formatException())
 
 # Handlers
 # import index

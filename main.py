@@ -33,6 +33,7 @@ Cron.start()
 
 # addEventHandler(DebugLogger.DebugLogger())
 addEventHandler(DBLogger.DBLogger())
+addEventHandler(ErrorCounter.errorCounter)
 addEventHandler(MessageDispatcher.MessageDispatcher())
 if settings.redis:
 	host, port = settings.redis.split(':', 1)

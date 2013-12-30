@@ -29,6 +29,7 @@ from LoadValues import getLoadtime, setDevMode
 from Log import LogEntry, log
 from Settings import settings
 from Event import Event
+from event_handlers.ErrorCounter import errorCounter
 from relativeDates import timesince
 from utils import *
 
@@ -741,7 +742,7 @@ def adminUnimpersonatePost(handler):
 		del handler.session['impersonator']
 		Event.impersonate(handler, None)
 
-@admin('admin/log', 'Log', 'log')
+@admin('admin/log', 'Log', 'log', statics = 'admin-log')
 def adminLog(handler, page = 1, users = None, types = None):
 	PAGE_LEN = 100
 	PAGINATION_BOXES = 12
@@ -755,6 +756,8 @@ def adminLog(handler, page = 1, users = None, types = None):
 		# ErrorBox.die("Unrecognized user ID(s)")
 
 	types = [str(type) for type in types] if types else LogEntry.getTypes()
+	if 'error' in types:
+		errorCounter.reset()
 
 	entries = filter(lambda entry: entry.user in users and entry.type in types, entries)
 	page = int(page)

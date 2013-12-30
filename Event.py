@@ -1,7 +1,7 @@
 from utils import *
 
 TYPES = [
-	'pageHandle',
+	'pageHandle', 'error',
 	'login', 'passwordReset', 'tfa', 'prefs',
 	'newSprint', 'sprintInfoUpdate', 'sprintAvailUpdate',
 	'newGroup', 'renameGroup', 'deleteGroup',
@@ -48,6 +48,7 @@ map(_, TYPES)
 """
 class EventHandlerTemplate(EventHandler):
 	def pageHandle(self, handler, fn):
+	def error(self, handler, description):
 	def login(self, handler, user, success, text = None):
 	def passwordReset(self, handler, user):
 	def tfa(self, handler, user):
