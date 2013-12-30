@@ -181,10 +181,12 @@ def newTaskSingle(handler, group, assigned = ''):
 	elif not sprint.canEdit(handler.session['user']):
 		ErrorBox.die("Permission denied", "You don't have permission to modify this sprint")
 
-	# name, assigned, hours, status, sprint, group
-
 	print "<script type=\"text/javascript\">"
-	print "next_url = '/sprints/%d#group%d';" % (group.sprint.id, group.id)
+	nextURL = "/sprints/%d" % group.sprint.id
+	if assigned:
+		nextURL += "?search=assigned:%s" % ','.join(assigned)
+	nextURL += "#group%d" % group.id
+	print "next_url = %s;" % toJS(nextURL)
 	print "</script>"
 
 	print InfoBox('', id = 'post-status', close = True)
