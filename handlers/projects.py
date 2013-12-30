@@ -71,6 +71,8 @@ def projectsList(handler):
 					print "</div><br>"
 					for tab in sprintTabs().group('').values():
 						print "<a href=\"%s\">%s</a>" % (tab.getPath(sprint.id), tab.getDisplayName().lower())
+					if handler.session['user'] in sprint.members:
+						print "<a href=\"/sprints/%d?search=assigned:me\">your tasks</a>" % sprint.id
 					print "</div>"
 				else:
 					print "<div class=\"sprint-summary\">%s <span class=\"sprint-time\">(%s - %s)</span></div>" % (sprint.link(handler.session['user']), sprint.getStartStr(), sprint.getEndStr())
