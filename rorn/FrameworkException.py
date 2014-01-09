@@ -34,7 +34,7 @@ div.details {
 
 		print "<div class=\"error\">"
 		print "<b>Unexpected framework exception caught in rorn before action dispatching:</b><br>"
-		print "<div class=\"details\">%s: %s</div>" % (self.exc[0].__name__, self.exc[1])
+		print "<div class=\"details\">%s: %s</div>" % (self.exc[0].__name__, str(self.exc[1]).replace('\n', '<br>'))
 
 		tb = self.exc[2]
 		try:

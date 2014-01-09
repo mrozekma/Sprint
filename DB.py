@@ -4,6 +4,7 @@ from os import listdir
 from os.path import isdir, isfile, splitext
 from threading import Thread
 from datetime import datetime, timedelta
+import sys
 from time import sleep
 from StringIO import StringIO
 
@@ -89,10 +90,14 @@ class DB:
 
 	@synchronized('db')
 	def cursor(self, expr = None, *args):
+		try:
 			cur = self.conn.cursor()
 			if expr:
 				cur.execute(expr, args)
 			return cur
+		except Exception:
+			ex_type, e, tb = sys.exc_info()
+			raise DBError("Unable to execute query [%s] with arguments: %s\n%s: %s" % (stripTags(expr), ' '.join("[%s]:%s" % (stripTags(arg), stripTags(type(arg).__name__)) for arg in args), ex_type.__name__, e)), None, tb
 
 	@synchronized('db')
 	def selectRow(self, expr, *args):
@@ -106,7 +111,7 @@ class DB:
 		self.counts['select'] += 1
 		self.counts['total'] += 1
 		for row in self.selectRow(expr, *args):
-			yield dict([(k, row[k]) for k in row.keys()])
+			yield {k: row[k] for k in row.keys()}
 
 	@synchronized('db')
 	def matches(self, expr, *args):

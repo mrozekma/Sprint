@@ -7,7 +7,7 @@ import traceback
 def stripTags(value):
     # "Return the given HTML with all tags stripped."
     # return re.sub(r'<[^>]*?>', '', value)
-	return value.replace("<", "&lt;")
+	return str(value).replace("<", "&lt;")
 
 class DoneRendering(Exception): pass
 def done():
@@ -43,13 +43,14 @@ def basePath():
 def formatException():
 	from code import highlightCode
 	from ResponseWriter import ResponseWriter
+	type, e, tb = sys.exc_info()
 
 	writer = ResponseWriter()
 	base = basePath()
 	lpad = len(base) + 1
-	print "<b>%s: %s</b><br><br>" % (sys.exc_info()[0].__name__, sys.exc_info()[1])
+	print "<b>%s: %s</b><br><br>" % (type.__name__, str(e).replace('\n', '<br>'))
 	print "<div class=\"code_default light\" style=\"padding: 4px\">"
-	for filename, line, fn, stmt in traceback.extract_tb(sys.exc_info()[2]):
+	for filename, line, fn, stmt in traceback.extract_tb(tb):
 		print "<div class=\"code_header\">%s:%s(%d)</div>" % (filename[lpad:] if filename.startswith(base) else "<i>%s</i>" % filename.split('/')[-1], fn, line)
 		print "<div style=\"padding: 0px 0px 10px 20px\">"
 		print highlightCode(stmt)
