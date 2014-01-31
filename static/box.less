@@ -74,6 +74,13 @@
 	.typed(login);
 }
 
+// Special case error boxes within alert messages so they look alright
+.alert-message .box, .alert-message .box div {
+	margin-top: 0px;
+	line-height: normal;
+	text-shadow: none;
+}
+
 // Syntax is a bit odd; I named the class and the mixin the same
 .rounded {
 	.rounded;
