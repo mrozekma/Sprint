@@ -7,7 +7,7 @@ TYPES = [
 	'newGroup', 'renameGroup', 'deleteGroup',
 	'newTask', 'taskUpdate',
 	'newNote', 'deleteNote',
-	'admin', 'adminSettings', 'genResetKey', 'impersonate', 'newUser', 'grantPrivilege', 'revokePrivilege', 'newProject', 'repl', 'mockTime', 'cron'
+	'admin', 'adminSettings', 'genResetKey', 'impersonate', 'newUser', 'grantPrivilege', 'revokePrivilege', 'newProject', 'repl', 'mockTime', 'cron', 'restart'
 ]
 
 handlers = []
@@ -73,4 +73,5 @@ class EventHandlerTemplate(EventHandler):
 	def repl(self, handler, code):
 	def mockTime(self, handler, effectiveTime, delta):
 	def cron(self, handler, name):
+	def restart(self, handler):
 """

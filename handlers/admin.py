@@ -24,7 +24,7 @@ from User import User, USERNAME_PATTERN
 from Button import Button
 from Table import LRTable
 from Cron import Cron
-from LoadValues import getLoadtime, setDevMode
+from LoadValues import getLoadtime, setDevMode, brick
 from Log import LogEntry, log
 from Settings import settings
 from Event import Event
@@ -60,6 +60,9 @@ def adminInfo(handler):
 	print "Started %s<br>" % loadTime
 	print "Up for %s<br>" % timesince(loadTime)
 	print "Total requests: %d<br>" % server().getTotalRequests()
+	print "<form method=\"post\" action=\"/admin/restart\">"
+	print Button('Restart', type = 'submit').negative()
+	print "</form>"
 
 	print "<h3>Threads</h3>"
 	print "<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\">"
@@ -83,6 +86,19 @@ def adminInfo(handler):
 	print "</table>"
 
 	print "</div><br><br>"
+
+@post('admin/restart', statics = ['admin', 'admin-restart'])
+def adminRestart(handler, now = False):
+	handler.title('Restart')
+	requireAdmin(handler)
+
+	if now:
+		# This is a POST, so we've already blocked other requests and it's safe to restart
+		Event.restart(handler)
+		brick("Restart triggered by %s" % handler.session['user'].username) # This string is checked for in main
+		server().stop()
+	else:
+		print "<img src=\"/static/images/loading.gif\">&nbsp;Restarting..."
 
 @admin('admin/test', 'Test pages', 'test-pages')
 def adminTest(handler):
@@ -813,7 +829,7 @@ def adminLog(handler, page = 1, users = None, types = None):
 		print "<div>"
 		print "<b><span class=\"label logtype-%s\">%s</span> at %s</b><br>" % (entry.type.split('.')[0], entry.type, entry.location)
 		print "%s by %s<br>" % (tsToDate(entry.timestamp), "%s (%s)" % (entry.user.username, entry.ip) if entry.user else entry.ip)
-		print "<pre>%s</pre>" % entry.text
+		print "<pre>%s</pre>" % (entry.text or '&nbsp;')
 		print "</div>"
 		print "</div>"
 		print "<div class=\"clear\"></div>"

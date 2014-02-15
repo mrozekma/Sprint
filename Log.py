@@ -40,9 +40,9 @@ class LogEntry(ActiveRecord):
 
 	@classmethod
 	def getTypes(cls):
-		return set(entry['type'] for entry in db()['log'].values())
+		return sorted(list(set(entry['type'] for entry in db()['log'].values())))
 
-def log(handler, type, fmt, *args):
+def log(handler, type, fmt = '', *args):
 	str = fmt
 	if args:
 		str %= args

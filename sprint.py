@@ -2,10 +2,12 @@
 import Update
 
 from datetime import datetime
+import errno
 import os
 from os.path import abspath, dirname
 from resource import getrlimit, RLIMIT_NOFILE, RLIM_INFINITY
 import signal
+import socket
 import sys
 from threading import currentThread
 
@@ -27,6 +29,7 @@ def cacheLog(table):
 	sys.__stdout__.write("[%s] [%s] %s\n" % (datetime.now().replace(microsecond = 0), 'stasis', "Backfilling table: %s" % table))
 setDB(DiskMap(dbFilename, cache = True, nocache = ['log', 'sessions'], cacheNotifyFn = cacheLog))
 
+from LoadValues import bricked
 from Log import console
 from Cron import Cron
 from HTTPServer import server as getServer, ServerError
@@ -88,9 +91,17 @@ if pidFile:
 	with open(pidFile, 'w') as f:
 		f.write("%d\n" % os.getpid())
 
+restart = False
+
 try:
 	console('rorn', 'Listening for connections')
-	server.serve_forever()
+	try:
+		server.serve_forever()
+	except socket.error, e:
+		if e.errno == errno.EBADF and (bricked() or '').startswith('Restart'):
+			restart = True
+		else:
+			raise
 except KeyboardInterrupt:
 	sys.__stdout__.write("\n\n")
 	console('main', 'Exiting at user request')
@@ -104,4 +115,8 @@ server.server_close()
 if pidFile:
 	os.remove(pidFile)
 
-console('main', 'Done')
+if restart:
+	console('main', 'Restarting')
+	os.execl(sys.executable, sys.executable, *sys.argv)
+else:
+	console('main', 'Done')

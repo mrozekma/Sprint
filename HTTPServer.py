@@ -40,6 +40,9 @@ class HTTPServer(ParentServer):
 		self.currentRequests.dec()
 		super(HTTPServer, self).close_request(request)
 
+	def stop(self):
+		self.socket.close()
+
 	def getTotalRequests(self):
 		return self.totalRequests
 

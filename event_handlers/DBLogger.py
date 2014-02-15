@@ -131,3 +131,6 @@ class DBLogger(EventHandler):
 
 	def cron(self, handler, name):
 		log(handler, 'admin.cron.run', "Ran cron job: %s" % name)
+
+	def restart(self, handler):
+		log(handler, 'admin.restart')
