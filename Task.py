@@ -1,12 +1,16 @@
-from utils import *
-from DB import ActiveRecord, db
+from inspect import getmembers
+from datetime import datetime, date
+
 from User import User
 from Project import Project
 from Sprint import Sprint
 from Group import Group
 from Goal import Goal
-from inspect import getmembers
-from datetime import datetime, date
+from utils import *
+
+from stasis.Singleton import get as db
+from stasis.ActiveRecord import ActiveRecord, link
+from stasis.StasisError import StasisError
 
 class Status(object):
 	def getIcon(self): return "/static/images/status-%s.png" % self.name.replace(' ', '-')
@@ -49,16 +53,17 @@ def getStatuses(tag = None):
 	return [name for (name, status) in statuses.iteritems() if tag in status.tags] if tag else [name for block in statusMenu for name in block]
 
 class Task(ActiveRecord):
-	sprint = ActiveRecord.idObjLink(Sprint, 'sprintid')
-	creator = ActiveRecord.idObjLink(User, 'creatorid')
-	group = ActiveRecord.idObjLink(Group, 'groupid')
-	goal = ActiveRecord.idObjLink(Goal, 'goalid')
+	sprint = link(Sprint, 'sprintid')
+	creator = link(User, 'creatorid')
+	group = link(Group, 'groupid')
+	goal = link(Goal, 'goalid')
+	assigned = link(User, 'assignedids')
 
 	def getStatus(self): return statuses[self.status]
 	def setStatus(self, stat): self.status = stat.name
 	stat = property(getStatus, setStatus)
 
-	def __init__(self, groupid, sprintid, creatorid, goalid, name, status, hours, seq = None, timestamp = None, deleted = 0, revision = 1, id = None):
+	def __init__(self, groupid, sprintid, creatorid, goalid, name, status, hours, assignedids = set(), seq = None, timestamp = None, deleted = 0, revision = 1, id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.revision = revision
@@ -69,36 +74,36 @@ class Task(ActiveRecord):
 		self.name = name
 		self.status = status
 		self.hours = hours
+		self.assignedids = assignedids
 		self.timestamp = timestamp if timestamp else max(dateToTs(getNow()), self.sprint.start)
 		self.seq = seq if seq else maxOr(task.seq for task in self.group.getTasks())+1
 		self.deleted = deleted
-		self.assigned = ActiveRecord.loadLink(self, 'assigned', [('taskid', self.id), ('revision', self.revision)], User, 'userid')
 
 	def __str__(self):
 		return self.safe.name
 
 	def getRevision(self, revision):
-		rows = db().select("SELECT * FROM %s WHERE id = ? AND revision = ? LIMIT 1" % Task.table(), self.id, revision)
-		rows = [x for x in rows]
-		return Task(**rows[0]) if len(rows) > 0 else None
+		data = db()['tasks'][self.id]
+		return Task(**data[revision]) if revision < len(data) else None
 
 	def getRevisions(self):
-		rows = db().select("SELECT * FROM %s WHERE id = ? ORDER BY revision" % Task.table(), self.id)
-		return map(lambda x: Task(**x), rows)
+		data = db()['tasks'][self.id]
+		return map(lambda x: Task(**x), data)
 
 	# This returns the revision at the end of the specified day
 	def getRevisionAt(self, date):
 		timestamp = tsEnd(dateToTs(date))
-		rows = db().select("SELECT * FROM %s WHERE id = ? AND timestamp <= ? ORDER BY revision DESC LIMIT 1" % Task.table(), self.id, timestamp)
-		rows = [x for x in rows]
-		return Task(**rows[0]) if len(rows) > 0 else None
+		for rev in reversed(self.getRevisions()):
+			if rev.timestamp <= timestamp:
+				return rev
+		return None
 
 	def getStartRevision(self, includeAfterPlanning = True):
 		return self.getRevisionAt(tsToDate(self.sprint.start)) or (self.getRevision(1) if includeAfterPlanning else None)
 
 	def getNotes(self):
 		from Note import Note
-		return Note.loadAll(taskid = self.id, orderby = 'timestamp ASC')
+		return Note.loadAll(taskid = self.id, orderby = 'timestamp')
 
 	def manHours(self):
 		return self.hours * len(self.assigned)
@@ -125,39 +130,44 @@ class Task(ActiveRecord):
 	### ActiveRecord methods
 
 	@classmethod
-	def load(cls, *id, **attrs):
-		if len(id): # Searching by id
-			if len(id) != 1:
-				raise ArgumentMismatchError
-			cur = db().cursor("SELECT * FROM %s WHERE id = ? ORDER BY revision DESC LIMIT 1" % cls.table(), id[0])
-		else: # Searching by attributes
-			placeholders = ["%s = ?" % k for k in attrs.keys()]
-			vals = attrs.values()
-			cur = db().cursor("SELECT * FROM %s WHERE %s ORDER BY revision DESC LIMIT 1" % (cls.table(), ' AND '.join(placeholders)), *vals)
-
-		row = cur.fetchone()
-		cur.close()
-		if row: # Checking in case rowcount == -1 (unsupported)
-			return cls(**row)
-		else:
-			return None
+	def loadDataFilter(cls, data, **attrs):
+		rev = attrs['revision'] - 1 if 'revision' in attrs else -1
+		return data[rev] if rev < len(data) else None
 
 	@classmethod
-	def loadAll(cls, orderby = None, **attrs):
-		return super(Task, cls).loadAll(groupby = 'id', orderby = orderby, **attrs)
+	def saveDataFilter(cls, data):
+		if data['id']:
+			if data['id'] not in db()['tasks']:
+				return [data]
+			rev = data['revision'] - 1
+			revs = db()['tasks'][data['id']]
+			if rev < len(revs):
+				revs[rev] = data
+			elif rev == len(revs):
+				revs.append(data)
+			else:
+				raise StasisError("Invalid revision %d for task %d" % (data['revision'], data['id']))
+			return revs
+		else:
+			if data['revision'] != 1:
+				raise StasisError("Invalid first revision (%d)" % data['revision'])
+			return [data]
 
 	def save(self):
-		if not self.id:
-			# Pre-insert since tasks.id isn't autoincrementing
-			rows = db().select("SELECT MAX(id) FROM tasks");
-			rows = [x for x in rows]
-			self.id = (rows[0]['MAX(id)'] or 0) + 1
-			db().update("INSERT INTO tasks(id, revision, seq) VALUES(?, ?, ?)", self.id, 1, self.seq)
+		#DEBUG #NO
+		if not isinstance(self.assignedids, (set, frozenset)):
+			raise RuntimeError("Broken type (%s)" % type(self.assignedids).__name__)
+		if not isinstance(self.assigned, (set, frozenset)):
+			raise RuntimeError("Broken type (%s)" % type(self.assigned).__name__)
 
+		if not self.id:
 			# Shift everything after this sequence
-			db().update("UPDATE tasks SET seq = seq + 1 WHERE groupid = ? AND seq >= ?", self.groupid, self.seq)
-		ActiveRecord.save(self, pks = ['id', 'revision'])
-		ActiveRecord.saveLink(self, self.assigned, 'assigned', [('taskid', self.id), ('revision', self.revision)], User, 'userid')
+			for id, task in db()['tasks'].iteritems():
+				rev = task[-1]
+				if rev['groupid'] == self.groupid and rev['seq'] >= self.seq:
+					with db()['tasks'].change(id) as data:
+						data[-1]['seq'] += 1
+		return ActiveRecord.save(self)
 
 	def move(self, newPred, newGroup):
 		# newPred = None means move to the top of newGroup
@@ -171,42 +181,36 @@ class Task(ActiveRecord):
 			raise ValueError("Neither predecessor nor group specified")
 
 		# Remove from current group (shift all later tasks up)
-		db().update("UPDATE tasks SET seq = seq - 1 WHERE groupid = ? AND seq > ?", self.groupid, self.seq)
+		for id, task in db()['tasks'].iteritems():
+			rev = task[-1]
+			if rev['groupid'] == self.groupid and rev['seq'] > self.seq:
+				with db()['tasks'].change(id) as data:
+					for rev in data:
+						rev['seq'] -= 1
 
 		# Switch group (for all revisions)
 		if(self.group != newGroup):
 			self.group = newGroup
-			db().update("UPDATE tasks SET groupid = ? WHERE id = ?", self.groupid, self.id)
+			with db()['tasks'].change(self.id) as data:
+				for rev in data:
+					rev['groupid'] = self.groupid
 
 		# Add to new group (shift all later tasks down)
 		# Reload newPred in case its sequence has changed
 		self.seq = Task.load(newPred.id).seq + 1 if newPred else 1
-		db().update("UPDATE tasks SET seq = seq + 1 WHERE groupid = ? AND seq >= ?", self.groupid, self.seq)
-		db().update("UPDATE tasks SET seq = ? WHERE id = ?", self.seq, self.id)
-
-
-	# @classmethod
-	# def loadAll(cls, **attrs):
-		# if len(attrs):
-			# placeholders = ["%s = ?" % k for k in attrs.keys()]
-			# vals = attrs.values()
-			# rows = db().select("SELECT * FROM %s WHERE %s GROUP BY id" % (cls.table(), ' AND '.join(placeholders)), *vals)
-		# else:
-			# rows = db().select("SELECT * FROM %s GROUP BY id" % cls.table())
-		# return map(lambda x: cls(**x), rows)
+		for id, task in db()['tasks'].iteritems():
+			rev = task[-1]
+			if rev['groupid'] == self.groupid and rev['seq'] >= self.seq:
+				with db()['tasks'].change(id) as data:
+					for rev in data:
+						rev['seq'] += 1
+		with db()['tasks'].change(self.id) as data:
+			for rev in data:
+				rev['seq'] = self.seq
 
 	def revise(self):
-		cls = self.__class__
-
 		self.revision += 1 # Bump the revision number
-
-		fields = [x for x in set(cls.fields())]
-		vals = dict(getmembers(self))
-		boundArgs = [vals[k] for k in fields]
-
-		placeholders = ', '.join(map(lambda x: "?", fields))
-		db().update("INSERT INTO %s(%s) VALUES(%s)" % (cls.table(), ', '.join(fields), placeholders), *boundArgs)
-		ActiveRecord.saveLink(self, self.assigned, 'assigned', [('taskid', self.id), ('revision', self.revision)], User, 'userid')
+		self.save()
 
 	def saveRevision(self, author):
 		self.creator = author

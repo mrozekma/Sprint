@@ -3,12 +3,14 @@ import traceback
 import datetime
 from math import ceil
 
-from DB import ActiveRecord, db
 from User import User
 from utils import *
 
+from stasis.Singleton import get as db
+from stasis.ActiveRecord import ActiveRecord, link
+
 class LogEntry(ActiveRecord):
-	user = ActiveRecord.idObjLink(User, 'userid')
+	user = link(User, 'userid')
 
 	def __init__(self, type, text, userid = None, ip = None, timestamp = None, location = 0, id = None):
 		ActiveRecord.__init__(self)
@@ -38,8 +40,7 @@ class LogEntry(ActiveRecord):
 
 	@classmethod
 	def getTypes(cls):
-		rows = db().select("SELECT type FROM log GROUP BY type ORDER BY type ASC");
-		return [row['type'] for row in rows]
+		return set(entry['type'] for entry in db()['log'].values())
 
 def log(handler, type, fmt, *args):
 	str = fmt

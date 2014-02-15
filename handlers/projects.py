@@ -25,7 +25,9 @@ def projectsList(handler):
 	for project in Project.getAllSorted(handler.session['user']):
 		sprints = project.getSprints()
 		active, inactive = partition(lambda sprint: sprint.isActive() or sprint.isPlanning(), reversed(sprints))
-		activeMembers = set(sum((sprint.members for sprint in active), []))
+		activeMembers = set()
+		for sprint in active:
+			activeMembers |= sprint.members
 		isTest = project.id < 0
 
 		classes = ['project-summary']

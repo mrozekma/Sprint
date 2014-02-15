@@ -1,57 +1,38 @@
 from utils import *
-from DB import ActiveRecord, db
 from Project import Project
 from Sprint import Sprint
 from Task import statuses, statusMenu
 from User import User
 from handlers.sprints import tabs as sprintTabs
 
+from rorn.ResponseWriter import ResponseWriter
+from stasis.ActiveRecord import ActiveRecord, link
+
 class Prefs(ActiveRecord):
-	user = ActiveRecord.idObjLink(User, 'userid')
+	user = link(User, 'id')
 
-	def __init__(self, userid, defaultSprintTab, id = None):
+	def __init__(self, id, defaultSprintTab, backlogStyles, messages):
 		ActiveRecord.__init__(self)
-		self.id = id
-		self.userid = userid
+		self.id = id # Same as the parent user's ID
 		self.defaultSprintTab = defaultSprintTab
-
-		self.backlogStyles = {}
-		for row in db().select("SELECT status, style FROM prefs_backlog_styles WHERE userid = ?", self.userid):
-			self.backlogStyles[row['status']] = row['style']
-
-		self.messages = {}
-		for row in db().select("SELECT type, enabled FROM prefs_messages WHERE userid = ?", self.userid):
-			self.messages[row['type']] = not not row['enabled']
+		self.backlogStyles = backlogStyles
+		self.messages = messages
 
 	def getLogString(self):
-		return "default sprint tab: %s\nbacklog styles: %s" % (self.defaultSprintTab, ', '.join("%s: %s" % (k, v) for k, v in self.backlogStyles.iteritems()))
-
-	@staticmethod
-	def create(user, defaultSprintTab, backlogStyles, messages):
-		rtn = Prefs(user.id, defaultSprintTab)
-		rtn.backlogStyles = backlogStyles
-		rtn.messages = messages
-		return rtn
-
-	def save(self):
-		for status, style in self.backlogStyles.iteritems():
-			if self.id:
-				db().update("UPDATE prefs_backlog_styles SET style = ? WHERE userid = ? AND status = ?", style, self.userid, status)
-			else:
-				db().update("INSERT INTO prefs_backlog_styles(userid, status, style) VALUES(?, ?, ?)", self.userid, status, style)
-
-		for type, enabled in self.messages.iteritems():
-			if self.id:
-				db().update("UPDATE prefs_messages SET enabled = ? WHERE userid = ? AND type = ?", enabled, self.userid, type)
-			else:
-				db().update("INSERT INTO prefs_messages(userid, type, enabled) VALUES(?, ?, ?)", self.userid, type, enabled)
-
-		ActiveRecord.save(self)
+		writer = ResponseWriter()
+		print "default sprint tab: %s" % self.defaultSprintTab
+		print "backlog styles:"
+		for k, v in self.backlogStyles.iteritems():
+			print "  %s: %s" % (k, v)
+		print "messages:"
+		for k, v in self.messages.iteritems():
+			print "  %s: %s" % (k, v)
+		return writer.done()
 
 	@classmethod
 	def table(cls):
-		return 'Prefs'
+		return 'prefs'
 
 	@staticmethod
 	def getDefaults(user):
-		return Prefs.create(user, 'backlog', dict((name, 'show') for block in statusMenu for name in block), {'sprintMembership': False, 'taskAssigned': False, 'noteMention': True, 'noteRelated': True, 'priv': True})
+		return Prefs(user.id, 'backlog', {name: 'show' for block in statusMenu for name in block}, {'sprintMembership': False, 'taskAssigned': False, 'noteMention': True, 'noteRelated': True, 'priv': True})

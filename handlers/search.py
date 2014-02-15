@@ -65,7 +65,7 @@ def searchSavedOthers(handler):
 			print "<h2>%s<small><img class=\"bumpdown\" src=\"%s\">&nbsp;%s</small></h2>" % (search.safe.name, search.user.getAvatar(16), search.user.username)
 			print "<code>%s</code><br><br>" % search.safe.query
 
-			following = search.following(handler.session['user'])
+			following = handler.session['user'] in search.followers
 			print "<form method=\"post\" action=\"/search/saved/%d/%s\">" % (search.id, 'unfollow' if following else 'follow')
 			print Button('Run', url = "/search/saved/%d/run" % search.id)
 			btn = Button('Unfollow' if following else 'Follow', type = 'submit')
@@ -195,6 +195,7 @@ def searchRunActive(handler, id):
 def searchRunSprint(handler, id, sprintid):
 	handler.title('Run Search')
 	requirePriv(handler, 'User')
+	id = int(id)
 
 	search = SavedSearch.load(id)
 	if not search:
@@ -211,7 +212,7 @@ def searchSavedMenubox(handler):
 	if not handler.session['user']: return
 
 	yours = [{'name': search.name, 'id': search.id, 'query': search.query} for search in SavedSearch.loadAll(userid = handler.session['user'].id)]
-	others = [{'name': search.name, 'id': search.id, 'query': search.query, 'username': search.user.username, 'gravatar': search.user.getAvatar(16)} for search in SavedSearch.loadAll(public = True) if search.following(handler.session['user'])]
+	others = [{'name': search.name, 'id': search.id, 'query': search.query, 'username': search.user.username, 'gravatar': search.user.getAvatar(16)} for search in SavedSearch.loadAll(public = True) if handler.session['user'] in search.followers]
 	otherTotal = len(filter(lambda search: search.user != handler.session['user'], SavedSearch.loadAll(public = True)))
 
 	print toJS({'yours': yours, 'others': others, 'otherTotal': otherTotal})

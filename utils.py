@@ -85,10 +85,21 @@ class Weekday:
 		return day
 
 def to_int(val, name, error_handler):
-	try:
-		return int(val)
-	except ValueError:
-		error_handler("Expected %s to be an integer; was `%s'" % (stripTags(name), stripTags(val)))
+	if isinstance(val, list):
+		try:
+			return [int(subval) for subval in val]
+		except ValueError:
+			error_handler("Expected %s element to be an integer; was `%s'" % (stripTags(name), stripTags(subval)))
+	elif isinstance(val, set):
+		try:
+			return set(int(subval) for subval in val)
+		except ValueError:
+			error_handler("Expected %s element to be an integer; was `%s'" % (stripTags(name), stripTags(subval)))
+	else:
+		try:
+			return int(val)
+		except ValueError:
+			error_handler("Expected %s to be an integer; was `%s'" % (stripTags(name), stripTags(val)))
 
 def to_bool(val):
 	return val in [True, 'true', 1]

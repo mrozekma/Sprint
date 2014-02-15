@@ -1,36 +1,23 @@
 from utils import *
-from DB import ActiveRecord, db
+from stasis.Singleton import get as db
 
 PORT = 8081
 
-class Setting(ActiveRecord):
-	def __init__(self, name, value, id = None):
-		ActiveRecord.__init__(self)
-		self.id = id
-		self.name = name
-		self.value = value
-
 class Settings:
-	def _get(self, name):
-		rtn = Setting.load(name = name)
-		if rtn:
-			return rtn
-		raise IndexError("Unrecognized setting name: %s" % name)
+	def keys(self):
+		return db()['settings'].keys()
 
 	def items(self):
-		return [(setting.name, setting.value) for setting in Setting.loadAll()]
-
-	def keys(self):
-		return [name for name, value in self.items()]
+		return db()['settings'].all().items()
 
 	def __iter__(self):
 		return self.keys().__iter__
 
 	def __len__(self):
-		return len(self.items())
+		return len(self.keys())
 
 	def __contains__(self, item):
-		return item in self.keys()
+		return item in db()['settings']
 
 	def __getattr__(self, name):
 		return self[name] if name in self else None
@@ -39,18 +26,13 @@ class Settings:
 		self[name] = value
 
 	def __getitem__(self, name):
-		return self._get(name).value
+		return db()['settings'][name]
 
 	def __setitem__(self, name, value):
-		try:
-			item = self._get(name)
-			item.value = value
-		except IndexError:
-			item = Setting(name, value)
-		item.save()
+		db()['settings'][name] = value
 
 	def __delitem__(self, name):
-		self._get(name).delete()
+		del db()['settings'][name]
 
 	def __str__(self):
 		return "\n".join("%s: %s" % i for i in self.items())

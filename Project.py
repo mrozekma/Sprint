@@ -1,9 +1,9 @@
-from rorn.ResponseWriter import ResponseWriter
-
-from DB import ActiveRecord, db
 from LoadValues import isDevMode
 from User import User
 from utils import stripTags
+
+from rorn.ResponseWriter import ResponseWriter
+from stasis.ActiveRecord import ActiveRecord
 
 class Project(ActiveRecord):
 	# Test projects have negative IDs
@@ -13,6 +13,7 @@ class Project(ActiveRecord):
 		self.name = name
 
 	def getSprints(self):
+		from Sprint import Sprint
 		return Sprint.loadAll(projectid = self.id)
 
 	def getMembers(self):
@@ -25,12 +26,12 @@ class Project(ActiveRecord):
 		return "<img src=\"/static/images/project.png\" class=\"project\"><a href=\"/projects/?id=%d\">%s</a>" % (self.id, self.safe.name)
 
 	@classmethod
-	def loadAll(cls, orderby = None, **attrs):
-		return filter(lambda project: project.id > 0, super(Project, cls).loadAll(orderby = orderby, **attrs))
+	def loadAll(cls, **attrs):
+		return filter(lambda project: project.id > 0, super(Project, cls).loadAll(**attrs))
 
 	@classmethod
-	def loadAllTest(cls, orderby = None, **attrs):
-		return filter(lambda project: project.id < 0, super(Project, cls).loadAll(orderby = orderby, **attrs))
+	def loadAllTest(cls, **attrs):
+		return filter(lambda project: project.id < 0, super(Project, cls).loadAll(**attrs))
 
 	@staticmethod
 	def getAllSorted(user = None, firstProject = None):
@@ -46,7 +47,9 @@ class Project(ActiveRecord):
 				return 0
 			sprints = project.getSprints()
 			activeSprints = filter(lambda sprint: sprint.isActive(), sprints)
-			activeMembers = set(sum((sprint.members for sprint in activeSprints), []))
+			activeMembers = set()
+			for sprint in activeSprints:
+				activeMembers |= sprint.members
 			if user and user in activeMembers:
 				return 1
 			if activeSprints:
@@ -59,5 +62,3 @@ class Project(ActiveRecord):
 			projects += Project.loadAllTest()
 
 		return projects
-
-from Sprint import Sprint

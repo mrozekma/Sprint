@@ -48,7 +48,7 @@ def task(handler, ids):
 				print "<h%d>%s</h%d>" % (level, text, level)
 	else: # Many IDs
 		ids = map(int, uniq(ids.split(',')))
-		tasks = dict((id, Task.load(id)) for id in ids)
+		tasks = {id: Task.load(id) for id in ids}
 		handler.title("Task Information")
 
 		if not all(tasks.values()):
@@ -171,7 +171,7 @@ def newTaskSingle(handler, group, assigned = ''):
 
 	print tabs.format(id).where('single')
 
-	group = Group.load(group)
+	group = Group.load(id)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
 
@@ -254,10 +254,10 @@ def newTaskPost(handler, p_group, p_name, p_goal, p_status, p_hours, p_assigned 
 	if p_name.strip() == '':
 		die("Task must have a non-empty name")
 
-	assignedids = map(lambda i: to_int(i, 'assigned', die), p_assigned)
-	assigned = [User.load(assignedid) for assignedid in assignedids]
-	if assigned == []:
-		assigned = [handler.session['user']]
+	assignedids = set(to_int(i, 'assigned', die) for i in p_assigned)
+	assigned = set(User.load(assignedid) for assignedid in assignedids)
+	if assigned == set():
+		assigned.add(handler.session['user'])
 	if not all(assigned):
 		die("Invalid assignee")
 
@@ -272,7 +272,7 @@ def newTaskPost(handler, p_group, p_name, p_goal, p_status, p_hours, p_assigned 
 	hours = to_int(p_hours, 'hours', die)
 
 	task = Task(groupid, group.sprintid, handler.session['user'].id, goalid, p_name, p_status, hours)
-	task.assigned += assigned
+	task.assigned |= assigned
 	task.save()
 
 	handler.responseCode = 299
@@ -296,7 +296,7 @@ def newTaskMany(handler, group):
 		body = handler.session['many-upload']
 		del handler.session['many-upload']
 
-	defaultGroup = Group.load(group)
+	defaultGroup = Group.load(id)
 	if not defaultGroup:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
 	sprint = defaultGroup.sprint
@@ -356,7 +356,7 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 	requirePriv(handler, 'User')
 	id = int(group)
 
-	defaultGroup = Group.load(group)
+	defaultGroup = Group.load(id)
 	if not defaultGroup:
 		die("No group with ID <b>%d</b>" % id)
 
@@ -401,7 +401,7 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 			name, assigned, status, hours = None, None, None, None
 			for case in switch(len(parts)):
 				if case(2):
-					assigned = [handler.session['user']]
+					assigned = {handler.session['user']}
 					# Fall-through
 				if case(3):
 					status = 'not started'
@@ -423,7 +423,7 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 
 						# Assigned
 						if assigned is None and set(part.split(' ')) <= set(u.username for u in sprint.members):
-							assigned = [User.load(username = username) for username in part.split(' ')]
+							assigned = set(User.load(username = username) for username in part.split(' '))
 							continue
 
 						# Name
@@ -498,7 +498,7 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 			group.save()
 			for name, assigned, status, hours in groupTasks:
 				task = Task(group.id, group.sprint.id, handler.session['user'].id, 0, name, status, hours)
-				task.assigned += assigned
+				task.assigned |= assigned
 				task.save()
 				Event.newTask(handler, task)
 
@@ -522,7 +522,7 @@ def newTaskImport(handler, group, source = None):
 
 	print tabs.format(id).where('import')
 
-	group = Group.load(group)
+	group = Group.load(id)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
 
@@ -608,7 +608,7 @@ def newTaskImportPost(handler, group, source, p_group, p_name, p_hours, p_assign
 	requirePriv(handler, 'User')
 
 	id = int(group)
-	group = Group.load(group)
+	group = Group.load(id)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
 
@@ -649,7 +649,7 @@ def newTaskImportPost(handler, group, source, p_group, p_name, p_hours, p_assign
 			ErrorBox.die('Malformed Request', "Invalid user ID(s): %s" % ', '.join(map(stripTags, assignedID)))
 
 		task = Task(group.id, group.sprint.id, handler.session['user'].id, 0, name, 'not started', hours)
-		task.assigned += assigned
+		task.assigned |= assigned
 		task.save()
 		Event.newTask(handler, task)
 
@@ -756,7 +756,7 @@ def distributeUpdate(handler, p_sprint, p_targetUser = None, p_task = None):
 			if not user:
 				die("No user with ID %d" % userid)
 
-			task.assigned = [user]
+			task.assigned = {user}
 			if task.creator == handler.session['user'] and (dateToTs(getNow()) - task.timestamp) < 5*60:
 				task.save()
 			else:
@@ -942,10 +942,10 @@ def taskEditPost(handler, ids, p_hours, p_status, p_goal, p_assigned = [], p_inc
 	if not sprint.canEdit(handler.session['user']):
 		ErrorBox.die("You don't have permission to modify this sprint")
 
-	assignedids = map(lambda i: to_int(i, 'assigned', ErrorBox.die), p_assigned)
+	assignedids = set(to_int(i, 'assigned', ErrorBox.die) for i in p_assigned)
 
 	changes = {
-		'assigned': False if assignedids == [] else [User.load(assignedid) for assignedid in assignedids],
+		'assigned': False if assignedids == set() else {User.load(assignedid) for assignedid in assignedids},
 		'hours': False if p_hours == '' else int(p_hours),
 		'status': False if p_status == '' else p_status,
 		'goal': False if p_goal == '' else Goal.load(int(p_goal))

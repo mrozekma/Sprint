@@ -334,7 +334,7 @@ def printTask(handler, task, days, group = None, highlight = False, editable = T
 	print "<td class=\"name\"><span id=\"name_span_%d\">%s</span></td>" % (task.id, task.safe.name)
 	print "<td class=\"assigned\"><span>"
 	if len(task.assigned) == 1:
-		print task.assigned[0].str('member', False, "assigned_span_%d" % task.id)
+		print list(task.assigned)[0].str('member', False, "assigned_span_%d" % task.id)
 	else:
 		assignedStr = ' '.join(sorted(user.username for user in task.assigned))
 		print "<img src=\"/static/images/team.png\" class=\"user\">"
@@ -380,6 +380,7 @@ def sprintPost(handler, sprintid, p_id, p_rev_id, p_field, p_value):
 		done()
 
 	handler.wrappers = False
+	sprintid = int(sprintid)
 	p_id = int(p_id)
 	p_rev_id = int(p_rev_id)
 
@@ -420,7 +421,7 @@ def sprintPost(handler, sprintid, p_id, p_rev_id, p_field, p_value):
 						die("Attempting to use goal outside the specified sprint")
 				break
 			elif case('assigned'):
-				parsedValue = [User.load(username = username) for username in p_value.split(' ')]
+				parsedValue = set(User.load(username = username) for username in p_value.split(' '))
 				if not all(parsedValue):
 					die("Unknown user(s): <b>%s</b>" % stripTags(p_value))
 				break
@@ -568,6 +569,8 @@ def sprintInfoPost(handler, id, p_name, p_end, p_goals, p_start = None, p_member
 	if not handler.session['user']:
 		die("You must be logged in to modify sprint info")
 
+	id = to_int(id, 'id', die)
+	p_members = to_int(p_members, 'members', die)
 	sprint = Sprint.load(id)
 	if not sprint:
 		die("There is no sprint with ID %d" % id)
@@ -601,11 +604,11 @@ def sprintInfoPost(handler, id, p_name, p_end, p_goals, p_start = None, p_member
 	if end < tsToDate(sprint.end):
 		die("You cannot shorten the length of the sprint")
 
-	goals = map(Goal.load, p_goals)
+	goals = map(Goal.load, to_int(p_goals.keys(), 'goals', die))
 	if not all(goals):
 		die("One or more goals do not exist")
 
-	members = map(User.load, p_members) if p_members else []
+	members = set(map(User.load, p_members)) if p_members else set()
 	if not all(members):
 		die("One or more members do not exist")
 	if sprint.owner not in members:
@@ -617,16 +620,18 @@ def sprintInfoPost(handler, id, p_name, p_end, p_goals, p_start = None, p_member
 	tasks = sprint.getTasks()
 	changedTasks = set()
 	avail = Availability(sprint)
-	addMembers = list(set(members) - set(sprint.members))
-	delMembers = list(set(sprint.members) - set(members))
+	addMembers = set(members) - set(sprint.members)
+	delMembers = set(sprint.members) - set(members)
 	for user in delMembers:
 		for task in filter(lambda task: user in task.assigned, tasks):
-			task.assigned.remove(user)
-			if task.assigned.length == 0:
-				task.assigned = [sprint.owner]
+			print "Removing %s from %d<br>" % (user, task.id)
+			task.assigned -= {user}
+			if len(task.assigned) == 0:
+				print "Adding %s to %d<br>" % (sprint.owner, task.id)
+				task.assigned = {sprint.owner}
 			changedTasks.add(task)
 		avail.delete(user)
-		sprint.members.remove(user)
+		sprint.members -= {user}
 
 	# For event dispatching
 	changes = OrderedDict([
@@ -641,18 +646,18 @@ def sprintInfoPost(handler, id, p_name, p_end, p_goals, p_start = None, p_member
 		('removeGoals', [])
 	])
 
-	sprint.members += addMembers
+	sprint.members |= addMembers
 	sprint.name = p_name
 	sprint.end = dateToTs(end)
 
-	if start:
+	if dateToTs(start) != sprint.start:
 		sprint.start = dateToTs(start)
 		avail.trim()
 
 	sprint.save()
 
 	for id in p_goals:
-		goal = Goal.load(id)
+		goal = Goal.load(int(id))
 		if goal.name != p_goals[id]:
 			if goal.name:
 				changes['removeGoals'].append(goal.name)
@@ -682,6 +687,7 @@ def sprintInfoPost(handler, id, p_name, p_end, p_goals, p_start = None, p_member
 				changedTasks.add(task)
 
 	for task in changedTasks:
+		print "Saving new revision for %d<br>" % task.id
 		task.saveRevision(handler.session['user'])
 
 	handler.responseCode = 299
@@ -852,6 +858,7 @@ def sprintAvailabilityPost(handler, id, p_hours):
 		done()
 
 	handler.wrappers = False
+	id = int(id)
 
 	if not handler.session['user']:
 		die("You must be logged in to modify sprint info")
@@ -1059,6 +1066,7 @@ def sprintRetrospectiveStart(handler, id):
 	if not handler.session['user']:
 		ErrorBox.die('Forbidden', "You must be logged in to modify sprint info")
 
+	id = int(id)
 	sprint = Sprint.load(id)
 	if not sprint:
 		ErrorBox.die('Sprints', "There is no sprint with ID %d" % id)
@@ -1083,6 +1091,7 @@ def sprintRetrospectiveRender(handler, sprintid, p_id, p_catid, p_body = None, p
 	if not handler.session['user']:
 		die("You must be logged in to modify sprint info")
 
+	sprintid = int(sprintid)
 	sprint = Sprint.load(sprintid)
 	if not sprint:
 		die("There is no sprint with ID %d" % sprintid)
@@ -1161,6 +1170,7 @@ def newSprintPost(handler, p_project, p_name, p_start, p_end, p_members = None):
 		done()
 
 	handler.wrappers = False
+	p_project = int(p_project)
 
 	project = Project.load(p_project)
 	if not project:
@@ -1193,14 +1203,14 @@ def newSprintPost(handler, p_project, p_name, p_start, p_end, p_members = None):
 	if end.weekday() >= 5:
 		die("Sprints cannot start on a weekend")
 
-	members = map(User.load, p_members) if p_members else []
+	members = set(User.load(int(memberid)) for memberid in p_members)
 	if None in members:
 		die("Unknown username")
 	if handler.session['user'] not in members:
 		die("The scrummaster (%s) must be a sprint member" % handler.session['user'])
 
 	sprint = Sprint(project.id, p_name, handler.session['user'].id, dateToTs(start), dateToTs(end))
-	sprint.members += members
+	sprint.members |= members
 	sprint.save()
 	# Make a default 'Miscellaneous' group so there's something to add tasks to
 	Group(sprint.id, 'Miscellaneous', 1, False).save()

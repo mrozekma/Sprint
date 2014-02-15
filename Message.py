@@ -1,11 +1,12 @@
-from DB import ActiveRecord
 from User import User
 from Markdown import Markdown
 from utils import *
 
+from stasis.ActiveRecord import ActiveRecord, link
+
 class Message(ActiveRecord):
-	user = ActiveRecord.idObjLink(User, 'userid')
-	sender = ActiveRecord.idObjLink(User, 'senderid')
+	user = link(User, 'userid')
+	sender = link(User, 'senderid')
 
 	def __init__(self, userid, senderid, title, body, language = 'html', timestamp = None, read = False, id = None):
 		ActiveRecord.__init__(self)

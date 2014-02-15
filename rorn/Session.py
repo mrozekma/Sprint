@@ -9,7 +9,7 @@ import pickle
 
 from Lock import synchronized
 
-sessions = {}
+serializer = None
 
 class Session(object):
 	def __init__(self, key):
@@ -32,12 +32,12 @@ class Session(object):
 	@synchronized('session')
 	def __setitem__(self, k, v):
 		self.map[k] = v
-		Session.saveAll()
+		serializer.save(self.key)
 
 	@synchronized('session')
 	def __delitem__(self, k):
 		del self.map[k]
-		Session.saveAll()
+		serializer.save(self.key)
 
 	@synchronized('session')
 	def remember(self, *keys):
@@ -74,32 +74,59 @@ class Session(object):
 	@synchronized('session')
 	def generateKey():
 		key = md5(os.urandom(128) + str(time.time()))[:-3].replace('/', '$')
-		if key in sessions:
+		if key in Session.getIDs():
 			return None
 		return key
 
 	@staticmethod
 	@synchronized('session')
 	def load(key):
-		if key not in sessions:
-			sessions[key] = Session(key)
-			Session.saveAll()
-		return sessions[key]
+		return serializer.get(key)
 
 	@staticmethod
 	@synchronized('session')
-	def loadAll():
-		global sessions
+	def getIDs():
+		return serializer.getIDs()
+
+	@staticmethod
+	@synchronized('session')
+	def destroy(key):
+		serializer.destroy(key)
+
+class SessionSerializer:
+	def __init__(self):
 		try:
 			with open('session', 'r') as f:
-				sessions = pickle.load(f)
-		except Exception: pass
+				self.sessions = pickle.load(f)
+		except Exception:
+			self.sessions = {}
 
-	@staticmethod
-	@synchronized('session')
-	def saveAll():
+	def get(self, sessionID):
+		if sessionID not in self.sessions:
+			self.sessions[sessionID] = Session(sessionID)
+			self.saveAll()
+		return self.sessions[sessionID]
+
+	def save(self, sessionID):
+		self.saveAll()
+
+	def getIDs(self):
+		return self.sessions.keys()
+
+	def destroy(self, sessionID):
+		del self.sessions[sessionID]
+		self.saveAll()
+
+	# This is internal; not necessary for other implementations
+	def saveAll(self):
 		with open('session', 'w') as f:
-			pickle.dump(sessions, f)
+			pickle.dump(self.sessions, f)
+
+def setSerializer(store):
+	global serializer
+	serializer = store
+
+setSerializer(SessionSerializer()) # Default
 
 def timestamp(days = 7):
 	return (datetime.utcnow() + timedelta(days)).strftime("%a, %d-%b-%Y %H:%M:%S GMT")
@@ -114,5 +141,3 @@ def undelay(handler):
 		for item in handler.session['delayed']:
 			print item
 		del handler.session['delayed']
-
-Session.loadAll()

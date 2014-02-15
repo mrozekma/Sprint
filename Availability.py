@@ -1,36 +1,66 @@
 from utils import *
-from DB import ActiveRecord, db
 from User import User
 from Project import Project
 from Sprint import Sprint
+
+from stasis.Singleton import get as db
 
 class Availability:
 	def __init__(self, sprint):
 		self.sprint = sprint
 
 	def get(self, user, timestamp):
-		rows = db().select("SELECT hours FROM availability WHERE sprintid = ? AND userid = ? AND timestamp = ?", self.sprint.id, user.id, dateToTs(timestamp))
-		rows = list(rows)
-		return int(rows[0]['hours']) if len(rows) > 0 else 0
+		table = db()['availability']
+		if self.sprint.id in table:
+			data = table[self.sprint.id]
+			if user.id in data:
+				ts = dateToTs(timestamp)
+				if ts in data[user.id]:
+					return data[user.id][ts]
+		return 0
 
 	def getAll(self, timestamp):
-		rows = db().select("SELECT COALESCE(SUM(hours), 0) FROM availability WHERE sprintid = ? AND timestamp = ?", self.sprint.id, dateToTs(timestamp))
-		rows = list(rows)
-		return int(rows[0]['COALESCE(SUM(hours), 0)']) if len(rows) > 0 else 0
+		rtn = 0
+		ts = dateToTs(timestamp)
+		table = db()['availability']
+		if self.sprint.id in table:
+			for data in table[self.sprint.id].values():
+				if ts in data:
+					rtn += data[ts]
+		return rtn
 
 	def set(self, user, timestamp, hours):
-		db().update("INSERT OR REPLACE INTO availability(sprintid, userid, timestamp, hours) VALUES(?, ?, ?, ?)", self.sprint.id, user.id, dateToTs(timestamp), hours)
+		table = db()['availability']
+		if self.sprint.id not in table:
+			table[self.sprint.id] = {}
+		with table.change(self.sprint.id) as data:
+			if user.id not in data:
+				data[user.id] = {}
+			data[user.id][dateToTs(timestamp)] = hours
 
 	def delete(self, user):
-		db().update("DELETE FROM availability WHERE sprintid = ? AND userid = ?", self.sprint.id, user.id)
+		table = db()['availability']
+		if self.sprint.id in table:
+			if user.id in table[self.sprint.id]:
+				with table.change(self.sprint.id) as data:
+					del data[user.id]
 
 	def getAllForward(self, timestamp, user = None):
-		if user:
-			rows = db().select("SELECT COALESCE(SUM(hours), 0) FROM availability WHERE sprintid = ? AND userid = ? AND timestamp >= ?", self.sprint.id, user.id, dateToTs(timestamp))
-		else:
-			rows = db().select("SELECT COALESCE(SUM(hours), 0) FROM availability WHERE sprintid = ? AND timestamp >= ?", self.sprint.id, dateToTs(timestamp))
-		rows = list(rows)
-		return int(rows[0]['COALESCE(SUM(hours), 0)'])
+		rtn = 0
+		ts = dateToTs(timestamp)
+		table = db()['availability']
+		if self.sprint.id in table:
+			for userid, data in table[self.sprint.id].iteritems():
+				if user is not None and user.id != userid:
+					continue
+				for thisstamp, hours in data.iteritems():
+					if thisstamp >= ts:
+						rtn += hours
+		return rtn
 
 	def trim(self):
-		db().update("DELETE FROM availability WHERE sprintid = ? AND (timestamp < ? OR timestamp > ?)", self.sprint.id, self.sprint.start, self.sprint.end)
+		table = db()['availability']
+		if self.sprint.id in table:
+			with table.change(self.sprint.id) as data:
+				for userid, hourmap in data.iteritems():
+					data[userid] = {timestamp: hours for timestamp, hours in hourmap.iteritems() if self.sprint.start <= timestamp <= self.sprint.end}

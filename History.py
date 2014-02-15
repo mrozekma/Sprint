@@ -90,7 +90,7 @@ def goalChanged(rev, oldRev, describeTask):
 
 def unrecognizedChange(rev, oldRev, field, describeTask):
 	with entry(rev, oldRev, describeTask, 'revision-unknown.svg', '#000', "Field Changed"):
-		print "Field '%s' changed: %s &#rarr; %s" % (field, stripTags(str(oldRev.__getattribute__(field))), stripTags(str(rev.__getattribute__(field))))
+		print "Field '%s' changed: %s &rarr; %s" % (field, stripTags(str(oldRev.__getattribute__(field))), stripTags(str(rev.__getattribute__(field))))
 
 def showHistory(tasks, describeTask):
 	if isinstance(tasks, Task):
@@ -138,6 +138,8 @@ def showHistory(tasks, describeTask):
 					undeleted(rev, oldRev, describeTask)
 			elif field == 'assigned':
 				reassigned(rev, oldRev, describeTask)
+			elif field == 'assignedids':
+				pass # Handled by 'assigned'
 			elif field == 'goalid':
 				goalChanged(rev, oldRev, describeTask)
 			elif field == 'groupid':

@@ -1,10 +1,11 @@
 from utils import *
-from DB import ActiveRecord, db
 from Sprint import Sprint
-# from inspect import getmembers
+
+from stasis.Singleton import get as db
+from stasis.ActiveRecord import ActiveRecord, link
 
 class Group(ActiveRecord):
-	sprint = ActiveRecord.idObjLink(Sprint, 'sprintid')
+	sprint = link(Sprint, 'sprintid')
 
 	def __init__(self, sprintid, name, seq = None, deletable = True, id = None):
 		ActiveRecord.__init__(self)
@@ -20,17 +21,28 @@ class Group(ActiveRecord):
 	def save(self):
 		if not self.id:
 			# Shift everything after this sequence
-			db().update("UPDATE groups SET seq = seq + 1 WHERE sprintid = ? AND seq >= ?", self.sprintid, self.seq)
+			for id, group in db()['groups'].iteritems():
+				if group['sprintid'] == self.sprintid and group['seq'] >= self.seq:
+					with db()['groups'].change(id) as data:
+						data['seq'] += 1
 		return ActiveRecord.save(self)
 
 	def move(self, newSeq):
 		# Remove group from the list
-		db().update("UPDATE groups SET seq = seq - 1 WHERE sprintid = ? AND seq > ?", self.sprintid, self.seq)
+		for id, group in db()['groups'].iteritems():
+			if group['sprintid'] == self.sprintid and group['seq'] > self.seq:
+				with db()['groups'].change(id) as data:
+					data['seq'] -= 1
 
 		# Insert it at the new spot
 		if newSeq:
 			self.seq = newSeq
-			db().update("UPDATE groups SET seq = seq + 1 WHERE sprintid = ? AND seq > ?", self.sprintid, self.seq)
+			for id, group in db()['groups'].iteritems():
+				if group['sprintid'] == self.sprintid and group['seq'] > self.seq:
+					with db()['groups'].change(id) as data:
+						data['seq'] += 1
+
+		self.save()
 
 	def delete(self):
 		self.move(None)

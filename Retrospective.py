@@ -1,14 +1,15 @@
 from collections import OrderedDict
 
-from DB import ActiveRecord, db
 from Project import Project
 from Sprint import Sprint
 from utils import *
 
+from stasis.ActiveRecord import ActiveRecord, link
+
 DEFAULT_CATEGORIES = ['Product Management', 'Infrastructure', 'Teamwork', 'Release Planning', 'Scrum Process', 'Engineering Practices']
 
 class Category(ActiveRecord):
-	sprint = ActiveRecord.idObjLink(Sprint, 'sprintid')
+	sprint = link(Sprint, 'sprintid')
 
 	def __init__(self, sprintid, name, id = None):
 		ActiveRecord.__init__(self)
@@ -21,7 +22,7 @@ class Category(ActiveRecord):
 		return 'retrospective_categories'
 
 class Entry(ActiveRecord):
-	category = ActiveRecord.idObjLink(Category, 'catid')
+	category = link(Category, 'catid')
 
 	def __init__(self, catid, body, good, id = None):
 		ActiveRecord.__init__(self)
@@ -46,4 +47,3 @@ class Retrospective:
 	def init(sprint):
 		for name in DEFAULT_CATEGORIES:
 			Category(sprint.id, name).save()
-

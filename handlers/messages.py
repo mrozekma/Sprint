@@ -25,7 +25,7 @@ def inbox(handler):
 
 	Markdown.head('div.message .body pre code')
 
-	messages = Message.loadAll(userid = handler.session['user'].id, orderby = 'timestamp DESC')
+	messages = Message.loadAll(userid = handler.session['user'].id, orderby = '-timestamp')
 	for message in messages:
 		printMessage(message, True)
 		if not message.read:
@@ -42,7 +42,7 @@ def sent(handler):
 
 	Markdown.head('div.message .body pre code')
 
-	messages = Message.loadAll(senderid = handler.session['user'].id, orderby = 'timestamp DESC')
+	messages = Message.loadAll(senderid = handler.session['user'].id, orderby = '-timestamp')
 	for message in messages:
 		printMessage(message, False)
 

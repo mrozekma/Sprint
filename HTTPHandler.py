@@ -3,7 +3,6 @@ from os.path import isfile
 import traceback
 
 from wrappers import header, footer
-from DB import db
 from User import User
 from Event import Event
 from HTTPServer import server
@@ -65,8 +64,6 @@ class HTTPHandler(ParentHandler):
 	def processingRequest(self):
 		if bricked():
 			raise Exception(bricked())
-
-		db().resetCount()
 
 		#HACK
 		if self.path.startswith('/static/'): return

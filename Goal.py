@@ -1,11 +1,12 @@
 from utils import *
-from DB import ActiveRecord, db
 from Sprint import Sprint
+
+from stasis.ActiveRecord import ActiveRecord, link
 
 COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
 
 class Goal(ActiveRecord):
-	sprint = ActiveRecord.idObjLink(Sprint, 'sprintid')
+	sprint = link(Sprint, 'sprintid')
 
 	def __init__(self, sprintid, name, color, id = None):
 		ActiveRecord.__init__(self)

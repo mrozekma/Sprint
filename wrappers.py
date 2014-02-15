@@ -5,10 +5,9 @@ import os
 
 import HTTPHandler
 import menu
-from DB import db
 from ChangeLog import getChanges
 from Options import option
-from LoadValues import getRevisionInfo, isDevMode
+from LoadValues import gitURL, getRevisionInfo, isDevMode
 from Settings import settings
 from User import User
 from Message import Message
@@ -77,7 +76,7 @@ def header(handler, includes):
 		print "<script src=\"/static/changelog.js\"></script>"
 		print "<script type=\"text/javascript\">"
 		print "$(document).ready(function() {"
-		fmt = "%%(message)s<div style=\"text-align: right; font-size: 6pt\"><a target=\"_blank\" href=\"%s\">%%(hash)s</a></div>" % settings.gitURL if 'gitURL' in settings else "%(message)s"
+		fmt = "%%(message)s<div style=\"text-align: right; font-size: 6pt\"><a target=\"_blank\" href=\"%s\">%%(hash)s</a></div>" % gitURL
 		for change in changes:
 			print "    showChangelog(%s);" % toJS(fmt % {'hash': change.hash, 'message': change.message})
 		print "});"
@@ -150,14 +149,8 @@ def footer(handler):
 	print "Current revision:",
 	if isDevMode():
 		print "<span style=\"color: #f00;\">Development build</span><br>"
-		if isDevMode(handler):
-			selects, updates = db().resetCount()
-			print "Database (%s) requests: %d / %d<br>" % (settings.dbVersion, selects, updates)
 	else:
-		if 'gitURL' in settings:
-			print "<a href=\"%s\">%s</a>" % (settings.gitURL % {'hash': revisionHash}, revisionHash),
-		else:
-			print revisionHash,
+		print "<a href=\"%s\">%s</a>" % (gitURL % {'hash': revisionHash}, revisionHash),
 		print "(<span title=\"%s\">%s</span>)<br>" % (revisionDate, revisionRelative)
 	print "</div>"
 

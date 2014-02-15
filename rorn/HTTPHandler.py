@@ -192,7 +192,7 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 		if self.session:
 			headers['Set-Cookie'] = 'session=%s; expires=%s; path=/' % (self.session.key, timestamp())
 		if self.forceDownload:
-			headers['Content-disposition'] = "attachment; filename=%s" % forceDownload
+			headers['Content-disposition'] = "attachment; filename=%s" % self.forceDownload
 
 		headers.update(additionalHeaders)
 

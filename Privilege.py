@@ -1,30 +1,21 @@
 from rorn.Box import LoginBox, ErrorBox, WarningBox
 
-from DB import ActiveRecord
 from LoadValues import isDevMode
 from utils import *
 
+from stasis.ActiveRecord import ActiveRecord
+
+privs = {
+	'User': 'Privilege all registered users have',
+	'Dev': 'Allows access to admin and incomplete features',
+	'Write': 'Allows modifications to sprints',
+}
+
 # Privileges to give to new users
 defaults = ['User', 'Write']
-
-class Privilege(ActiveRecord):
-	def __init__(self, name, description, arguments, id = None):
-		ActiveRecord.__init__(self)
-		self.id = id
-		self.name = name
-		self.description = description
-		self.arguments = arguments
-
-	def argument(i):
-		return self.arguments.split(',')[i]
-
-	def __str__(self):
-		return self.name
+adminDefaults = ['User', 'Dev', 'Write']
 
 def requirePriv(handler, priv):
-	if isinstance(priv, Privilege):
-		priv = priv.name
-
 	if not handler.session['user']:
 		print LoginBox()
 		done()
@@ -42,14 +33,3 @@ def dev(handler):
 	else:
 		print WarningBox('This feature is still under development and is disabled')
 		done()
-
-# print map(str, User.loadAll())
-# print User.load(1)
-# print User.load(100)
-
-# usr = User.load(1)
-# usr.username = 'foobar'
-# usr.save()
-
-# usr = User('newuser', 'password')
-# usr.save()

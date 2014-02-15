@@ -1,42 +1,136 @@
+# This is the first module loaded by main, and the first thing we do is check dependencies, before anything else has a chance to try importing them
+def depcheck():
+	failures = []
+	def fail(msg):
+		failures.append(msg)
+
+	def imp(name, desc):
+		try:
+			return __import__(name)
+		except ImportError:
+			fail("Missing dependency: %s" % desc)
+
+	# Python
+	import sys
+	pyver = sys.version_info
+	if pyver.major > 2:
+		fail("Python 3 is not backwards compatible. Sprint requires Python 2.7+")
+	if pyver.minor < 7:
+		fail("Sprint requires Python 2.7+ (you are running %d.%d.%d)" % (pyver.major, pyver.minor, pyver.micro))
+
+	# Libraries
+	imp('fuzzywuzzy', 'FuzzyWuzzy - https://github.com/seatgeek/fuzzywuzzy') # This is currently bundled, so it shouldn't ever fail. Might pull it out at some point
+	imp('PIL', 'Python Imaging Library (PIL) - http://www.pythonware.com/products/pil/')
+	imp('SilverCity', 'SilverCity - https://pypi.python.org/pypi/SilverCity')
+	imp('rorn', 'Rorn') # Also bundled
+	imp('stasis', 'Stasis - https://github.com/mrozekma/Stasis')
+
+	if failures:
+		print "Unresolved environment problems:"
+		print
+		for failure in failures:
+			print "  * %s" % failure
+		exit(1)
+depcheck()
+
 import sys
-from os import mkdir, remove
-from os.path import isdir, splitext
+import termios
+import tty
+from os import mkdir
+from os.path import exists, isfile, isdir, splitext
 from getpass import getpass
 from socket import gethostname
-from shutil import copy
+from shutil import copy, rmtree
+from time import sleep
+import sqlite3
 
-from DB import DB, DBError, db, filename as dbFilename
+from LoadValues import dbFilename
 from User import User
-from Privilege import Privilege
+from Privilege import adminDefaults
 from Options import option
 from Settings import settings, PORT
 from utils import *
+
+from stasis.DiskMap import DiskMap
+from stasis.Singleton import set as setDB
+from stasis.StasisError import StasisError
+
+LAST_SQLITE_VERSION = 19
+LAST_SQLITE_REVISION = '38e224f66d34dd2077a6cf8597c8c299334cd059' # This is the revision that created DB 19; technically many after it would also work
+DB_VERSION = 20 # Temporary until stasis updating is implemented
+
+HOW_TO_RUN = "You can run %s normally now and browse to http://%s:%d/" % (sys.argv[0], gethostname(), PORT)
 
 def check():
 	if option('mode') == 'init':
 		init()
 		exit(0)
 
-	try:
-		db()
-	except DBError, e:
-		print e
-		print "If you've never run this tool before, run %s --init to configure it" % sys.argv[0]
+	if isfile('db'):
+		conn = sqlite3.connect(dbFilename)
+		cur = conn.cursor()
+		try:
+			row = cur.execute("SELECT value FROM settings WHERE name = 'dbVersion'")
+		except sqlite3.DatabaseError, e:
+			if 'not a database' in e.message:
+				print "There is a file named 'db', but it doesn't appear to be a sprint database"
+			else:
+				print "There was a problem attempting to open the database: %s" % e.message
+			exit(1)
+		if option('mode') != 'update':
+			print "The database is in an old format. Run %s --update to update it" % sys.argv[0]
+			exit(1)
+		version = int(row.fetchone()[0])
+		if version < LAST_SQLITE_VERSION:
+			print "Sprint has changed backend formats, but your database is so old it can't be converted by this version. You need to:"
+			print
+			print "  * Rollback to revision %s" % LAST_SQLITE_REVISION
+			print "  * Run %s --update to update to the latest sqlite database" % sys.argv[0]
+			print "  * Switch back to the latest Sprint revision"
+			print "  * Run %s --update again to switch from sqlite to stasis" % sys.argv[0]
+		else:
+			print "Sprint has changed backend formats, so your entire existing database needs to be converted. This is an automated procedure; your old database will be renamed 'db-old.sqlite'"
+			print
+			print "Run database conversion? [\033[1;32mYes\033[0m/\033[1;31mNo\033[0m] ",
+			fd = sys.stdin.fileno()
+			reg = termios.tcgetattr(fd)
+			try:
+				tty.setraw(fd)
+				ch = sys.stdin.read(1)
+			finally:
+				termios.tcsetattr(fd, termios.TCSADRAIN, reg)
+			sys.stdout.write("%s\n" % ch)
+			print
+			if ch not in ('y', 'Y', '\r', '\n'):
+				print "Canceled"
+				exit(0)
+			print "Conversion will start in 3 seconds; depending on the database size you may see quite a lot of text go by"
+			sleep(3)
+			import sqlite_to_stasis
+			print
+			print "Database conversion complete. %s" % HOW_TO_RUN
+			exit(0)
+
+	if not isdir('db'):
+		print "No database found. If you've never run this tool before, run %s --init to configure it" % sys.argv[0]
 		exit(1)
 
-	dbVersion = DB.getTemplates()[-1]
+	# There's no DB connection yet, so we set a temporary uncached one
+	# The real cached version is set later in main
+	setDB(DiskMap(dbFilename))
+
 	if option('mode') == 'update':
-		if int(settings.dbVersion) < dbVersion:
+		if int(settings.dbVersion) < DB_VERSION:
 			update()
 			exit(0)
-		elif int(settings.dbVersion) == dbVersion:
-			print "Unable to update -- already at database version %d" % dbVersion
+		elif int(settings.dbVersion) == DB_VERSION:
+			print "Unable to update -- already at database version %d" % DB_VERSION
 			exit(1)
-	if int(settings.dbVersion) < dbVersion:
-		print "The database is %s behind. Run %s --update to update it" % (pluralize(dbVersion - int(settings.dbVersion), 'version', 'versions'), sys.argv[0])
+	if int(settings.dbVersion) < DB_VERSION:
+		print "The database is %s behind. Run %s --update to update it" % (pluralize(DB_VERSION - int(settings.dbVersion), 'version', 'versions'), sys.argv[0])
 		exit(1)
-	elif int(settings.dbVersion) > dbVersion:
-		print "The database is %s ahead; downgrading is not supported" % pluralize(int(settings.dbVersion) - dbVersion, 'version', 'versions')
+	elif int(settings.dbVersion) > DB_VERSION:
+		print "The database is %s ahead; downgrading is not supported" % pluralize(int(settings.dbVersion) - DB_VERSION, 'version', 'versions')
 		exit(1)
 
 def init():
@@ -44,16 +138,8 @@ def init():
 		print msg
 		exit(1)
 
-	try:
-		db()
+	if exists(dbFilename):
 		die("The database %s already exists. If you really want to reconfigure, remove it first" % dbFilename)
-	except DBError:
-		pass
-
-	try:
-		templates = DB.getTemplates()
-	except DBError, e:
-		die(str(e))
 
 	print "The database starts with a root user you can use to manage the installation"
 	username = raw_input('Username: ')
@@ -71,26 +157,21 @@ def init():
 	print
 
 	print "Creating database"
-	open(dbFilename, 'w').close()
-	index = applyTemplates(templates, lambda: remove(dbFilename))
+	setDB(DiskMap(dbFilename, create = True))
 
 	try:
-		settings.dbVersion = index
+		settings.dbVersion = DB_VERSION
 		settings.emailDomain = email
-		settings.gitURL = 'https://github.com/mrozekma/sprint/commit/%(hash)s'
 	except Exception, e:
-		remove(dbFilename)
+		rmtree(dbFilename)
 		die("Unable to set default settings: %s" % e)
 
 	print "Creating admin user"
 	try:
-		user = User(username, password)
+		user = User(username, password, privileges = set(adminDefaults))
 		user.save()
-
-		for priv in Privilege.loadAll():
-			db().update("INSERT INTO grants(userid, privid) VALUES(?, ?)", user.id, priv.id)
 	except Exception, e:
-		remove(dbFilename)
+		rmtree(dbFilename)
 		die("Unable to create admin user: %s" % e)
 
 	print "Creating backup and log directories"
@@ -99,32 +180,8 @@ def init():
 	if not isdir('logs'):
 		mkdir('logs')
 
-	db().diskQueue.flush()
-	print "Done. You can run %s normally now and browse to http://%s:%d/" % (sys.argv[0], gethostname(), PORT)
+	print "Done. %s" % HOW_TO_RUN
 
 def update():
-	templates = DB.getTemplates()
-	dbVersion = templates[-1]
-	if int(settings.dbVersion) >= dbVersion:
-		print "Unable to update version %d to %d" % (int(settings.dbVersion), dbVersion)
-		exit(1)
-
-	backupFilename = "%s-preupgrade%s" % splitext(dbFilename)
-	copy(dbFilename, backupFilename)
-	print "Backed up database to %s" % backupFilename
-
-	newTemplates = templates[templates.index(int(settings.dbVersion))+1:]
-	applyTemplates(newTemplates, lambda: copy(backupFilename, dbFilename))
-	settings.dbVersion = dbVersion
-	db().diskQueue.flush()
-	print "Updated to database version %d. You can run %s normally now and browse to http://%s:%d/" % (dbVersion, sys.argv[0], gethostname(), PORT)
-
-def applyTemplates(templates, failFn):
-	try:
-		for index in templates:
-			map(db().update, open("db-templates/%d.sql" % index).readlines())
-		return index
-	except Exception, e:
-		print "Unable to apply template %d: %s" % (index, e)
-		failFn()
-		exit(1)
+	pass # Unimplemented until the first update
+	# print "Updated to database version %d. You can run %s normally now and browse to http://%s:%d/" % (dbVersion, sys.argv[0], gethostname(), PORT)

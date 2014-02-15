@@ -1,3 +1,6 @@
+# This should always be the first import
+import Update
+
 from datetime import datetime
 import os
 from os.path import abspath, dirname
@@ -8,20 +11,34 @@ from threading import currentThread
 
 os.chdir(dirname(abspath(__file__)))
 
+# We give stasis a single lock for all DiskMaps, but there will only be one DiskMap
+from rorn.Lock import getLock
+from stasis.Lock import setMutexProvider
+setMutexProvider(lambda: getLock('#stasis'))
+
+from Options import option, parse as parseOptions
+parseOptions()
+Update.check()
+
+from stasis.Singleton import set as setDB
+from stasis.DiskMap import DiskMap
+from LoadValues import dbFilename
+def cacheLog(table):
+	sys.__stdout__.write("[%s] [%s] %s\n" % (datetime.now().replace(microsecond = 0), 'stasis', "Backfilling table: %s" % table))
+setDB(DiskMap(dbFilename, cache = True, nocache = ['log', 'sessions'], cacheNotifyFn = cacheLog))
+
 from Log import console
-from DB import db
 from Cron import Cron
 from HTTPServer import server as getServer, ServerError
-from Options import option, parse as parseOptions
 from Settings import PORT, settings
-from Update import check
 from Event import addEventHandler
 from event_handlers import *
 
-currentThread().name = 'main'
+from rorn.Session import setSerializer
+from SessionSerializer import SessionSerializer
+setSerializer(SessionSerializer())
 
-parseOptions()
-check()
+currentThread().name = 'main'
 
 try:
 	server = getServer()
@@ -83,9 +100,6 @@ except (Exception, SystemExit), e:
 
 console('main', 'Closing server sockets')
 server.server_close()
-
-console('main', 'Flushing database')
-db().diskQueue.flush()
 
 if pidFile:
 	os.remove(pidFile)

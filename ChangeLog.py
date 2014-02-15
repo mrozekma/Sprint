@@ -4,8 +4,9 @@ import re
 from traceback import extract_stack
 from utils import *
 
-from DB import ActiveRecord
 from User import User
+
+from stasis.ActiveRecord import ActiveRecord, link
 
 class ChangeLog:
 	id = 1
@@ -40,7 +41,7 @@ class ChangeLog:
 		return (getNow() - first) < timedelta(weeks = 2)
 
 class ChangeRecord(ActiveRecord):
-	user = ActiveRecord.idObjLink(User, 'userid')
+	user = link(User, 'userid')
 
 	def __init__(self, changeid, userid, timestamp = None, id = None):
 		ActiveRecord.__init__(self)

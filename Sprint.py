@@ -1,16 +1,18 @@
 from __future__ import division
 from datetime import timedelta
 
-from utils import *
-from DB import ActiveRecord, db
 from User import User
 from Project import Project
+from utils import *
+
+from stasis.ActiveRecord import ActiveRecord, link
 
 class Sprint(ActiveRecord):
-	project = ActiveRecord.idObjLink(Project, 'projectid')
-	owner = ActiveRecord.idObjLink(User, 'ownerid')
+	project = link(Project, 'projectid')
+	owner = link(User, 'ownerid')
+	members = link(User, 'memberids')
 
-	def __init__(self, projectid, name, ownerid, start, end, id = None):
+	def __init__(self, projectid, name, ownerid, start, end, memberids = set(), id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.projectid = projectid
@@ -18,20 +20,16 @@ class Sprint(ActiveRecord):
 		self.ownerid = ownerid
 		self.start = start
 		self.end = end
-		self.members = ActiveRecord.loadLink(self, 'members', [('sprintid', self.id)], User, 'userid')
+		self.memberids = memberids
 
 	@classmethod
 	def loadAllActive(cls, member = None, project = None):
-		rtn = filter(lambda s: s.isActive(), Sprint.loadAll())
+		rtn = filter(lambda s: s.isActive() or s.isPlanning(), Sprint.loadAll())
 		if member:
 			rtn = filter(lambda s: member in s.members, rtn)
 		if project:
 			rtn = filter(lambda s: s.project == project, rtn)
 		return rtn
-
-	def save(self):
-		ActiveRecord.save(self)
-		ActiveRecord.saveLink(self, self.members, 'members', [('sprintid', self.id)], User, 'userid')
 
 	def getStartStr(self):
 		return formatDate(tsToDate(self.start))
@@ -63,7 +61,7 @@ class Sprint(ActiveRecord):
 	def canEdit(self, user):
 		return (self.isActive() or self.isPlanning()) and user and user.hasPrivilege('Write')
 
-	def getTasks(self, orderby = 'seq ASC', includeDeleted = False):
+	def getTasks(self, orderby = 'seq', includeDeleted = False):
 		from Task import Task
 		tasks = Task.loadAll(sprintid = self.id, orderby = orderby)
 		# This is filtered here instead of in Task.loadAll to prevent loading old revisions
@@ -71,7 +69,7 @@ class Sprint(ActiveRecord):
 			tasks = filter(lambda t: not t.deleted, tasks)
 		return tasks
 
-	def getGroups(self, orderby = 'seq ASC'):
+	def getGroups(self, orderby = 'seq'):
 		from Group import Group
 		return Group.loadAll(sprintid = self.id, orderby = orderby)
 

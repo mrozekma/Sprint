@@ -1,16 +1,16 @@
 from inspect import getmembers
 
-from DB import ActiveRecord, db
-from Privilege import Privilege
 from Settings import settings
 from utils import md5
+
+from stasis.ActiveRecord import ActiveRecord
 
 USERNAME_PATTERN = '[a-zA-Z0-9]+'
 AVATAR_TYPES = ['png', 'gif', 'jpeg']
 AVATAR_MAX_SIZE = 5 * 1024 * 1024 # bytes
 
 class User(ActiveRecord):
-	def __init__(self, username, password, hotpKey = '', lastseen = 0, resetkey = 0, avatar = None, id = None):
+	def __init__(self, username, password, hotpKey = '', lastseen = 0, resetkey = 0, avatar = None, privileges = set(), id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.username = username
@@ -19,9 +19,20 @@ class User(ActiveRecord):
 		self.lastseen = lastseen
 		self.resetkey = resetkey
 		self.avatar = avatar
+		self.privileges = privileges
 
 		if not id:
 			self.password = User.crypt(self.username, self.password)
+
+	def save(self):
+		#DEBUG #NO
+		if not isinstance(self.privileges, (set, frozenset)):
+			raise RuntimeError("Broken type (%s)" % type(self.privileges).__name__)
+		newUser = (self.id is None)
+		ActiveRecord.save(self)
+		if newUser:
+			from Prefs import Prefs
+			Prefs.getDefaults(self).save()
 
 	def str(self, role = None, link = True, id = None):
 		roles = {
@@ -54,19 +65,14 @@ class User(ActiveRecord):
 		other = User.load(state)
 		fields = set(User.fields())
 		vals = dict(getmembers(other))
-		self.__init__(**dict([(field, vals[field]) for field in fields]))
-
-	def getPrivileges(self):
-		return Privilege.load(userid = self.id)
+		self.__init__(**{field: vals[field] for field in fields})
 
 	def hasPrivilege(self, name):
-		if not self.id:
-			return False
-		return db().matches("SELECT g.* FROM grants AS g, privileges AS p WHERE g.userid=? AND g.privid=p.id AND p.name=?", self.id, name)
+		return name in self.privileges
 
 	def getPrefs(self):
 		from Prefs import Prefs
-		return Prefs.load(userid = self.id) or Prefs.getDefaults(self)
+		return Prefs.load(self.id)
 
 	def getEmail(self):
 		return "%s@%s" % (self.username, settings.emailDomain)

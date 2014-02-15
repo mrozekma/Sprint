@@ -413,3 +413,7 @@ def testQueryStr(handler, a = None, b = None, c = None, d = None):
 	sys.stdout.write("d = ")
 	pprint(d)
 	print "</pre>"
+
+@get('test/error')
+def testError(handler):
+	raise RuntimeError("Test")

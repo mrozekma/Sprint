@@ -5,6 +5,8 @@ import sys
 import os
 from datetime import datetime
 
+dbFilename = 'db'
+gitURL = 'https://github.com/mrozekma/sprint/commit/%(hash)s'
 loadTime = datetime.now()
 devMode = None # Also checked in wrappers
 brickMessage = False

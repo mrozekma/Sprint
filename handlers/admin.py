@@ -13,12 +13,11 @@ from time import sleep
 from rorn.Box import ErrorBox, WarningBox, SuccessBox
 from rorn.Lock import locks, counters
 from rorn.ResponseWriter import ResponseWriter
-from rorn.Session import sessions, delay, undelay
+from rorn.Session import Session, delay, undelay
 from rorn.code import highlightCode
 
 from HTTPServer import server
-from DB import db, DiskQueue
-from Privilege import Privilege, admin as requireAdmin, defaults as privDefaults
+from Privilege import admin as requireAdmin, privs as privList, defaults as privDefaults
 from Project import Project
 from Sprint import Sprint
 from User import User, USERNAME_PATTERN
@@ -61,13 +60,6 @@ def adminInfo(handler):
 	print "Started %s<br>" % loadTime
 	print "Up for %s<br>" % timesince(loadTime)
 	print "Total requests: %d<br>" % server().getTotalRequests()
-
-	print "<h3>Database</h3>"
-	print "Writing to memory; mirroring to disk every %d seconds / %d writes<br>" % (DiskQueue.PERIOD, DiskQueue.SIZE)
-	print "Current queue size: %d<br>" % db().diskQueue.size
-	print "Last sync: %s (%s ago)<br>" % (db().diskQueue.lastFlush, pluralize(int((datetime.now() - db().diskQueue.lastFlush).total_seconds()), 'second', 'seconds'))
-	print "Disk writes: %d<br>" % db().counts['flush']
-	print "Total queries: %d<br>" % db().counts['total']
 
 	print "<h3>Threads</h3>"
 	print "<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\">"
@@ -206,8 +198,8 @@ def adminUsers(handler):
 	print "<table class=\"list\">"
 	print "<tr><td class=\"left\">Username:</td><td class=\"right\"><input type=\"text\" name=\"username\"></td></tr>"
 	print "<tr><td class=\"left\">Privileges:</td><td class=\"right\"><div>"
-	for priv in Privilege.loadAll():
-		print "<input type=\"checkbox\" name=\"privileges[]\" id=\"priv%d\" value=\"%s\"%s><label for=\"priv%d\">%s &mdash; %s</label><br>" % (priv.id, priv.name, ' checked' if priv.name in privDefaults else '', priv.id, priv.name, priv.description)
+	for name, desc in privList.iteritems():
+		print "<input type=\"checkbox\" name=\"privileges[]\" id=\"priv_%s\" value=\"%s\"%s><label for=\"priv_%s\">%s &mdash; %s</label><br>" % (name, name, ' checked' if name in privDefaults else '', name, name, desc)
 	print "</div></td></tr>"
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
 	print Button('Save', id = 'save-button', type = 'submit').positive()
@@ -238,7 +230,7 @@ def adminUsersPost(handler, p_action, p_username, p_privileges = []):
 
 			random.seed()
 			hadPreviousKey = (user.resetkey != None and user.resetkey != '0')
-			user.resetkey = "%x" % random.randint(268435456, 4294967295)
+			user.resetkey = "%x" % random.randint(0x10000000, 0xffffffff)
 			user.save()
 			Event.genResetKey(handler, user)
 
@@ -269,16 +261,14 @@ def adminUsersPost(handler, p_action, p_username, p_privileges = []):
 				ErrorBox.die('Add User', "There is already a user named <b>%s</b>" % stripTags(p_username))
 			if not re.match("^%s$" % USERNAME_PATTERN, p_username):
 				ErrorBox.die('Add User', "Username <b>%s</b> is illegal" % stripTags(p_username))
-			privileges = [Privilege.load(name = name) for name in p_privileges]
-			if not all(privileges):
+			if not all(name in privList for name in p_privileges):
 				ErrorBox.die('Add User', "Unrecognized privilege name")
 
-			user = User(p_username, '')
-			user.save()
+			user = User(p_username, '', privileges = set(p_privileges))
 			Event.newUser(handler, user)
-			for priv in privileges:
-				db().update("INSERT INTO grants(userid, privid) VALUES(?, ?)", user.id, priv.id)
+			for priv in p_privileges:
 				Event.grantPrivilege(handler, user, priv, True)
+			user.save()
 
 			delay(handler, SuccessBox("Added user <b>%s</b>" % stripTags(p_username), close = True))
 			redirect("/users/%s" % user.username)
@@ -458,6 +448,7 @@ def adminSessions(handler, username = None):
 
 	print "<table border=0 cellspacing=4>"
 	print "<tr><th>Key</th><th>User</th><th>Last address</th><th>Last seen</th><th>&nbsp;</th></tr>"
+	sessions = {sessionID: Session.load(sessionID) for sessionID in Session.getIDs()}
 	for key, session in sorted(sessions.iteritems(), lambda (k1, s1), (k2, s2): cmpSessionTimes(s1, s2), reverse = True):
 		if username and (('user' not in session) or session['user'].username != username):
 			continue
@@ -482,8 +473,9 @@ def adminSessionsPost(handler, p_key, p_action, p_value = None):
 	requireAdmin(handler)
 	print "<script src=\"/static/admin-sessions.js\" type=\"text/javascript\"></script>"
 
-	if not p_key in sessions:
+	if not p_key in Session.getIDs():
 		ErrorBox.die("Retrieve session", "No session exists with key <b>%s</b>" % stripTags(p_key))
+	session = Session.load(p_key)
 
 	for case in switch(p_action):
 		if case('reassign'):
@@ -492,7 +484,7 @@ def adminSessionsPost(handler, p_key, p_action, p_value = None):
 				user = User.load(int(p_value))
 				if not user:
 					ErrorBox.die("Load user", "No user exists with ID <b>%s</b>" % stripTags(p_value))
-				sessions[p_key]['user'] = user
+				session['user'] = user
 				redirect('/admin/sessions')
 			else:
 				print "<form method=\"post\" action=\"/admin/sessions\">"
@@ -507,7 +499,7 @@ def adminSessionsPost(handler, p_key, p_action, p_value = None):
 				print "</form>"
 				break
 		if case('destroy'):
-			del sessions[p_key]
+			Session.destroy(p_key)
 			redirect('/admin/sessions')
 			break
 		break
@@ -519,8 +511,7 @@ def adminPrivileges(handler, username = None):
 	undelay(handler)
 
 	users = User.loadAll(orderby = 'username')
-	privs = Privilege.loadAll()
-	counts = dict((row['privid'], row['count']) for row in db().select("SELECT privid, COUNT(*) AS count FROM grants GROUP BY privid"))
+	counts = {name: len(filter(lambda user: name in user.privileges, users)) for name in privList}
 
 	if username:
 		print "<style type=\"text/css\">"
@@ -532,19 +523,19 @@ def adminPrivileges(handler, username = None):
 	print "<h3>List</h3>"
 	print "<table border=\"0\" cellspacing=\"4\">"
 	print "<tr><th>Name</th><th>Grants</th><th>Description</th></tr>"
-	for priv in privs:
-		print "<tr><td>%s</td><td>%d</td><td>%s</td></tr>" % (priv.name, counts[priv.id] if priv.id in counts else 0, priv.description)
+	for name, desc in privList.iteritems():
+		print "<tr><td>%s</td><td>%d</td><td>%s</td></tr>" % (name, counts[name] if name in counts else 0, desc)
 	print "</table>"
 
 	print "<h3>Grants</h3>"
 	print "<form method=\"post\" action=\"/admin/privileges\">"
 	print "<table border=\"0\" cellspacing=\"0\" cellpadding=\"2\" class=\"granttable\">"
-	print "<tr><td>&nbsp;</td>%s</tr>" % ''.join("<td>%s</td>" % priv.name for priv in privs)
+	print "<tr><td>&nbsp;</td>%s</tr>" % ''.join("<td>%s</td>" % name for name in privList)
 	for user in users:
 		print "<tr username=\"%s\">" % user.username
 		print "<td>%s</td>" % user.username
-		for priv in privs:
-			print "<td><input type=\"checkbox\" name=\"grant[%s][%s]\"%s></td>" % (user.username, priv.name, ' checked' if user.hasPrivilege(priv.name) else '')
+		for name in privList:
+			print "<td><input type=\"checkbox\" name=\"grant[%s][%s]\"%s></td>" % (user.username, name, ' checked' if user.hasPrivilege(name) else '')
 		print "</tr>"
 	print "<tr><td>&nbsp;</td><td colspan=\"3\">%s</td></tr>" % Button('Save', type = 'submit').positive()
 	print "</table>"
@@ -570,12 +561,13 @@ def adminPrivilegesPost(handler, p_grant):
 			has = user.hasPrivilege(name)
 			if has and name not in privs:
 				print "Revoking %s from %s<br>" % (name, username)
-				db().update("DELETE FROM grants WHERE userid = ? AND privid = ?", user.id, priv.id)
+				user.privileges.remove(priv.name)
 				Event.revokePrivilege(handler, user, priv)
 			elif not has and name in privs:
 				print "Granting %s to %s<br>" % (name, username)
-				db().update("INSERT INTO grants(userid, privid) VALUES(?, ?)", user.id, priv.id)
+				user.privileges.add(priv.name)
 				Event.grantPrivilege(handler, user, priv, False)
+		user.save()
 	print "Done"
 
 @admin('admin/repl', 'REPL', 'repl')
@@ -749,7 +741,7 @@ def adminLog(handler, page = 1, users = None, types = None):
 
 	handler.title('Log')
 	requireAdmin(handler)
-	entries = LogEntry.loadAll(orderby = 'timestamp DESC')
+	entries = LogEntry.loadAll(orderby = '-timestamp')
 
 	users = set(User.load(int(id)) for id in users) if users else (User.loadAll(orderby = 'username') + [None])
 	# if not all(users):

@@ -7,9 +7,8 @@ from datetime import datetime
 from shutil import copy
 
 from rorn.ResponseWriter import ResponseWriter
-from rorn.Session import sessions
+from rorn.Session import Session
 
-from DB import db
 from HTTPServer import server
 from utils import *
 
@@ -88,10 +87,12 @@ class Cron:
 
 @job('Old sessions', DAILY)
 def oldSessions():
-	print "Processing %s<br><br>" % pluralize(len(sessions), 'session', 'sessions')
+	ids = Session.getIDs()
+	print "Processing %s<br><br>" % pluralize(len(ids), 'session', 'sessions')
 	toDelete = []
 	now = getNow()
-	for key, session in sessions.iteritems():
+	for key in ids.iteritems():
+		session = Session.load(key)
 		age = (now - session['timestamp']) if session['timestamp'] else None
 
 		if session['user']:
@@ -109,7 +110,7 @@ def oldSessions():
 
 	print "<br>Deleting %s... " % pluralize(len(toDelete), 'session', 'sessions'),
 	for key in toDelete:
-		del sessions[key]
+		Session.destroy(key)
 	print "done"
 
 @job('Backup', DAILY)
@@ -130,6 +131,8 @@ def backup():
 
 	print "Backup to %s successful" % filename
 
+#TODO #NO
+"""
 @job('Log Archive', MONTHLY)
 def logArchive():
 	if not isdir('logs'):
@@ -157,3 +160,4 @@ def logArchive():
 	db().update("DELETE FROM log")
 	db().update("VACUUM")
 	print "Archived %s to %s" % (pluralize(numRows, 'log entry', 'log entries'), filename)
+"""

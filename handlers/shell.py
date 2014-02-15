@@ -1,7 +1,7 @@
 from json import dumps as toJS
 from shlex import split
 
-from LoadValues import getLoadtime, getRevisionInfo, isDevMode, setDevMode
+from LoadValues import gitURL, getLoadtime, getRevisionInfo, isDevMode, setDevMode
 from Project import Project
 from SavedSearch import SavedSearch
 from Settings import settings
@@ -129,7 +129,7 @@ def helpCommand(context, command):
 @command('info')
 def info(context):
 	revisionHash, revisionDate, revisionRelative = getRevisionInfo()
-	print "Sprint tool, revision %s" % link(revisionHash, settings.gitURL % {'hash': revisionHash})
+	print "Sprint tool, revision %s" % link(revisionHash, gitURL % {'hash': revisionHash})
 	if isDevMode():
 		print clr("Development mode", 'red')
 	else:
