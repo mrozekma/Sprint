@@ -75,41 +75,44 @@ for row in cur:
 cur.close()
 
 # members -> sprints.members
-for sprintid in dest['sprints']:
-	with dest['sprints'].change(sprintid) as data:
-		data['memberids'] = set()
-cur = source.cursor()
-cur.execute("SELECT * FROM members")
-for row in cur:
-	print "%-20s %d (%d)" % ('members', row['sprintid'], row['userid'])
-	with dest['sprints'].change(int(row['sprintid'])) as data:
-		data['memberids'].add(row['userid'])
-cur.close()
+if 'sprints' in dest:
+	for sprintid in dest['sprints']:
+		with dest['sprints'].change(sprintid) as data:
+			data['memberids'] = set()
+	cur = source.cursor()
+	cur.execute("SELECT * FROM members")
+	for row in cur:
+		print "%-20s %d (%d)" % ('members', row['sprintid'], row['userid'])
+		with dest['sprints'].change(int(row['sprintid'])) as data:
+			data['memberids'].add(row['userid'])
+	cur.close()
 
 # assigned -> tasks.assigned
-for taskid in dest['tasks']:
-	with dest['tasks'].change(taskid) as data:
-		for rev in data:
-			rev['assignedids'] = set()
-cur = source.cursor()
-cur.execute("SELECT * FROM assigned")
-for row in cur:
-	print "%-20s %d (revision %d) %s" % ('assigned', row['taskid'], row['revision'], row['userid'])
-	with dest['tasks'].change(int(row['taskid'])) as data:
-		data[int(row['revision']) - 1]['assignedids'].add(row['userid'])
-cur.close()
+if 'tasks' in dest:
+	for taskid in dest['tasks']:
+		with dest['tasks'].change(taskid) as data:
+			for rev in data:
+				rev['assignedids'] = set()
+	cur = source.cursor()
+	cur.execute("SELECT * FROM assigned")
+	for row in cur:
+		print "%-20s %d (revision %d) %s" % ('assigned', row['taskid'], row['revision'], row['userid'])
+		with dest['tasks'].change(int(row['taskid'])) as data:
+			data[int(row['revision']) - 1]['assignedids'].add(row['userid'])
+	cur.close()
 
 # search_uses -> searches.followers
-for searchid in dest['searches']:
-	with dest['searches'].change(searchid) as data:
-		data['followerids'] = set()
-cur = source.cursor()
-cur.execute("SELECT * FROM search_uses")
-for row in cur:
-	print "%-20s %d (%d)" % ('search_uses', row['searchid'], row['userid'])
-	with dest['searches'].change(int(row['searchid'])) as data:
-		data['followerids'].add(row['userid'])
-cur.close()
+if 'searches' in dest:
+	for searchid in dest['searches']:
+		with dest['searches'].change(searchid) as data:
+			data['followerids'] = set()
+	cur = source.cursor()
+	cur.execute("SELECT * FROM search_uses")
+	for row in cur:
+		print "%-20s %d (%d)" % ('search_uses', row['searchid'], row['userid'])
+		with dest['searches'].change(int(row['searchid'])) as data:
+			data['followerids'].add(row['userid'])
+	cur.close()
 
 # prefs is converted normally, except the id is now set to the userid
 # prefs_backlog_styles -> prefs.backlogStyles
@@ -143,23 +146,25 @@ for userid in dest['users']:
 
 # Availability is now stored by sprint id
 # The contents are {user_id: {timestamp: hours}}
-oneday = timedelta(1)
-for sprintid, data in dest['sprints'].iteritems():
-	m = {}
-	for userid in data['memberids']:
-		m[userid] = {}
-		print "%-20s %d %d" % ('availability', sprintid, userid)
-		cur = source.cursor()
-		cur.execute("SELECT hours, timestamp FROM availability WHERE sprintid = %d AND userid = %d AND timestamp != 0" % (sprintid, userid))
-		for row in cur:
-			m[userid][int(row['timestamp'])] = int(row['hours'])
-		cur.close()
-	dest['availability'][sprintid] = m
+if 'sprints' in dest:
+	oneday = timedelta(1)
+	for sprintid, data in dest['sprints'].iteritems():
+		m = {}
+		for userid in data['memberids']:
+			m[userid] = {}
+			print "%-20s %d %d" % ('availability', sprintid, userid)
+			cur = source.cursor()
+			cur.execute("SELECT hours, timestamp FROM availability WHERE sprintid = %d AND userid = %d AND timestamp != 0" % (sprintid, userid))
+			for row in cur:
+				m[userid][int(row['timestamp'])] = int(row['hours'])
+			cur.close()
+		dest['availability'][sprintid] = m
 
 # Make search.public a bool instead of an int
-for searchid, data in dest['searches'].iteritems():
-	with dest['searches'].change(searchid) as data:
-		data['public'] = bool(data['public'])
+if 'searches' in dest:
+	for searchid, data in dest['searches'].iteritems():
+		with dest['searches'].change(searchid) as data:
+			data['public'] = bool(data['public'])
 
 # Bump the DB version
 dest['settings']['dbVersion'] = 20
