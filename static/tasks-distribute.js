@@ -167,11 +167,11 @@ function showChart() {
 	for(i in usernames) {
 		userid = nameToID[usernames[i]];
 		user = distData[userid];
-		pcnt = user.availability == 0 ? 100 : Math.min(Math.floor(user.hours * 100 / user.availability), 100);
+		pcnt = user.availability == 0 ? 100 : Math.floor(user.hours * 100 / user.availability);
 
 		categories.push(user.username);
 		data.push({
-			y: pcnt,
+			y: Math.min(pcnt, 100),
 			color: (pcnt < distMin) ? '#4572A7' : (pcnt > distMax) ? '#AA4643' : '#4BB24D'
 		});
 	}
