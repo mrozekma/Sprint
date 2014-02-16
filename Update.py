@@ -36,7 +36,7 @@ depcheck()
 import sys
 import termios
 import tty
-from os import mkdir
+from os import mkdir, rename
 from os.path import exists, isfile, isdir, splitext
 from getpass import getpass
 from socket import gethostname
@@ -89,7 +89,7 @@ def check():
 			print "  * Switch back to the latest Sprint revision"
 			print "  * Run %s --update again to switch from sqlite to stasis" % sys.argv[0]
 		else:
-			print "Sprint has changed backend formats, so your entire existing database needs to be converted. This is an automated procedure; your old database will be renamed 'db-old.sqlite'"
+			print "Sprint has changed backend formats, so your entire existing database needs to be converted. This is an automated procedure; your old database will be renamed 'db-old.sqlite'. The logs folder will also be converted to a stasis database with a single 'log' table; the existing logs folder will be renamed logs-old."
 			print
 			print "Run database conversion? [\033[1;32mYes\033[0m/\033[1;31mNo\033[0m] ",
 			fd = sys.stdin.fileno()
@@ -108,6 +108,9 @@ def check():
 			sleep(3)
 			import sqlite_to_stasis
 			print
+			if isdir('logs'):
+				rename('logs', 'logs-old')
+			mkdir('logs')
 			print "Database conversion complete. %s" % HOW_TO_RUN
 			exit(0)
 

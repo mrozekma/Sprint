@@ -711,7 +711,7 @@ def adminCron(handler):
 		print "</form>"
 	print "<br><br>"
 
-@post('admin/cron/run', statics = 'admin-cron')
+@post('admin/cron/run', statics = ['admin', 'admin-cron'])
 def adminCronRun(handler, p_name):
 	handler.title('Run cron job')
 	requireAdmin(handler)

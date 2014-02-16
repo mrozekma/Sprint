@@ -1,5 +1,5 @@
 import re
-from sqlite3 import connect
+import tarfile
 from threading import Thread
 from time import sleep
 from os.path import isdir, exists
@@ -9,6 +9,10 @@ from shutil import copy
 from rorn.ResponseWriter import ResponseWriter
 from rorn.Session import Session
 
+from stasis.DiskMap import DiskMap
+from stasis.Singleton import get as db
+
+from LoadValues import dbFilename
 from HTTPServer import server
 from utils import *
 
@@ -91,7 +95,7 @@ def oldSessions():
 	print "Processing %s<br><br>" % pluralize(len(ids), 'session', 'sessions')
 	toDelete = []
 	now = getNow()
-	for key in ids.iteritems():
+	for key in ids:
 		session = Session.load(key)
 		age = (now - session['timestamp']) if session['timestamp'] else None
 
@@ -119,45 +123,27 @@ def backup():
 		print "No backups directory exists; aborting"
 		return
 
-	filename = datetime.now().strftime('backups/%Y%m%d-%H%M%S.db')
+	filename = datetime.now().strftime('backups/%Y%m%d-%H%M%S.tar.gz')
 	if exists(filename):
-		print "Backup file %s already exists; aborting" % filename
+		print "Backup file <code>%s</code> already exists; aborting" % filename
 		return
 
-	copy('db', filename)
+	f = tarfile.open(filename, 'w:gz')
+	f.add(dbFilename)
+	f.close()
 	if not exists(filename):
-		print "Unable to write backup file %s" % filename
+		print "Unable to write backup file <code>%s</code>" % filename
 		return
 
-	print "Backup to %s successful" % filename
+	print "Backup to <code>%s</code> successful" % filename
 
-#TODO #NO
-"""
 @job('Log Archive', MONTHLY)
 def logArchive():
 	if not isdir('logs'):
 		print "No logs directory exists; aborting"
 		return
 
-	filename = datetime.now().strftime('logs/%Y%m%d-%H%M%S.log')
-	if exists(filename):
-		print "Log file %s already exists; aborting" % filename
-		return
-
-	cursor = db().cursor()
-	cursor.execute("ATTACH DATABASE '%s' AS archive" % filename)
-	cursor.execute("SELECT sql FROM main.sqlite_master WHERE type = 'table' AND name = 'log'")
-	sql = cursor.fetchone()[0]
-	if not sql.startswith('CREATE TABLE log'):
-		print "Unexpected SQL: %s" % sql
-		return
-	cursor.execute(sql.replace('CREATE TABLE log', 'CREATE TABLE archive.log'))
-	cursor.execute("INSERT INTO archive.log SELECT * FROM log")
-	cursor.execute("SELECT COUNT(*) FROM archive.log")
-	numRows = cursor.fetchone()[0]
-	cursor.execute("DETACH DATABASE archive")
-
-	db().update("DELETE FROM log")
-	db().update("VACUUM")
-	print "Archived %s to %s" % (pluralize(numRows, 'log entry', 'log entries'), filename)
-"""
+	logDB = DiskMap('logs')
+	logDB['log'].merge(db()['log'])
+	print "Archived %s; %d total" % (pluralize(len(db()['log']), 'log entry', 'log entries'), len(logDB['log']))
+	db()['log'].truncate(resetID = False)
