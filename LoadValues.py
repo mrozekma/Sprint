@@ -1,3 +1,4 @@
+from Log import console
 from Options import option
 from utils import *
 
@@ -23,7 +24,7 @@ def getLoadtime():
 def isDevMode(handler = None):
 	if devMode is None:
 		setDevMode(option('dev'))
-	return devMode and ((handler.session['user'] and handler.session['user'].hasPrivilege('Dev')) if handler else True)
+	return devMode and ((handler is None) or (handler.session['user'] and handler.session['user'].hasPrivilege('Dev')))
 
 def setDevMode(dev):
 	global devMode
@@ -32,7 +33,7 @@ def setDevMode(dev):
 def brick(msg):
 	global brickMessage
 	brickMessage = msg or True
-	sys.__stdout__.write("BRICK: %s\n" % brickMessage)
+	console('brick', "Bricked: %s", brickMessage)
 
 def bricked():
 	return brickMessage

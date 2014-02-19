@@ -41,16 +41,17 @@ def basePath():
 	return dirname(__file__).replace('/rorn', '')
 
 def formatException():
+	type, e, tb = sys.exc_info()
+	return "<b>%s: %s</b><br><br>%s" % (type.__name__, str(e).replace('\n', '<br>'), formatTrace(traceback.extract_tb(tb)))
+
+def formatTrace(frames):
 	from code import highlightCode
 	from ResponseWriter import ResponseWriter
-	type, e, tb = sys.exc_info()
-
 	writer = ResponseWriter()
 	base = basePath()
 	lpad = len(base) + 1
-	print "<b>%s: %s</b><br><br>" % (type.__name__, str(e).replace('\n', '<br>'))
 	print "<div class=\"code_default light\" style=\"padding: 4px\">"
-	for filename, line, fn, stmt in traceback.extract_tb(tb):
+	for filename, line, fn, stmt in frames:
 		print "<div class=\"code_header\">%s:%s(%d)</div>" % (filename[lpad:] if filename.startswith(base) else "<i>%s</i>" % filename.split('/')[-1], fn, line)
 		print "<div style=\"padding: 0px 0px 10px 20px\">"
 		print highlightCode(stmt)

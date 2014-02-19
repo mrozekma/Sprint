@@ -14,13 +14,15 @@ from threading import currentThread
 os.chdir(dirname(abspath(__file__)))
 
 # We give stasis a single lock for all DiskMaps, but there will only be one DiskMap
-from rorn.Lock import getLock
+from rorn.Lock import getLock, setStackRecording
 from stasis.Lock import setMutexProvider
 setMutexProvider(lambda: getLock('#stasis'))
 
 from Options import option, parse as parseOptions
 parseOptions()
 Update.check()
+if option('lock-tracking'):
+	setStackRecording(True)
 
 from stasis.Singleton import set as setDB
 from stasis.DiskMap import DiskMap

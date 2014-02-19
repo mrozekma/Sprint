@@ -1,4 +1,5 @@
 import socket
+from time import sleep
 
 from Settings import PORT
 from utils import *
@@ -34,7 +35,7 @@ class HTTPServer(ParentServer):
 			if self.currentRequests.count <= expected:
 				return lock
 			lock.release()
-			threadYield()
+			sleep(.1)
 
 	def close_request(self, request):
 		self.currentRequests.dec()

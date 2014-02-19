@@ -7,10 +7,12 @@ from pprint import pformat
 from json import loads as fromJS, dumps as toJS
 from cgi import escape
 from datetime import datetime, time
+import sys
 from threading import enumerate as threads
 from time import sleep
+import traceback
 
-from rorn.Box import ErrorBox, WarningBox, SuccessBox
+from rorn.Box import ErrorBox, WarningBox, SuccessBox, CollapsibleBox
 from rorn.Lock import locks, counters
 from rorn.ResponseWriter import ResponseWriter
 from rorn.Session import Session, delay, undelay
@@ -75,7 +77,32 @@ def adminInfo(handler):
 	print "<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\">"
 	print "<tr><th class=\"main\">Name</th><th>Available</th><th>Reentrant</th></tr>"
 	for (name, lock) in sorted(locks.iteritems()):
-		print "<tr><td>%s</td><td class=\"%s\">&nbsp;</td><td class=\"%s\">&nbsp;</td></tr>" % (name, 'yes' if lock.avail() else 'no', 'yes' if lock.reentrant() else 'no')
+		print "<tr><td>"
+		print name
+		avail = lock.avail()
+		if not avail:
+			print "<br>"
+			writer = ResponseWriter()
+			try:
+				owner, tb = lock.owner, lock.tb
+				name = ("%x" % abs(owner)) if owner else 'None'
+				#TODO Is there no O(1) way to do this?
+				for thread in threads():
+					if thread.ident == owner:
+						name = "%s (%x)" % (thread.name, abs(owner))
+						break
+				print "Owned by: <b>%s</b><br><br>" % name
+				if tb:
+					print "Acquisition traceback:<br>"
+					print formatTrace(tb)
+					print "<br>"
+				print "Current traceback:<br>"
+				print formatTrace(traceback.extract_stack(sys._current_frames()[owner]))
+			except Exception, e:
+				writer.clear()
+				print "<i>(Unable to retrieve stack trace)</i>"
+			print CollapsibleBox('Ownership', writer.done())
+		print "</td><td class=\"%s\">&nbsp;</td><td class=\"%s\">&nbsp;</td></tr>" % ('yes' if avail else 'no', 'yes' if lock.reentrant() else 'no')
 	print "</table>"
 
 	print "<h3>Counters</h3>"
