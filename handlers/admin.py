@@ -784,7 +784,9 @@ def adminLog(handler, page = 1, users = None, types = None):
 
 	handler.title('Log')
 	requireAdmin(handler)
+	LogEntry.cacheAll()
 	entries = LogEntry.loadAll(orderby = '-timestamp')
+	filtered = (users is not None) or (types is not None)
 
 	users = set(User.load(int(id)) for id in users) if users else (User.loadAll(orderby = 'username') + [None])
 	# if not all(users):
@@ -794,7 +796,8 @@ def adminLog(handler, page = 1, users = None, types = None):
 	if 'error' in types:
 		errorCounter.reset()
 
-	entries = filter(lambda entry: entry.user in users and entry.type in types, entries)
+	if filtered:
+		entries = filter(lambda entry: entry.user in users and entry.type in types, entries)
 	page = int(page)
 	pages = max(len(entries) / PAGE_LEN, 1)
 	if page < 1: page = 1
