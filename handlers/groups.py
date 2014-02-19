@@ -222,6 +222,7 @@ def deleteGroupPost(handler, id, p_newGroup = None):
 	requirePriv(handler, 'User')
 	handler.wrappers = False
 
+	id = int(id)
 	group = Group.load(id)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)

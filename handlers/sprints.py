@@ -414,7 +414,7 @@ def sprintPost(handler, sprintid, p_id, p_rev_id, p_field, p_value):
 			elif case('goal'):
 				parsedValue = None
 				if p_value != '0':
-					parsedValue = Goal.load(p_value)
+					parsedValue = Goal.load(to_int(p_value, 'goal', die))
 					if not parsedValue:
 						die("Unknown goal: <b>%s</b>" % stripTags(p_value))
 					if parsedValue.sprint != sprint:
