@@ -13,6 +13,10 @@ from threading import currentThread
 
 os.chdir(dirname(abspath(__file__)))
 
+from HTTPServer import LoadingServer
+preServer = LoadingServer()
+preServer.serve_bg()
+
 # We give stasis a single lock for all DiskMaps, but there will only be one DiskMap
 from rorn.Lock import getLock, setStackRecording
 from stasis.Lock import setMutexProvider
@@ -44,12 +48,6 @@ from SessionSerializer import SessionSerializer
 setSerializer(SessionSerializer())
 
 currentThread().name = 'main'
-
-try:
-	server = getServer()
-except ServerError, e:
-	console('server', e.message)
-	exit(1)
 
 Cron.start()
 
@@ -94,6 +92,13 @@ if pidFile:
 		f.write("%d\n" % os.getpid())
 
 restart = False
+preServer.stop()
+
+try:
+	server = getServer()
+except ServerError, e:
+	console('server', e.message)
+	exit(1)
 
 try:
 	console('rorn', 'Listening for connections')

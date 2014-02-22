@@ -1,8 +1,15 @@
 from json import dumps as toJS
 
+from LoadValues import getLoadtime
 from Project import Project
 from Sprint import Sprint
 from utils import *
+
+@get('api/uptime')
+def apiUptime(handler):
+	handler.wrappers = False
+	delta = getNow() - getLoadtime()
+	print delta.days * 60 * 60 * 24 + delta.seconds
 
 @get('api/projects/(?P<id>[0-9]+)/active/(?P<action>[^/]+)')
 def apiProjectActive(handler, id, action):

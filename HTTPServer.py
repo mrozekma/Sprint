@@ -1,3 +1,4 @@
+from BaseHTTPServer import HTTPServer as GrandparentServer, BaseHTTPRequestHandler as GrandparentHandler
 import socket
 from time import sleep
 
@@ -49,6 +50,44 @@ class HTTPServer(ParentServer):
 
 	def anyCurrentRequests(self):
 		return self.currentRequests.any()
+
+class LoadingServer(GrandparentServer, object):
+	class Handler(GrandparentHandler):
+		def do_GET(self):
+			self.send_response(200)
+			self.end_headers()
+			if self.path == '/api/uptime':
+				self.wfile.write("-1\n")
+			else:
+				self.wfile.write(open('static/loading.html').read())
+
+		def do_POST(self):
+			self.send_response(302)
+			self.send_header('Location', '/')
+			self.end_headers()
+
+		def log_message(self, fmt, *args):
+			pass
+
+	def __init__(self):
+		super(LoadingServer, self).__init__(('', PORT), LoadingServer.Handler)
+		self.thread = None
+
+	def serve_bg(self):
+		self.thread = Thread(target = self.serve_wrap)
+		self.thread.daemon = True
+		self.thread.start()
+
+	def serve_wrap(self):
+		try:
+			self.serve_forever()
+		except socket.error:
+			pass
+
+	def stop(self):
+		self.socket.close()
+		if self.thread:
+			self.thread.join()
 
 singleton = None
 def server():
