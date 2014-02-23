@@ -25,7 +25,13 @@ function term_process(command, term) {
 			}
 
 			if('redirect' in data) {
-				window.location = data['redirect'];
+				if('postdata' in data) {
+					$.post(data['redirect'], data['postdata'], function() {
+						term.echo(data['success_msg']);
+					});
+				} else {
+					window.location = data['redirect'];
+				}
 			}
 		}
 	}, 'json');

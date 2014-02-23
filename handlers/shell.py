@@ -30,6 +30,14 @@ class CommandError(RuntimeError): pass
 def fail(str):
 	raise CommandError(str)
 
+class RedirectPost:
+	def __init__(self, target, data, successMsg):
+		self.target = target
+		self.data = data
+		self.successMsg = successMsg
+def redirectPost(target, data = {}, successMsg = clr('Done')):
+	raise RedirectPost(target, data, successMsg)
+
 @post('shell/run')
 def run(handler, p_command, p_path, p_mode = ''):
 	handler.wrappers = False
@@ -71,6 +79,10 @@ def run(handler, p_command, p_path, p_mode = ''):
 			return
 		except Redirect, e:
 			rtn['redirect'] = e.target
+		except RedirectPost, e:
+			rtn['redirect'] = e.target
+			rtn['postdata'] = e.data
+			rtn['success_msg'] = e.successMsg
 
 		rtn['output'] = w.done()
 		if mode is not None:
@@ -79,7 +91,7 @@ def run(handler, p_command, p_path, p_mode = ''):
 			else:
 				rtn['mode'] = rtn['prompt'] = mode
 		if 'redirect' in rtn and rtn['output'] == '':
-			rtn['output'] = clr('Redirecting...', 'yellow')
+			rtn['output'] = clr('Posting...' if 'postdata' in rtn else 'Redirecting...', 'yellow')
 		print toJS(rtn)
 
 def filterCommands(parts, mode = ''):
@@ -330,10 +342,23 @@ def adminLog(context):
 
 @command('dev', mode = 'admin')
 def devMode(context):
-	setDevMode(True)
-	print "Switched to %s mode" % clr('development', 'red')
+	redirectPost('/admin/build', {'mode': 'development'}, "Switched to %s mode" % clr('development', 'red'))
 
 @command('prod', mode = 'admin')
 def prodMode(context):
-	setDevMode(False)
-	print "Switched to %s mode" % clr('production', 'green')
+	redirectPost('/admin/build', {'mode': 'production'}, "Switched to %s mode" % clr('production', 'green'))
+
+@command('impersonate _', mode = 'admin')
+def impersonate(context, username):
+	user = nameLookup(User, username, key = 'username')
+	if not user:
+		fail("No user named %s" % username)
+	redirectPost('/admin/users', {'action': 'impersonate', 'username': username}, "Impersonating %s" % clr(username))
+
+@command('unimpersonate')
+def unimpersonate(context):
+	if 'impersonator' not in context['handler'].session:
+		if not context['handler'].session['user'].hasPrivilege('Admin'):
+			fail("You need the Admin privilege")
+		fail("Not impersonating")
+	redirectPost('/admin/unimpersonate', {}, "Stopped impersonating")
