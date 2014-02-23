@@ -70,7 +70,14 @@ def adminInfo(handler):
 	print "<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\">"
 	print "<tr><th>ID</th><th class=\"main\">Name</th><th>Alive</th><th>Daemon</th></tr>"
 	for thread in sorted(threads(), key = lambda thread: thread.name):
-		print "<tr><td>%s</td><td>%s</td><td class=\"%s\">&nbsp;</td><td class=\"%s\">&nbsp;</td></tr>" % ('None' if thread.ident is None else "%x" % abs(thread.ident), thread.name, 'yes' if thread.isAlive() else 'no', 'yes' if thread.daemon else 'no')
+		print "<tr><td>%s</td><td>" % ('None' if thread.ident is None else "%x" % abs(thread.ident))
+		print thread.name
+		print "<br>"
+		try:
+			print CollapsibleBox('Traceback', formatTrace(traceback.extract_stack(sys._current_frames()[thread.ident])))
+		except Exception:
+			pass
+		print "</td><td class=\"%s\">&nbsp;</td><td class=\"%s\">&nbsp;</td></tr>" % ('yes' if thread.isAlive() else 'no', 'yes' if thread.daemon else 'no')
 	print "</table>"
 
 	print "<h3>Locks</h3>"
