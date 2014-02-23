@@ -1,3 +1,7 @@
+$.noty.defaults.theme = 'sprint';
+$.noty.defaults.layout = 'bottomCenter';
+$.noty.defaults.timeout = 0;
+
 $(document).ready(function () {
 	$('.defaultfocus').focus();
 

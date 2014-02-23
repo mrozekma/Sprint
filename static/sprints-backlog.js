@@ -515,6 +515,11 @@ function set_status(task, status_name) {
 	}
 }
 
+function save_error(text, fatal) {
+	if(fatal === undefined) {fatal = true;}
+	noty({type: fatal ? 'error' : 'warning', text: text})
+}
+
 savingMutex = false;
 function save_task(task, field, value, counter) {
 	console.log("Saving change to " + task.attr('taskid') + "(" + task.attr('revid') + "): " + field + " <- " + value + " (attempt " + (counter == undefined ? 0 : counter) + ")");
@@ -522,10 +527,7 @@ function save_task(task, field, value, counter) {
 
 	if(savingMutex) {
 		if(counter == 10) {
-			box = $('#post-status');
-			box.attr('class', 'alert-message error');
-			$('span.boxbody', box).html("Timed out trying to set task " + task.attr('taskid') + " " + field + " to " + value);
-			showbox(box);
+			save_error("Timed out trying to set task " + task.attr('taskid') + " " + field + " to " + value);
 			$('.saving', task).css('visibility', 'hidden');
 		} else {
 			setTimeout(function() {save_task(task, field, value, (counter == undefined ? 0 : counter) + 1);}, 200);
@@ -535,32 +537,23 @@ function save_task(task, field, value, counter) {
 
 	savingMutex = true;
 	$.post("/sprints/" + sprintid, {'id': task.attr('taskid'), 'rev_id': task.attr('revid'), 'field': field, 'value': value}, function(data, text, request) {
-		box = $('#post-status')
 		switch(request.status) {
 		case 200:
-			box.attr('class', 'alert-message error');
-			$('span.boxbody', box).html(data);
+			save_error(data)
 			break;
 		case 298:
-			box.attr('class', 'alert-message warning');
-			$('span.boxbody', box).html(data);
+			save_error(data, false);
 			break;
 		case 299:
 			rev = parseInt(data, 10);
 			$('tr.task[taskid=' + task.attr('taskid') + ']').attr('revid', rev).addClass('changed-today');
 			console.log("Changed saved; new revision is " + rev);
-			box.fadeOut();
-			box = null;
 			break;
 		default:
-			box.attr('class', 'alert-message success');
-			$('span.boxbody', box).html("Unexpected response code " + request.status)
+			save_error("Unexpected response code " + request.status)
 			break;
 		}
 
-		if(box) {
-			showbox(box);
-		}
 		$('.saving', task).css('visibility', 'hidden');
 		savingMutex = false;
 	});
@@ -582,8 +575,5 @@ function delete_task(task_id) {
 }
 
 function unimplemented(what) {
-	box = $('#post-status');
-	box.attr('class', 'alert-message warning');
-	$('span.boxbody', box).html("<b>Unimplemented</b>: " + what);
-	showbox(box);
+	noty({type: 'error', text: '<b>Unimplemented</b>: ' + what})
 }
