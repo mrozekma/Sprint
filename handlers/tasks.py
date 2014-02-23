@@ -321,7 +321,7 @@ def newTaskMany(handler, group):
 	print "<li><b>X...X|X...X[|X...X[|X...X]]</b> &mdash; 2-4 fields are a new task. The fields can appear in any order:<ul>"
 	print "<li><b>name</b> &mdash; The name of the task</li>"
 	print "<li><b>hours</b> &mdash; The number of hours this task will take</li>"
-	print "<li><b>assignee</b> &mdash; The person assigned to this task. If multiple people, separate usernames with spaces. This field is optional as long as <b>status</b> is also omitted; it defaults to the current user</li>"
+	print "<li><b>assignee</b> &mdash; The person assigned to this task. If multiple people, separate usernames with spaces. This field is optional as long as <b>status</b> is also omitted; it defaults to the current user if a sprint member, or the scrummaster otherwise</li>"
 	print "<li><b>status</b> &mdash; The initial status of the task. This field is optional; it defaults to \"not started\"</li>"
 	print "</ul></li>"
 	print "<li><b>#...</b> &mdash; A line starting with a hash character is a comment, and is ignored. You can only comment out entire lines; a hash within a line does not start a comment at that point</li>"
@@ -401,7 +401,7 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 			name, assigned, status, hours = None, None, None, None
 			for case in switch(len(parts)):
 				if case(2):
-					assigned = {handler.session['user']}
+					assigned = {handler.session['user'] if handler.session['user'] in sprint.members else sprint.owner}
 					# Fall-through
 				if case(3):
 					status = 'not started'
