@@ -6,7 +6,7 @@ menu = [
 	('Users', '/users', []),
 	('Prefs', '/prefs', ['User']),
 	('Search', '#', ['User']),
-	('Admin', '/admin', ['Dev']),
+	('Admin', '/admin', ['Admin']),
 	('Logout', '/logout', ['User'])
 ]
 
@@ -23,7 +23,7 @@ def render(handler, path):
 			rtn.append("<a href=\"%s\">%s</a>" % (url % {'path': path}, text))
 
 			# Include the error count after the admin link
-			if url == '/admin':
+			if url == '/admin' and hasPriv(handler.session['user'], 'Dev'):
 				from event_handlers.ErrorCounter import errorCounter
 				if errorCounter.getCount() > 0:
 					rtn[-1] += "<a class=\"error-count\" href=\"/admin/log?types[]=error\">%d</a>" % errorCounter.getCount()

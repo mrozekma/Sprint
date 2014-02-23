@@ -19,7 +19,7 @@ from rorn.Session import Session, delay, undelay
 from rorn.code import highlightCode
 
 from HTTPServer import server
-from Privilege import admin as requireAdmin, privs as privList, defaults as privDefaults
+from Privilege import requirePriv, privs as privList, defaults as privDefaults
 from Project import Project
 from Sprint import Sprint
 from User import User, USERNAME_PATTERN
@@ -45,7 +45,7 @@ def admin(url, name, icon, **kw):
 @get('admin', statics = 'admin')
 def adminIndex(handler):
 	handler.title('Admin')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 
 	for page in pages:
 		print "<div class=\"admin-list-entry\"><a href=\"%(url)s\"><img class=\"admin-icon\" src=\"/static/images/admin-%(icon)s.png\"></a><br>%(name)s</div>" % page
@@ -53,7 +53,7 @@ def adminIndex(handler):
 @admin('admin/info', 'Information', 'info')
 def adminInfo(handler):
 	handler.title('Information')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 
 	print "<div class=\"info\">"
 
@@ -117,7 +117,7 @@ def adminInfo(handler):
 @post('admin/restart', statics = ['admin', 'admin-restart'])
 def adminRestart(handler, now = False):
 	handler.title('Restart')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 
 	if now:
 		# This is a POST, so we've already blocked other requests and it's safe to restart
@@ -127,29 +127,10 @@ def adminRestart(handler, now = False):
 	else:
 		print "<img src=\"/static/images/loading.gif\">&nbsp;Restarting..."
 
-@admin('admin/test', 'Test pages', 'test-pages')
-def adminTest(handler):
-	handler.title('Test pages')
-	requireAdmin(handler)
-
-	with open('handlers/test.py') as f:
-		found = 0
-		for token, tokString, tokStart, tokEnd, line in tokenize.generate_tokens(f.readline):
-			if token == OP and tokString == '@':
-				found = 1
-			elif token == NEWLINE:
-				found = 0
-			elif token == NAME and tokString == 'get' and found == 1:
-				found = 2
-			elif token == STRING and found == 2:
-				tokString = tokString.replace("'", "")
-				print "<a href=\"/%s\">%s</a><br>" % (tokString, stripTags(tokString))
-				found = 0
-
 @admin('admin/settings', 'Settings', 'settings')
 def adminSettings(handler):
 	handler.title('Settings')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 	undelay(handler)
 
 	print "<style type=\"text/css\">"
@@ -184,7 +165,7 @@ def adminSettings(handler):
 @post('admin/settings')
 def adminSettingsPost(handler, p_emailDomain, p_systemMessage, p_bugzillaURL, p_redis, p_kerberosRealm):
 	handler.title('Settings')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 
 	settings.emailDomain = p_emailDomain
 
@@ -227,7 +208,7 @@ def adminSettingsPost(handler, p_emailDomain, p_systemMessage, p_bugzillaURL, p_
 @admin('admin/users', 'Users', 'users')
 def adminUsers(handler):
 	handler.title('User Management')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 
 	print "<style type=\"text/css\">"
 	print "table.list td.right > * {width: 400px;}"
@@ -262,7 +243,7 @@ def adminUsers(handler):
 @post('admin/users')
 def adminUsersPost(handler, p_action, p_username, p_privileges = []):
 	handler.title('User Management')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 
 	for case in switch(p_action):
 		if case('resetpw'):
@@ -320,7 +301,7 @@ def adminUsersPost(handler, p_action, p_username, p_privileges = []):
 @admin('admin/projects', 'Projects', 'projects', statics = 'admin-projects')
 def adminProjects(handler):
 	handler.title('Project Management')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 
 	print "<style type=\"text/css\">"
 	print "table.list td.right > * {width: 400px;}"
@@ -347,7 +328,7 @@ def adminProjects(handler):
 @post('admin/projects')
 def adminProjectsPost(handler, p_name):
 	handler.title('Project Management')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 
 	if Project.load(name = p_name):
 		ErrorBox.die('Add Project', "There is already a project named <b>%s</b>" % stripTags(p_name))
@@ -361,7 +342,7 @@ def adminProjectsPost(handler, p_name):
 @get('admin/projects/(?P<id>[0-9]+)', statics = ['admin', 'admin-projects'])
 def adminProjectsManage(handler, id):
 	handler.title('Manage Project')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 	project = Project.load(int(id))
 	if not project:
 		ErrorBox.die('Invalid Project', "No project with ID <b>%d</b>" % int(id))
@@ -412,7 +393,7 @@ def adminProjectsManage(handler, id):
 @post('admin/projects/(?P<id>[0-9]+)/move-sprints')
 def adminProjectsMoveSprintsPost(handler, id, p_newproject, p_sprintid = None):
 	handler.title('Move Sprints')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 	project = Project.load(int(id))
 	if not project:
 		ErrorBox.die('Invalid Project', "No project with ID <b>%d</b>" % int(id))
@@ -439,7 +420,7 @@ def adminProjectsMoveSprintsPost(handler, id, p_newproject, p_sprintid = None):
 @post('admin/projects/(?P<id>[0-9]+)/edit')
 def adminProjectsEditPost(handler, id, p_name):
 	handler.title('Edit Project')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 	project = Project.load(int(id))
 	if not project:
 		ErrorBox.die('Invalid Project', "No project with ID <b>%d</b>" % int(id))
@@ -451,7 +432,7 @@ def adminProjectsEditPost(handler, id, p_name):
 @post('admin/projects/(?P<id>[0-9]+)/delete')
 def adminProjectsDeletePost(handler, id, p_newproject = None):
 	handler.title('Delete Project')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 	project = Project.load(int(id))
 	if not project:
 		ErrorBox.die('Invalid Project', "No project with ID <b>%d</b>" % int(id))
@@ -475,7 +456,7 @@ def adminProjectsDeletePost(handler, id, p_newproject = None):
 @admin('admin/sessions', 'Sessions', 'sessions')
 def adminSessions(handler, username = None):
 	handler.title("Sessions for %s" % stripTags(username) if username else "Sessions")
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 
 	undelay(handler)
 
@@ -513,7 +494,7 @@ def adminSessions(handler, username = None):
 @post('admin/sessions')
 def adminSessionsPost(handler, p_key, p_action, p_value = None):
 	handler.title('Sessions')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 	print "<script src=\"/static/admin-sessions.js\" type=\"text/javascript\"></script>"
 
 	if not p_key in Session.getIDs():
@@ -550,7 +531,7 @@ def adminSessionsPost(handler, p_key, p_action, p_value = None):
 @admin('admin/privileges', 'Privileges', 'privileges')
 def adminPrivileges(handler, username = None):
 	handler.title("Privileges")
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 	undelay(handler)
 
 	users = User.loadAll(orderby = 'username')
@@ -587,28 +568,26 @@ def adminPrivileges(handler, username = None):
 @post('admin/privileges')
 def adminPrivilegesPost(handler, p_grant):
 	handler.title("Privileges")
-	requireAdmin(handler)
-	p_grant = dict((name, privs.keys()) for name, privs in p_grant.iteritems())
-
-	allPrivs = dict((priv.name, priv) for priv in Privilege.loadAll())
+	requirePriv(handler, 'Admin')
+	p_grant = {name: privs.keys() for name, privs in p_grant.iteritems()}
 
 	privNames = set()
 	for privs in p_grant.values():
 		privNames |= set(privs)
-	if not all(map(lambda name: name in allPrivs, privNames)):
+	if not privNames <= set(privList.keys()):
 		ErrorBox.die("Update privileges", "Unrecognized privilege name")
 
-	for username, privs in p_grant.iteritems():
-		user = User.load(username = username)
-		for name, priv in allPrivs.iteritems():
-			has = user.hasPrivilege(name)
-			if has and name not in privs:
-				print "Revoking %s from %s<br>" % (name, username)
-				user.privileges.remove(priv.name)
+	for user in User.loadAll():
+		for priv in privList:
+			privs = p_grant.get(user.username, [])
+			has = user.hasPrivilege(priv)
+			if has and priv not in privs:
+				print "Revoking %s from %s<br>" % (priv, user.username)
+				user.privileges.remove(priv)
 				Event.revokePrivilege(handler, user, priv)
-			elif not has and name in privs:
-				print "Granting %s to %s<br>" % (name, username)
-				user.privileges.add(priv.name)
+			elif not has and priv in privs:
+				print "Granting %s to %s<br>" % (priv, user.username)
+				user.privileges.add(priv)
 				Event.grantPrivilege(handler, user, priv, False)
 		user.save()
 	print "Done"
@@ -616,7 +595,7 @@ def adminPrivilegesPost(handler, p_grant):
 @admin('admin/repl', 'REPL', 'repl')
 def adminRepl(handler):
 	handler.title('Python REPL')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 	print "<script src=\"/static/admin-repl.js\" type=\"text/javascript\"></script>"
 
 	handler.session['admin-repl'] = {'handler': handler}
@@ -669,7 +648,7 @@ def adminReplPost(handler, p_code):
 @admin('admin/time', 'Mock time', 'time')
 def adminTime(handler):
 	handler.title('Mock time')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 	print "<link href=\"/static/jquery.ui.timepicker.css\" rel=\"stylesheet\" type=\"text/css\" />"
 	print "<script src=\"/static/jquery.ui.timepicker.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/admin-time.js\" type=\"text/javascript\"></script>"
@@ -700,7 +679,7 @@ def adminTime(handler):
 @post('admin/time')
 def adminTimePost(handler, p_date, p_time):
 	handler.title('Mock time')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 
 	try:
 		ts = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_date)
@@ -726,7 +705,7 @@ def adminTimePost(handler, p_date, p_time):
 @admin('admin/cron', 'Cron jobs', 'cron')
 def adminCron(handler):
 	handler.title('Cron jobs')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 
 	for job in Cron.getJobs():
 		print "<form method=\"post\" action=\"/admin/cron/run\">"
@@ -741,7 +720,7 @@ def adminCron(handler):
 @post('admin/cron/run', statics = ['admin', 'admin-cron'])
 def adminCronRun(handler, p_name):
 	handler.title('Run cron job')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 
 	print "<script type=\"text/javascript\">"
 	print "job_name = %s;" % toJS(p_name)
@@ -783,7 +762,7 @@ def adminLog(handler, page = 1, users = None, types = None):
 	PAGINATION_BOXES = 12
 
 	handler.title('Log')
-	requireAdmin(handler)
+	requirePriv(handler, 'Admin')
 	LogEntry.cacheAll()
 	entries = LogEntry.loadAll(orderby = '-timestamp')
 	filtered = (users is not None) or (types is not None)

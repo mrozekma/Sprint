@@ -39,8 +39,8 @@ def run(handler, p_command, p_path, p_mode = ''):
 		return
 
 	# This is already checked in the "su" command, but could be spoofed by the user
-	if p_mode == 'admin' and not handler.session['user'].hasPrivilege('Dev'):
-		print toJS({'error': "You need the Dev privilege"})
+	if p_mode == 'admin' and not handler.session['user'].hasPrivilege('Admin'):
+		print toJS({'error': "You need the Admin privilege"})
 		return
 
 	if 'shell' not in handler.session: # Shell context
@@ -276,7 +276,7 @@ def finger(context, username):
 	sprints = Sprint.loadAllActive(user)
 	if sprints:
 		print "Member of: %s" % ', '.join(link(sprint.name, "/sprints/%d" % sprint.id) for sprint in sprints)
-	if context['handler'].session['user'].hasPrivilege('Dev'):
+	if context['handler'].session['user'].hasPrivilege('Admin'):
 		if user.hotpKey:
 			print "HOTP key: %s" % clr(user.hotpKey)
 		if user.resetkey:
@@ -284,8 +284,8 @@ def finger(context, username):
 
 @command('su')
 def su(context):
-	if not context['handler'].session['user'].hasPrivilege('Dev'):
-		fail("You need the Dev privilege")
+	if not context['handler'].session['user'].hasPrivilege('Admin'):
+		fail("You need the Admin privilege")
 	return ('admin', '#')
 
 @command('info', mode = 'admin')

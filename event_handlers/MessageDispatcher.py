@@ -4,6 +4,7 @@ from Event import EventHandler
 from Note import Note
 from User import User
 from Message import Message
+from Privilege import privs as privList
 
 types = {
 	'sprintMembership': ("Added to a sprint", "You were added to %s"),
@@ -69,4 +70,4 @@ class MessageDispatcher(EventHandler):
 
 	def grantPrivilege(self, handler, user, priv, isNewUser):
 		if not isNewUser:
-			self.sendMessage(handler, user, 'priv', priv.name, priv.description)
+			self.sendMessage(handler, user, 'priv', priv, privList[priv])

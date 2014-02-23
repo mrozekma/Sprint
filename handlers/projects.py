@@ -41,7 +41,7 @@ def projectsList(handler):
 		print Button("new sprint", "/sprints/new?project=%d" % project.id).mini()
 		print Button("export", "/sprints/export?project=%d" % project.id).mini()
 		print Button("active", "/sprints/active?project=%d" % project.id).mini()
-		if handler.session['user'] and handler.session['user'].hasPrivilege('Dev'):
+		if handler.session['user'] and handler.session['user'].hasPrivilege('Admin'):
 			print Button("manage", "/admin/projects/%d" % project.id).mini().negative()
 		print "</div>"
 

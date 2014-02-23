@@ -7,13 +7,14 @@ from stasis.ActiveRecord import ActiveRecord
 
 privs = {
 	'User': 'Privilege all registered users have',
-	'Dev': 'Allows access to admin and incomplete features',
+	'Admin': 'Allows access to administration features',
 	'Write': 'Allows modifications to sprints',
+	'Dev': 'Show debugging information',
 }
 
 # Privileges to give to new users
 defaults = ['User', 'Write']
-adminDefaults = ['User', 'Dev', 'Write']
+adminDefaults = ['User', 'Admin', 'Write']
 
 def requirePriv(handler, priv):
 	if not handler.session['user']:
@@ -23,9 +24,6 @@ def requirePriv(handler, priv):
 	if not handler.session['user'].hasPrivilege(priv):
 		print ErrorBox('Forbidden', "You need the <b>%s</b> privilege" % priv)
 		done()
-
-def admin(handler):
-	requirePriv(handler, 'Dev')
 
 def dev(handler):
 	if isDevMode(handler):

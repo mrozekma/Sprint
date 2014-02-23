@@ -17,6 +17,7 @@ from Task import Task
 from Availability import Availability
 from Button import Button
 from Chart import Chart
+from LoadValues import isDevMode
 from Markdown import Markdown
 from relativeDates import timesince
 from utils import *
@@ -32,7 +33,7 @@ def users(handler):
 	print "</div>"
 	print "<div class=\"clear\"></div>"
 
-@get("users/(?P<username>%s)" % USERNAME_PATTERN)
+@get("users/(?P<username>%s)" % USERNAME_PATTERN, statics = 'user-profile')
 def user(handler, username):
 	user = User.load(username = username)
 	if not user:
@@ -48,9 +49,11 @@ def user(handler, username):
 	handler.replace('$bodytitle$', '', 1)
 	print "<img src=\"%s\" class=\"gravatar\">" % user.getAvatar(64)
 	print "<h1>%s</h1>" % user.safe.username
+	if isDevMode(handler):
+		print "<div class=\"debugtext\">User ID: %d</div>" % user.id
 	print "<div class=\"clear\"></div>"
 
-	if handler.session['user'] and handler.session['user'].hasPrivilege('Dev'):
+	if handler.session['user'] and handler.session['user'].hasPrivilege('Admin'):
 		print "<h3>Admin</h3>"
 		print "<form method=\"post\" action=\"/admin/users\">"
 		print "<input type=\"hidden\" name=\"username\" value=\"%s\">" % user.username

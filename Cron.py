@@ -1,5 +1,4 @@
 import re
-import tarfile
 from threading import Thread
 from time import sleep
 from os.path import isdir, exists
@@ -12,7 +11,6 @@ from rorn.Session import Session
 from stasis.DiskMap import DiskMap
 from stasis.Singleton import get as db
 
-from LoadValues import dbFilename
 from HTTPServer import server
 from utils import *
 
@@ -128,13 +126,7 @@ def backup():
 		print "Backup file <code>%s</code> already exists; aborting" % filename
 		return
 
-	f = tarfile.open(filename, 'w:gz')
-	f.add(dbFilename)
-	f.close()
-	if not exists(filename):
-		print "Unable to write backup file <code>%s</code>" % filename
-		return
-
+	db().archive(filename)
 	print "Backup to <code>%s</code> successful" % filename
 
 @job('Log Archive', MONTHLY)

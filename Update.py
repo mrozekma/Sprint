@@ -34,6 +34,7 @@ def depcheck():
 depcheck()
 
 import sys
+import tarfile
 import termios
 import tty
 from os import mkdir, rename
@@ -52,14 +53,17 @@ from Settings import settings, PORT
 from utils import *
 
 from stasis.DiskMap import DiskMap
-from stasis.Singleton import set as setDB
+from stasis.Singleton import get as db, set as setDB
 from stasis.StasisError import StasisError
 
 LAST_SQLITE_VERSION = 19
 LAST_SQLITE_REVISION = '38e224f66d34dd2077a6cf8597c8c299334cd059' # This is the revision that created DB 19; technically many after it would also work
-DB_VERSION = 20 # Temporary until stasis updating is implemented
-
 HOW_TO_RUN = "You can run %s normally now and browse to http://%s:%d/" % (sys.argv[0], gethostname(), PORT)
+
+updates = [None] * LAST_SQLITE_VERSION # Spacers for all the old sqlite versions, and the first stasis version that's created by check()
+def update(f):
+	updates.append(f)
+	return f
 
 def check():
 	if option('mode') == 'init':
@@ -111,8 +115,7 @@ def check():
 			if isdir('logs'):
 				rename('logs', 'logs-old')
 			mkdir('logs')
-			print "Database conversion complete. %s" % HOW_TO_RUN
-			exit(0)
+			print "Database conversion complete. Ready to apply updates"
 
 	if not isdir('db'):
 		print "No database found. If you've never run this tool before, run %s --init to configure it" % sys.argv[0]
@@ -123,16 +126,17 @@ def check():
 	setDB(DiskMap(dbFilename))
 
 	if option('mode') == 'update':
-		if int(settings.dbVersion) < DB_VERSION:
-			update()
+		if int(settings.dbVersion) < len(updates):
+			runUpdates()
+			print "Updated to database version %d. %s" % (len(updates), HOW_TO_RUN)
 			exit(0)
-		elif int(settings.dbVersion) == DB_VERSION:
-			print "Unable to update -- already at database version %d" % DB_VERSION
+		elif int(settings.dbVersion) == len(updates):
+			print "Unable to update -- already at database version %d" % len(updates)
 			exit(1)
-	if int(settings.dbVersion) < DB_VERSION:
-		print "The database is %s behind. Run %s --update to update it" % (pluralize(DB_VERSION - int(settings.dbVersion), 'version', 'versions'), sys.argv[0])
+	if int(settings.dbVersion) < len(updates):
+		print "The database is %s behind. Run %s --update to update it" % (pluralize(len(updates) - int(settings.dbVersion), 'version', 'versions'), sys.argv[0])
 		exit(1)
-	elif int(settings.dbVersion) > DB_VERSION:
+	elif int(settings.dbVersion) > len(updates):
 		print "The database is %s ahead; downgrading is not supported" % pluralize(int(settings.dbVersion) - DB_VERSION, 'version', 'versions')
 		exit(1)
 
@@ -163,11 +167,17 @@ def init():
 	setDB(DiskMap(dbFilename, create = True))
 
 	try:
-		settings.dbVersion = DB_VERSION
+		settings.dbVersion = LAST_SQLITE_VERSION
 		settings.emailDomain = email
 	except Exception, e:
 		rmtree(dbFilename)
 		die("Unable to set default settings: %s" % e)
+
+	try:
+		runUpdates(False)
+	except:
+		rmtree(dbFilename)
+		raise
 
 	print "Creating admin user"
 	try:
@@ -185,6 +195,40 @@ def init():
 
 	print "Done. %s" % HOW_TO_RUN
 
-def update():
-	pass # Unimplemented until the first update
-	# print "Updated to database version %d. You can run %s normally now and browse to http://%s:%d/" % (dbVersion, sys.argv[0], gethostname(), PORT)
+def runUpdates(output = True):
+	backupFilename = "%s-preupgrade.tar.gz" % dbFilename
+	if output:
+		print "Backing up database to %s" % backupFilename
+	db().archive(backupFilename)
+
+	if output:
+		print "Updating"
+	toApply = updates[settings.dbVersion:]
+	try:
+		for f in toApply:
+			f()
+			settings.dbVersion += 1
+	except:
+		if output:
+			print "Unable to update to version %d. Restoring database from backup" % (settings.dbVersion + 1)
+		rmtree(dbFilename)
+		f = tarfile.open(backupFilename, 'r:gz')
+		f.extractall()
+		f.close()
+		if output:
+			print "Update rolled back. Error follows:"
+			print
+		raise
+
+@update
+def v20():
+	pass # Version 20 is the conversion to stasis, which is done in check()
+
+@update
+def v21():
+	"""Move all existing Dev grants to Admin"""
+	for user in User.loadAll():
+		if user.hasPrivilege('Dev'):
+			user.privileges.remove('Dev')
+			user.privileges.add('Admin')
+			user.save()

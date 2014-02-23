@@ -4,22 +4,38 @@ from rorn.ResponseWriter import ResponseWriter
 from rorn.Box import *
 from rorn.code import showCode
 
-from Privilege import admin
+from Privilege import requirePriv
 from Task import Task
 from Button import *
 from utils import *
 
-@get('code')
+pages = []
+def test(url, name, **kw):
+	def wrap(f):
+		e = {'url': url, 'name': name}
+		pages.append(e)
+		kw['statics'] = ['test'] + ensureList(kw['statics'] if 'statics' in kw else [])
+		if 'post' in kw and kw['post']:
+			del kw['post']
+			e['method'] = 'post'
+			return post(url, **kw)(f)
+		else:
+			e['method'] = 'get'
+			return get(url, **kw)(f)
+	return wrap
+
+@test('test/code', 'Code')
 def code(handler, filename, line):
 	handler.title('Code')
-	admin(handler)
+	requirePriv(handler, 'Dev')
 
 	showCode(filename, int(line), 2)
 
-@get('test')
-def test(handler):
+@test('test/test', 'Test')
+def testGet(handler):
 	handler.title('Test')
-	print "<form method=\"post\" action=\"/test\">"
+	requirePriv(handler, 'Dev')
+	print "<form method=\"post\" action=\"/test/test\">"
 	print "<input type=\"hidden\" name=\"test[]\" value=\"one\">"
 	print "<input type=\"hidden\" name=\"test[]\" value=\"two\">"
 	print "<input type=\"hidden\" name=\"test[]\" value=\"\">"
@@ -27,24 +43,21 @@ def test(handler):
 	print "<input type=\"submit\" value=\"Submit\">"
 	print "</form>"
 
-@post('test')
+@test('test/test', 'Test', post = True)
 def testPost(handler, p_test):
+	requirePriv(handler, 'Dev')
 	print p_test
 
-@get('test/(?P<num>[0-9]+)/regex')
+@test('test/(?P<num>[0-9]+)/regex', 'Regex')
 def testRegex(handler, num):
 	handler.title('Test Regex')
+	requirePriv(handler, 'Dev')
 	print num
 
-@get('test2')
-def test2(handler):
-	raise Exception("Lorem ipsum dolor sit amet, consectetur adipiscing elit")
-
-@get('chosen')
+@test('test/chosen', 'Chosen')
 def chosen(handler):
 	handler.title('Test')
-	from Privilege import dev
-	dev(handler)
+	requirePriv(handler, 'Dev')
 	print "<script type=\"text/javascript\">"
 	print "$(document).ready(function() {"
 	print "$('select').css('width', '500px').chosen();"
@@ -55,9 +68,10 @@ def chosen(handler):
 	print "<select id=\"three\"><option>one</option><option>two</option><option>three</option></select>"
 	print "<select id=\"four\"><option>one</option><option>two</option><option>three</option></select>"
 
-@get('hours-test')
+@test('test/hours-test', 'Hours')
 def hoursTest(handler):
 	handler.title('Hours Test')
+	requirePriv(handler, 'Dev')
 
 	from Sprint import Sprint
 	sprint = Sprint.load(2)
@@ -133,78 +147,10 @@ console.log(chart);
 """
 	print "<div id=\"chart\"></div>"
 
-@get('icons')
-def icons(handler):
-	handler.title('Icons')
-	admin(handler)
-
-	def makeList(path, l = {}):
-		from os import listdir
-		from os.path import isdir
-		for entry in listdir(path):
-			full = "%s/%s" % (path, entry)
-			if isdir(full):
-				makeList(full, l)
-			else:
-				if path not in l:
-					l[path] = []
-				l[path].append(full)
-		return l
-
-	l = makeList('/home/mrozekma/icons')
-	for scn, items in l.items():
-		print "<h2>%s</h2>" % scn
-		items.sort()
-		for item in items:
-			print "<img src=\"%s\" title=\"%s\">" % (item.replace('/home/mrozekma/icons', '/icons/show'), item)
-
-@get('icons/show/(?P<path>.*)')
-def iconsShow(handler, path):
-	handler.wrappers = False
-	admin(handler)
-
-	filename = stripTags(path)
-	types = {
-		'css': 'text/css',
-		'js': 'text/javascript',
-		'png': 'image/png'
-		}
-
-	ext = filename[filename.rfind('.')+1:]
-	if ext in types:
-		handler.contentType = types[ext]
-
-	with open("/home/mrozekma/icons/" + filename) as f:
-		print f.read()
-
-@get('test/bootstrap')
-def testBootstrap(handler):
-	handler.title('Bootstrap')
-	admin(handler)
-
-	print "<ul class=\"tabs\">"
-	print "<li><a href=\"#\">One</a></li>"
-	print "<li class=\"active\"><a href=\"#\">Two</a></li>"
-	print "<li><a href=\"#\">Three</a></li>"
-	print "<li><a href=\"#\">Four</a></li>"
-	print "<li><a href=\"#\">Five</a></li>"
-	print "</ul>"
-	print "<div class=\"clear\"></div>"
-
-	print "<div class=\"alert-message success\">Yay!</div>"
-	print "<div class=\"alert-message danger\"><a href=\"#\" class=\"close\">x</a>Boo!</div>"
-
-	print "Test <span class=\"label important\">Test</span><br>"
-	print "<button class=\"btn success\">Test</button>"
-	print "<br><br>"
-
-	for type in ('error', 'warning', 'success', 'info', 'inverse'):
-		print "<span class=\"badge badge-%s\">%s</span>&nbsp;" % (type, type)
-
-@get('test/boxes')
+@test('test/boxes', 'Boxes')
 def testBoxes(handler):
 	handler.title('Boxes')
-	admin(handler)
+	requirePriv(handler, 'Dev')
 
 	print Box("Box", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum")
 	print Box("Box (red)", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum", clr = 'red')
@@ -218,10 +164,10 @@ def testBoxes(handler):
 	print InfoBox("Timeout", "This box times out in 5 seconds", close = 5)
 	print InfoBox("Close", "This box can be closed", close = True)
 
-@get('test/savebutton')
+@test('test/savebutton', 'Save Button')
 def testSaveButton(handler):
 	handler.title('Save Button')
-	admin(handler)
+	requirePriv(handler, 'Dev')
 
 	print "<script type=\"text/javascript\">"
 	print "$(document).ready(function() {"
@@ -233,17 +179,17 @@ def testSaveButton(handler):
 	print "<button id=\"save-button\">Post</button>"
 	print "</form>"
 
-@post('test/savebutton')
+@test('test/savebutton', 'Save Button', post = True)
 def testSaveButtonPost(handler):
 	handler.title('Save Button')
-	admin(handler)
+	requirePriv(handler, 'Dev')
 
 	print "Post"
 
-@get('test/markdown')
+@test('test/markdown', 'Markdown')
 def testMarkdown(handler):
 	handler.title('Markdown')
-	admin(handler)
+	requirePriv(handler, 'Dev')
 
 	md = Markdown(output_format = 'html4', safe_mode = 'escape', lazy_ol = False, extensions = ['nl2br', 'fenced_code', 'codehilite'])
 	tests = [
@@ -277,10 +223,10 @@ table.tests > td {
 		print "<tr><td><pre>%s</pre></td><td>%s</td></tr>" % (stripTags(plain), md.convert(plain))
 	print "</table>"
 
-@get('test/querystr')
+@test('test/querystr', 'Query String')
 def testQueryStr(handler, a = None, b = None, c = None, d = None):
 	handler.title('Query String')
-	admin(handler)
+	requirePriv(handler, 'Dev')
 	from pprint import pprint
 	print "<pre>"
 	sys.stdout.write("a = ")
@@ -293,6 +239,7 @@ def testQueryStr(handler, a = None, b = None, c = None, d = None):
 	pprint(d)
 	print "</pre>"
 
-@get('test/error')
+@test('test/error', 'Error')
 def testError(handler):
+	requirePriv(handler, 'Dev')
 	raise RuntimeError("Test")
