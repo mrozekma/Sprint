@@ -934,8 +934,8 @@ def showSprintChecklist(handler, id):
 	else:
 		good("All members have enough availability for their tasks")
 
-	if 'no-tasks' in warnings:
-		bad("%s %s <a href=\"/sprints/%d/metrics#commitment-by-user\">no tasks</a>" % (userStr(warnings['no-tasks']), 'has' if len(warnings['no-tasks']) == 1 else 'have', sprint.id))
+	if 'users-no-tasks' in warnings:
+		bad("%s %s <a href=\"/sprints/%d/metrics#commitment-by-user\">no tasks</a>" % (userStr(warnings['users-no-tasks']), 'has' if len(warnings['users-no-tasks']) == 1 else 'have', sprint.id))
 	else:
 		good("All members have tasks assigned")
 
@@ -957,6 +957,9 @@ def showSprintChecklist(handler, id):
 			good("All tasks contribute to the sprint goals")
 		else:
 			good("Most tasks contribute to the sprint goals (<a href=\"/sprints/%d?search=goal:none\">%d left</a>)" % (sprint.id, len(unaffiliated)))
+
+	if 'goals-no-tasks' in warnings:
+		bad("There are <a href=\"/sprints/%d/metrics#goals\">goals with no tasks assigned</a> (%s)" % (sprint.id, '&nbsp;'.join("<img class=\"bumpdown\" src=\"/static/images/tag-%s.png\">" % goal.color for goal in warnings['goals-no-tasks'])))
 
 	print "<br><h1>Tasks</h1>"
 

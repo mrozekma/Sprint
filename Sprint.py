@@ -113,7 +113,7 @@ class Sprint(ActiveRecord):
 		# Users with no tasks
 		noTasks = filter(lambda user: filter(lambda task: user in task.assigned, tasks) == [], self.members)
 		if noTasks != []:
-			rtn['no-tasks'] = noTasks
+			rtn['users-no-tasks'] = noTasks
 
 		# No sprint goals, or too many tasks (at least 10 tasks and more than 20% of all tasks) without a goal
 		unaffiliated = filter(lambda task: not task.goal, tasks)
@@ -121,6 +121,11 @@ class Sprint(ActiveRecord):
 			rtn['no-sprint-goals'] = True
 		elif len(unaffiliated) >= 10 and len(unaffiliated) / len(tasks) > .20:
 			rtn['tasks-without-goals'] = unaffiliated
+
+		# Goals with no tasks
+		noTasks = filter(lambda goal: goal.name and filter(lambda task: task.goal == goal, tasks) == [], self.getGoals())
+		if noTasks != []:
+			rtn['goals-no-tasks'] = noTasks
 
 		# Open tasks with 0 hours
 		noHours = filter(lambda task: task.stillOpen() and task.hours == 0, tasks)
