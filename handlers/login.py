@@ -4,8 +4,9 @@ from hmac import HMAC
 import struct
 from time import time
 
-from rorn.Box import LoginBox, ErrorBox, WarningBox, SuccessBox
+from rorn.Box import ErrorBox, WarningBox, SuccessBox
 
+from Privilege import LoginBox
 from Settings import settings
 from User import User
 from Button import Button

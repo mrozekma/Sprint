@@ -1,5 +1,7 @@
 from datetime import datetime, date, timedelta
+from email.mime.text import MIMEText
 import re
+import smtplib
 import sys
 import time
 from threading import Thread
@@ -140,6 +142,18 @@ def partition(pred, iter):
 	for item in iter:
 		(good if pred(item) else bad).append(item)
 	return good, bad
+
+def sendmail(to, subject, body):
+	from Settings import settings
+	if not settings.smtpServer:
+		raise RuntimeError("No SMTP server configured")
+	msg = MIMEText(body)
+	msg['Subject'] = subject
+	msg['From'] = settings.smtpFrom
+	msg['To'] = to
+	smtp = smtplib.SMTP(settings.smtpServer)
+	smtp.sendmail(settings.smtpFrom, to, msg.as_string())
+	smtp.quit()
 
 def lipsum():
 	return """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut pharetra ornare tortor, a ornare nibh aliquam et. Cras ultricies rutrum magna et elementum. Aliquam at sapien ante, sit amet fermentum nisi. Maecenas in arcu ante. Etiam ac ligula sed est elementum rhoncus vitae et urna. Vestibulum tempus enim quis nisi rutrum venenatis. Vivamus dapibus aliquet erat, pellentesque dapibus leo placerat lacinia. Suspendisse potenti. Etiam nisl felis, aliquam in molestie id, dapibus feugiat dolor. Duis sagittis auctor fringilla. Curabitur tellus neque, vehicula a imperdiet ut, ullamcorper in nunc. Aliquam tincidunt ornare fringilla. Suspendisse potenti. Vestibulum quis turpis dignissim lectus ullamcorper viverra.<br><br>

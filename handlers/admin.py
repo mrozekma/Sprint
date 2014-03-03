@@ -109,7 +109,7 @@ def adminInfo(handler):
 				writer.clear()
 				print "<i>(Unable to retrieve stack trace)</i>"
 			print CollapsibleBox('Ownership', writer.done())
-		print "</td><td class=\"%s\">&nbsp;</td><td class=\"%s\">&nbsp;</td></tr>" % ('yes' if avail else 'no', 'yes' if lock.reentrant() else 'no')
+		print "</td><td class=\"%s\">%s</td><td class=\"%s\">&nbsp;</td></tr>" % ('yes' if avail else 'no', '&nbsp;' if avail else (lock.owner or '???'), 'yes' if lock.reentrant() else 'no')
 	print "</table>"
 
 	print "<h3>Counters</h3>"
@@ -156,6 +156,8 @@ def adminSettings(handler):
 	print "<tr><td class=\"left\">Bugzilla URL:</td><td class=\"right\"><input type=\"text\" name=\"bugzillaURL\" value=\"%s\"></td></tr>" % quot(settings.bugzillaURL or '')
 	print "<tr><td class=\"left\">Redis host:</td><td class=\"right\"><input type=\"text\" name=\"redis\" value=\"%s\"></td></tr>" % quot(settings.redis or '')
 	print "<tr><td class=\"left\">Kerberos realm:</td><td class=\"right\"><input type=\"text\" name=\"kerberosRealm\" value=\"%s\"></td></tr>" % quot(settings.kerberosRealm or '')
+	print "<tr><td class=\"left\">SMTP server:</td><td class=\"right\"><input type=\"text\" name=\"smtpServer\" value=\"%s\"></td></tr>" % quot(settings.smtpServer or '')
+	print "<tr><td class=\"left\">SMTP from address:</td><td class=\"right\"><input type=\"text\" name=\"smtpFrom\" value=\"%s\"></td></tr>" % quot(settings.smtpFrom or '')
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
 	print Button('Save', id = 'save-button', type = 'submit').positive()
 	print Button('Cancel', type = 'button', url = '/admin').negative()
@@ -170,7 +172,7 @@ def adminSettings(handler):
 	print "</table>"
 
 @post('admin/settings')
-def adminSettingsPost(handler, p_emailDomain, p_systemMessage, p_bugzillaURL, p_redis, p_kerberosRealm):
+def adminSettingsPost(handler, p_emailDomain, p_systemMessage, p_bugzillaURL, p_redis, p_kerberosRealm, p_smtpServer, p_smtpFrom):
 	handler.title('Settings')
 	requirePriv(handler, 'Admin')
 
@@ -207,6 +209,15 @@ def adminSettingsPost(handler, p_emailDomain, p_systemMessage, p_bugzillaURL, p_
 			del settings['kerberosRealm']
 	else:
 		settings.kerberosRealm = p_kerberosRealm
+
+	if p_smtpServer == '':
+		if settings.smtpServer:
+			del settings['smtpServer']
+		if settings.smtpFrom:
+			del settings['smtpFrom']
+	else:
+		settings.smtpServer = p_smtpServer
+		settings.smtpFrom = p_smtpFrom or "sprint@%s" % p_smtpServer
 
 	delay(handler, SuccessBox("Updated settings", close = True))
 	Event.adminSettings(handler, settings)
@@ -259,7 +270,6 @@ def adminUsersPost(handler, p_action, p_username, p_privileges = []):
 			if not user:
 				ErrorBox.die('Reset Password', "No user named <b>%s</b>" % stripTags(p_username))
 
-			random.seed()
 			hadPreviousKey = (user.resetkey != None and user.resetkey != '0')
 			user.resetkey = "%x" % random.randint(0x10000000, 0xffffffff)
 			user.save()

@@ -12,6 +12,7 @@ from stasis.DiskMap import DiskMap
 from stasis.Singleton import get as db
 
 from HTTPServer import server
+from User import User
 from utils import *
 
 # Regular expression that matches 'YYYY-MM-DD HH:MM:SS', where # is a digit
@@ -24,7 +25,7 @@ MONTHLY = '####-##-01 00:00:##'
 cronjobs = []
 def job(name, period):
 	def wrap(f):
-		pattern = re.compile(period.replace('#', '\d+'))
+		pattern = re.compile(period.replace('#', '\d'))
 		cronjobs.append(CronJob(name, pattern, f))
 		return f
 	return wrap
@@ -114,6 +115,31 @@ def oldSessions():
 	for key in toDelete:
 		Session.destroy(key)
 	print "done"
+
+@job('Old reset keys', DAILY)
+def oldResetKeys():
+	if 'reset-keys' not in db()['cron']:
+		db()['cron']['reset-keys'] = {}
+
+	with db()['cron'].change('reset-keys') as data:
+		for user in User.loadAll():
+			if user.resetkey:
+				if user.id in data:
+					if user.resetkey == data[user.id]:
+						user.resetkey = None
+						user.save()
+						del data[user.id]
+						print "<b>%s</b>: Key expired<br>" % user.safe.username
+					else:
+						data[user.id] = user.resetkey
+						print "<b>%s</b>: New key marked<br>" % user.safe.username
+				else:
+					data[user.id] = user.resetkey
+					print "<b>%s</b>: New key marked<br>" % user.safe.username
+			else:
+				if user.id in data:
+					del data[user.id]
+					print "<b>%s</b>: Key consumed; removed old mark<br>" % user.safe.username
 
 @job('Backup', DAILY)
 def backup():

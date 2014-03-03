@@ -17,7 +17,7 @@ function checkUp() {
 			}
 		},
 		error: function() {
-			if(++errors >= 3) {
+			if(++errors >= 5) {
 				clearInterval(interval);
 				$('#loading').hide();
 				$('#failed').show();

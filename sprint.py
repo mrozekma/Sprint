@@ -5,6 +5,7 @@ from datetime import datetime
 import errno
 import os
 from os.path import abspath, dirname
+from random import seed
 from resource import getrlimit, RLIMIT_NOFILE, RLIM_INFINITY
 import signal
 import socket
@@ -12,6 +13,7 @@ import sys
 from threading import currentThread
 
 os.chdir(dirname(abspath(__file__)))
+seed()
 
 from HTTPServer import LoadingServer
 preServer = LoadingServer()

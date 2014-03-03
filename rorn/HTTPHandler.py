@@ -91,8 +91,8 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 			givenS, expectedS = set(given), set(expected)
 			requiredS = set(expected[:-len(defaults)] if defaults else expected)
 
-			expectedS -= set(['self', 'handler', 'request'])
-			requiredS -= set(['self', 'handler', 'request'])
+			expectedS -= set(['self', 'handler'])
+			requiredS -= set(['self', 'handler'])
 
 			over = givenS - expectedS
 			if len(over):
