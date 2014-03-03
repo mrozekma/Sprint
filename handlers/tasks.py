@@ -37,9 +37,9 @@ def task(handler, ids):
 	undelay(handler)
 
 	tasks = {}
-	if isinstance(ids, int): # Single ID
-		tasks[ids] = Task.load(ids)
-		ids = [ids]
+	if ',' not in ids: # Single ID
+		ids = [int(ids)]
+		tasks[ids[0]] = Task.load(ids[0])
 
 		def header(task, text, level):
 			if level == 1:
