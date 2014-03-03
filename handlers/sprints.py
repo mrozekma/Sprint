@@ -809,6 +809,10 @@ def showAvailability(handler, id):
 	editable = sprint.canEdit(handler.session['user'])
 
 	print "<form method=\"post\" action=\"/sprints/%d/availability\">" % sprint.id
+
+	# This is in case the user presses enter
+	print Button('', id = 'save-button2', type = 'button')
+
 	print "<table class=\"availability\">"
 	print "<tr class=\"dateline\">"
 	print "<td>&nbsp;</td>"

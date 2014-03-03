@@ -22,5 +22,5 @@ $(document).ready(function() {
 		return false;
 	});
 
-	$('#save-button').savebutton($('#post-status'), '/sprints/' + sprintid);
+	$('#save-button,#save-button2').savebutton($('#post-status'), '/sprints/' + sprintid);
 });
