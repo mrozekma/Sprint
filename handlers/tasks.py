@@ -644,7 +644,7 @@ def newTaskImportPost(handler, group, source, p_group, p_name, p_hours, p_assign
 					groups[groupID].save()
 		group = groups[groupID]
 
-		assigned = [User.load(int(assignedID)) for assignedID in p_assigned[id]] if id in p_assigned else [sprint.owner]
+		assigned = {User.load(int(assignedID)) for assignedID in p_assigned[id]} if id in p_assigned else set(sprint.owner)
 		if not all(assigned):
 			ErrorBox.die('Malformed Request', "Invalid user ID(s): %s" % ', '.join(map(stripTags, assignedID)))
 

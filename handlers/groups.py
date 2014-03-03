@@ -163,6 +163,7 @@ def renameGroupPost(handler, id, p_name):
 	handler.title('Manage Group')
 	requirePriv(handler, 'User')
 
+	id = int(id)
 	group = Group.load(id)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
@@ -185,6 +186,7 @@ def assignGroupGoalPost(handler, id, p_goal):
 	requirePriv(handler, 'User')
 	handler.wrappers = False
 
+	id = int(id)
 	group = Group.load(id)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
