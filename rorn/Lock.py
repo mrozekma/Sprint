@@ -109,6 +109,16 @@ class Counter:
 		return self.count
 
 	@synchronized('counter')
+	def __iadd__(self, n):
+		self.count += n
+		return self
+
+	@synchronized('counter')
+	def __isub__(self, n):
+		self.count -= n
+		return self
+
+	@synchronized('counter')
 	def any(self):
 		return self.count != 0
 

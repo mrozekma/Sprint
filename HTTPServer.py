@@ -31,12 +31,15 @@ class HTTPServer(ParentServer):
 	def block_requests(self, expected = 0):
 		from Log import console
 		lock = getLock('#reqcheck')
+		lock.acquire()
+		self.currentRequests -= expected
 		while True:
-			lock.acquire()
-			if self.currentRequests.count <= expected:
+			if self.currentRequests.count == 0:
+				self.currentRequests += expected
 				return lock
 			lock.release()
 			sleep(.1)
+			lock.acquire()
 
 	def close_request(self, request):
 		self.currentRequests.dec()
