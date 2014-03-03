@@ -842,8 +842,10 @@ def showAvailability(handler, id):
 
 			if day.weekday() == 4:
 				print "<td class=\"spacer\">&nbsp;</td>"
+		print "<td class=\"buttons\">"
 		if editable:
-			print "<td class=\"buttons\"><img src=\"/static/images/clipboard.png\" title=\"Copy first right\"></td>"
+			print "<img src=\"/static/images/clipboard.png\" title=\"Copy first right\">"
+		print "</td>"
 		print "</tr>"
 
 	if editable:
