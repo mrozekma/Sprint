@@ -448,6 +448,7 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 		handler.log = False
 		numTasks = sum(len(taskSet) for taskSet in tasks.values())
 		taskHours = sum(hours for taskSet in tasks.values() for name, assigned, status, hours in taskSet)
+		ownTaskHours = sum(hours for taskSet in tasks.values() for name, assigned, status, hours in taskSet if handler.session['user'] in assigned)
 		avail = Availability(sprint)
 		availHours = avail.getAllForward(getNow().date(), handler.session['user'])
 		usedHours = sum(task.hours for task in sprint.getTasks() if handler.session['user'] in task.assigned)
@@ -460,7 +461,9 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 			if newGroups:
 				stats += "and %s " % pluralize(len(newGroups), 'group', 'groups')
 			stats += "for a total of %s" % pluralize(taskHours, 'hour', 'hours')
-			if taskHours:
+			if ownTaskHours != taskHours:
+				stats += ", %s yours" % pluralize(ownTaskHours, 'hour', 'hours')
+			if ownTaskHours:
 				if availHours == 0:
 					stats += ". You have no future availability for these tasks"
 					box = WarningBox
@@ -468,8 +471,8 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 					stats += ". You are already overcommitted by %s" % pluralize(-availHours, 'hour', 'hours')
 					box = WarningBox
 				else:
-					stats += ", %d%% of your future availability" % (100 * taskHours / availHours)
-					box = WarningBox if taskHours > availHours else InfoBox
+					stats += ", %d%% of your future availability" % (100 * ownTaskHours / availHours)
+					box = WarningBox if ownTaskHours > availHours else InfoBox
 			print box(stats)
 		elif not errors:
 			print InfoBox("Waiting for tasks. Click \"Help\" above if needed")
