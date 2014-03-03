@@ -45,6 +45,7 @@ from shutil import copy, rmtree
 from time import sleep
 import sqlite3
 
+from ChangeLog import ChangeRecord, changelog
 from LoadValues import dbFilename
 from User import User
 from Privilege import adminDefaults
@@ -186,6 +187,14 @@ def init():
 	except Exception, e:
 		rmtree(dbFilename)
 		die("Unable to create admin user: %s" % e)
+
+	# Mark all changelog entries read
+	try:
+		for change in changelog:
+			ChangeRecord(change.id, user.id).save()
+	except Exception, e:
+		rmtree(dbFilename)
+		die("Unable to mark changelog entries: %s" % e)
 
 	print "Creating backup and log directories"
 	if not isdir('backups'):
