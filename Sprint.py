@@ -143,3 +143,24 @@ class Sprint(ActiveRecord):
 			rtn['too-many-hours'] = tooManyHours
 
 		return rtn
+
+	@staticmethod
+	def validateDates(start, end, curStart = None, curEnd = None):
+		now = getNow()
+		if end < now:
+			return "The sprint cannot end in the past"
+		if start > end:
+			return "Start date cannot be after end date"
+		if end - start < timedelta(days = 1):
+			return "Sprint must be at least one day long"
+		if start.weekday() >= 5:
+			return "Sprint cannot start on a weekend"
+		if end.weekday() >= 5:
+			return "Sprint cannot end on a weekend"
+
+		if curStart is not None:
+			minDate = tsToDate(tsStripHours(min(dateToTs(getNow()), dateToTs(curStart))))
+			if start < minDate:
+				return "You cannot start the sprint before %s" % minDate.strftime('%d %b %Y')
+
+		return None

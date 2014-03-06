@@ -508,7 +508,7 @@ def showInfo(handler, id):
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
 	print "var startMin = '%s';" % min(tsToDate(sprint.start), getNow()).strftime('%m/%d/%Y')
-	print "var endMin = '%s';" % tsToDate(sprint.end).strftime('%m/%d/%Y')
+	print "var endMin = '%s';" % min(tsToDate(sprint.end), getNow()).strftime('%m/%d/%Y')
 	print "</script>"
 
 	print InfoBox('Loading...', id = 'post-status', close = True)
@@ -559,7 +559,7 @@ def showInfo(handler, id):
 	print "</form>"
 
 @post('sprints/info')
-def sprintInfoPost(handler, id, p_name, p_end, p_goals, p_start = None, p_members = None, p_clear = []):
+def sprintInfoPost(handler, id, p_name, p_start, p_end, p_goals, p_members = None, p_clear = []):
 	def die(msg):
 		print msg
 		done()
@@ -578,20 +578,14 @@ def sprintInfoPost(handler, id, p_name, p_end, p_goals, p_start = None, p_member
 	if sprint.owner != handler.session['user']:
 		die("You must be the scrummaster to modify sprint information")
 
-	if p_start:
-		try:
-			start = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_start)
-			if not start:
-				raise ValueError
-			month, day, year = map(int, start.groups())
-			start = datetime(year, month, day, 0, 0, 0)
-		except ValueError:
-			die("Malformed start date: %s" % stripTags(p_start))
-		minDate = tsToDate(tsStripHours(min(dateToTs(getNow()), sprint.start)))
-		if start < minDate:
-			die("You cannot start the sprint before %s" % minDate.strftime('%d %b %Y'))
-	else:
-		start = None
+	try:
+		start = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_start)
+		if not start:
+			raise ValueError
+		month, day, year = map(int, start.groups())
+		start = datetime(year, month, day, 0, 0, 0)
+	except ValueError:
+		die("Malformed start date: %s" % stripTags(p_start))
 
 	try:
 		end = re.match("^(\d{1,2})/(\d{1,2})/(\d{4})$", p_end)
@@ -601,8 +595,10 @@ def sprintInfoPost(handler, id, p_name, p_end, p_goals, p_start = None, p_member
 		end = datetime(year, month, day, 23, 59, 59)
 	except ValueError:
 		die("Malformed end date: %s" % stripTags(p_end))
-	if end < tsToDate(sprint.end):
-		die("You cannot shorten the length of the sprint")
+
+	msg = Sprint.validateDates(start, end, tsToDate(sprint.start), tsToDate(sprint.end))
+	if msg:
+		die(msg)
 
 	goals = map(Goal.load, to_int(p_goals.keys(), 'goals', die))
 	if not all(goals):
@@ -613,9 +609,6 @@ def sprintInfoPost(handler, id, p_name, p_end, p_goals, p_start = None, p_member
 		die("One or more members do not exist")
 	if sprint.owner not in members:
 		die("The scrummaster (%s) must be a sprint member" % sprint.owner)
-
-	if (dateToTs(start) if start else sprint.start) > sprint.end:
-		die("Start date cannot be after end date")
 
 	tasks = sprint.getTasks()
 	changedTasks = set()
@@ -648,10 +641,10 @@ def sprintInfoPost(handler, id, p_name, p_end, p_goals, p_start = None, p_member
 
 	sprint.members |= addMembers
 	sprint.name = p_name
-	sprint.end = dateToTs(end)
 
-	if dateToTs(start) != sprint.start:
+	if dateToTs(start) != sprint.start or dateToTs(end) != sprint.end:
 		sprint.start = dateToTs(start)
+		sprint.end = dateToTs(end)
 		avail.trim()
 
 	sprint.save()
@@ -1202,15 +1195,13 @@ def newSprintPost(handler, p_project, p_name, p_start, p_end, p_members = None):
 		if not end:
 			raise ValueError
 		month, day, year = map(int, end.groups())
-		end = datetime(year, month, day)
-		end += timedelta(days = 1, seconds = -1)
+		end = datetime(year, month, day, 23, 59, 59)
 	except ValueError:
 		die("Malformed end date: %s" % stripTags(p_end))
 
-	if start.weekday() >= 5:
-		die("Sprints cannot start on a weekend")
-	if end.weekday() >= 5:
-		die("Sprints cannot start on a weekend")
+	msg = Sprint.validateDates(start, end)
+	if msg:
+		die(msg)
 
 	members = set(User.load(int(memberid)) for memberid in p_members)
 	if None in members:
