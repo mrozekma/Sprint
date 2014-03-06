@@ -41,7 +41,7 @@ def tabs(sprint = None, where = None):
 		tabs['planning', 'history'] = '/sprints/%d/history'
 		tabs.add(('planning', 'checklist'), path = '/sprints/%d/checklist', num = len(sprint.getWarnings()) or None)
 		tabs['planning', 'distribute'] = '/tasks/distribute?sprint=%d'
-	elif sprint is not None and (sprint.isOver() or base == 'wrapup'):
+	elif sprint is not None and (sprint.isReview() or sprint.isOver() or base == 'wrapup'):
 		tabs['wrapup', 'history'] = '/sprints/%d/history'
 		tabs['wrapup', 'results'] = '/sprints/%d/results'
 		tabs['wrapup', 'retrospective'] = '/sprints/%d/retrospective'
@@ -56,7 +56,7 @@ def tabs(sprint = None, where = None):
 	if name == 'history' and sprint is not None:
 		if sprint.isPlanning():
 			tabs = tabs.where(('planning', 'history'))
-		elif sprint.isOver():
+		elif sprint.isReview() or sprint.isOver():
 			tabs = tabs.where(('wrapup', 'history'))
 		else:
 			tabs = tabs.where('history')
@@ -1031,8 +1031,8 @@ def showSprintRetrospective(handler, id):
 	print "var editing = %s;" % toJS(editing)
 	print "</script>"
 
-	if not sprint.isOver():
-		ErrorBox.die('Sprint Open', "The retrospective isn't available until the sprint has closed")
+	if not (sprint.isReview() or sprint.isOver()):
+		ErrorBox.die('Sprint Open', "The retrospective isn't available until the sprint is in review")
 
 	retro = Retrospective.load(sprint)
 	if retro is None:
@@ -1074,6 +1074,8 @@ def sprintRetrospectiveStart(handler, id):
 		ErrorBox.die('Sprints', "There is no sprint with ID %d" % id)
 	elif sprint.owner != handler.session['user']:
 		ErrorBox.die('Forbidden', "Only the scrummaster can edit the retrospective")
+	elif not (sprint.isReview() or sprint.isOver()):
+		ErrorBox.die('Sprint Open', "The retrospective isn't available until the sprint is in review")
 
 	Retrospective.init(sprint)
 	redirect("/sprints/%d/retrospective" % sprint.id)
@@ -1099,6 +1101,8 @@ def sprintRetrospectiveRender(handler, sprintid, p_id, p_catid, p_body = None, p
 		die("There is no sprint with ID %d" % sprintid)
 	elif sprint.owner != handler.session['user'] and (p_body is not None or p_good is not None):
 		die("Only the scrummaster can edit the retrospective")
+	elif not (sprint.isReview() or sprint.isOver()):
+		die("The retrospective isn't available until the sprint is in review")
 
 	if p_id == 'new':
 		if p_body is None or p_good is None:
