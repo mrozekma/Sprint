@@ -21,8 +21,11 @@ class ProgressBar:
 			self.pcnt = amt / total * 100
 
 		if isinstance(style, dict):
-			topPcnt = maxOr(filter(lambda p: p <= self.pcnt, style.keys()))
-			self.cls = style[topPcnt] if topPcnt in style else None
+			if amt == 0 and total == 0 and None in style:
+				self.cls = style[None]
+			else:
+				topPcnt = maxOr(filter(lambda p: p is not None and p <= self.pcnt, style.keys()))
+				self.cls = style[topPcnt] if topPcnt in style else None
 		elif isinstance(style, str):
 			self.cls = style
 		else:
