@@ -44,7 +44,7 @@ class HoursChart(Chart):
 	def __init__(self, placeholder, sprint, allTasks, revisions, **_):
 		Chart.__init__(self, placeholder)
 		days = [day for day in sprint.getDays()]
-		now = getNow()
+		now = Weekday.today()
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
 		futureIndex = days.index(futureStarts) if futureStarts else None
 
@@ -178,7 +178,7 @@ class StatusChart(Chart):
 	def __init__(self, placeholder, sprint, tasks, revisions, **_):
 		Chart.__init__(self, placeholder)
 		days = [day for day in sprint.getDays()]
-		now = getNow()
+		now = Weekday.today()
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
 		futureIndex = days.index(futureStarts) if futureStarts else None
 
@@ -224,7 +224,7 @@ class EarnedValueChart(Chart):
 	def __init__(self, placeholder, sprint, tasks, revisions, **_):
 		Chart.__init__(self, placeholder)
 		days = [day for day in sprint.getDays()]
-		now = getNow()
+		now = Weekday.today()
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
 		futureIndex = days.index(futureStarts) if futureStarts else None
 
@@ -290,7 +290,7 @@ class HoursByUserChart(Chart):
 	def __init__(self, placeholder, sprint, allTasks, revisions, **_):
 		Chart.__init__(self, placeholder)
 		days = [day for day in sprint.getDays()]
-		now = getNow()
+		now = Weekday.today()
 		futureStarts = minOr(filter(lambda day: day > now, days), None)
 		futureIndex = days.index(futureStarts) if futureStarts else None
 
