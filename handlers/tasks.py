@@ -156,8 +156,10 @@ tabs['import'] = '/tasks/new/import?group=%d'
 
 @get('tasks/new')
 def newTaskGeneric(handler, group, assigned = None):
-	url = '/tasks/new/single'
-	url += "?group=%s" % group
+	handler.title("New Task")
+	requirePriv(handler, 'User')
+	page = handler.session['user'].getPrefs().defaultTasksTab
+	url = tabs[page].getPath(to_int(group, 'group', ErrorBox.die))
 	if assigned:
 		url += "&assigned=%s" % assigned
 	redirect(url)
@@ -303,7 +305,10 @@ def newTaskMany(handler, group):
 
 	print "<script src=\"/static/jquery.typing-0.2.0.min.js\" type=\"text/javascript\"></script>"
 	print "<script type=\"text/javascript\">"
-	print "next_url = '/sprints/%d';" % sprint.id
+	nextURL = "/sprints/%d" % sprint.id
+	if assigned:
+		nextURL += "?search=assigned:%s" % stripTags(assigned.replace(' ', ','))
+	print "next_url = %s;" % toJS(nextURL)
 	print "</script>"
 
 	print tabs.format(id).where('many')

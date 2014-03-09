@@ -1,10 +1,11 @@
-import traceback
+from collections import OrderedDict
 import sys
+import traceback
+
+from utils import *
 
 from rorn.HTTPHandler import handlers
 from rorn.ResponseWriter import ResponseWriter
-
-from collections import OrderedDict
 
 class Tab:
 	def __init__(self, base, name, path = None, displayName = None, num = None):
@@ -62,6 +63,7 @@ def parseName(name):
 class Tabs():
 	def __init__(self):
 		self.tabs = {'': OrderedDict()}
+		self.afterContent = ''
 
 	def __getitem__(self, name):
 		base, name = parseName(name)
@@ -88,6 +90,21 @@ class Tabs():
 			self.tabs[base] = OrderedDict()
 		if name:
 			self.tabs[base][name] = Tab(base, name, path, displayName, num)
+
+	def addLink(self, url, label = None, icon = None, title = None):
+		if label is None and icon is None:
+			label = url
+		self.afterContent += "<a href=\"%s\"" % url
+		if title:
+			self.afterContent += " title=\"%s\"" % stripTags(title)
+		self.afterContent += ">"
+		if icon:
+			self.afterContent += "<img src=\"%s\">" % icon
+			if label:
+				self.afterContent += "&nbsp;"
+		if label:
+			self.afterContent += stripTags(label)
+		self.afterContent += "</a>\n"
 
 	def keys(self):
 		return self.tabs.keys()
@@ -132,6 +149,7 @@ class TabsView:
 	def __str__(self):
 		w = ResponseWriter()
 		try:
+			print "<div class=\"tabs-container\">"
 			print "<ul class=\"nav nav-tabs\">"
 			for tab in self.tabs.group('').values():
 				if self.tabs.group(tab.name):
@@ -143,6 +161,9 @@ class TabsView:
 				self.whr.out(self.fmt, True)
 			print "</ul>"
 			print "<div class=\"clear\"></div>"
+			if self.tabs.afterContent:
+				print "<div class=\"after-content\">%s</div>" % self.tabs.afterContent
+			print "</div>"
 			return w.done()
 		except:
 			w.done()

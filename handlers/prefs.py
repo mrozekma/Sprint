@@ -11,6 +11,7 @@ from Button import Button
 from Event import Event
 from resetpw import printResetForm
 from sprints import tabs as sprintTabs
+from tasks import tabs as taskTabs
 from utils import *
 
 backlogStyles = ['show', 'dim', 'hide']
@@ -28,11 +29,20 @@ def prefs(handler):
 
 	print InfoBox("Note", "Your password and avatar are controlled from <a href=\"/users/%s\">your profile</a>" % handler.session['user'].username)
 
+	print "<a name=\"default-sprint-tab\"></a>"
 	print "<h3>Default Sprint Tab</h3>"
 	print "Which tab you're taken to when following links in the project list:<br><br>"
-	print "<select name=\"default_tab\">"
+	print "<select name=\"default_sprint_tab\">"
 	for tab in sprintTabs().group('').values():
 		print "<option value=\"%s\"%s>%s</option>" % (tab.name, ' selected' if tab.name == prefs.defaultSprintTab else '', tab.getDisplayName())
+	print "</select>"
+
+	print "<a name=\"default-tasks-tab\"></a>"
+	print "<h3>Default Tasks Tab</h3>"
+	print "Which tab you're taken to when adding a new backlog task:<br><br>"
+	print "<select name=\"default_tasks_tab\">"
+	for tab in taskTabs.group('').values():
+		print "<option value=\"%s\"%s>%s</option>" % (tab.name, ' selected' if tab.name == prefs.defaultTasksTab else '', tab.getDisplayName())
 	print "</select>"
 
 	print "<h3>Backlog Style</h3>"
@@ -61,7 +71,7 @@ def prefs(handler):
 	print "</form>"
 
 @post('prefs')
-def prefsPost(handler, p_default_tab, p_backlog_style, p_messages = []):
+def prefsPost(handler, p_default_sprint_tab, p_default_tasks_tab, p_backlog_style, p_messages = []):
 	def die(msg):
 		print msg
 		done()
@@ -70,15 +80,18 @@ def prefsPost(handler, p_default_tab, p_backlog_style, p_messages = []):
 
 	if not handler.session['user']:
 		die("You must be logged in to modify preferences")
-	if p_default_tab not in sprintTabs():
-		die("Unrecognized default tab <b>%s</b>" % stripTags(p_default_tab))
+	if p_default_sprint_tab not in sprintTabs():
+		die("Unrecognized default sprint tab <b>%s</b>" % stripTags(p_default_sprint_tab))
+	if p_default_tasks_tab not in taskTabs:
+		die("Unrecognized default task tab <b>%s</b>" % stripTags(p_default_tasks_tab))
 	if set(p_backlog_style.keys()) != set(name for block in statusMenu for name in block):
 		die("Backlog style key mismatch")
 	if not set(p_messages.keys()) <= set(name for name, desc in messageTypes):
 		die("Message type mismatch")
 
 	prefs = handler.session['user'].getPrefs()
-	prefs.defaultSprintTab = p_default_tab
+	prefs.defaultSprintTab = p_default_sprint_tab
+	prefs.defaultTasksTab = p_default_tasks_tab
 	prefs.backlogStyles = p_backlog_style
 	prefs.messages = dict((name, name in p_messages.keys()) for name, desc in messageTypes)
 	prefs.save()

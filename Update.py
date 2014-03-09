@@ -236,8 +236,17 @@ def v20():
 @update
 def v21():
 	"""Move all existing Dev grants to Admin"""
-	for user in User.loadAll():
-		if user.hasPrivilege('Dev'):
-			user.privileges.remove('Dev')
-			user.privileges.add('Admin')
-			user.save()
+	table = db()['users']
+	for id in table:
+		with table.change(id) as data:
+			if 'Dev' in data['privileges']:
+				data['privileges'].remove('Dev')
+				data['privileges'].add('Admin')
+
+@update
+def v22():
+	"""Add the defaultTasksTab preference"""
+	table = db()['prefs']
+	for id in table:
+		with table.change(id) as data:
+			data['defaultTasksTab'] = 'single'

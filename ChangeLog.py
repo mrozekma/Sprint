@@ -59,6 +59,7 @@ changelog = [
 	ChangeLog("The assignee username is now optional -- new tasks will default to being self-assigned", ['/tasks/new/many']),
 	ChangeLog("You can upload your list of new tasks as a text file using the form above the textarea", ['/tasks/new/many']),
 	ChangeLog("Deferred tasks now retain their hours, but aren't counted in the metrics", ['/sprints/[0-9]+']),
+	ChangeLog("The default tab when adding a new task is now <a href=\"/prefs#default-tasks-tab\">customizable</a>", ['/tasks/new/.*']),
 ]
 
 def getChanges(handler, url, markSeen = True):

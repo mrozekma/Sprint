@@ -10,7 +10,9 @@ $(document).ready(function() {
 		});
 	};
 
-	$('#many-body').bind('paste', function() {setTimeout(get_preview, 0)}).typing({delay: 400, stop: get_preview});
+	if($('#many-body').length > 0) {
+		$('#many-body').bind('paste', function() {setTimeout(get_preview, 0)}).typing({delay: 400, stop: get_preview});
+	}
 
 	$('form#upload-tasks input[type=file]').change(function() {
 		$(this).parent('form').submit();

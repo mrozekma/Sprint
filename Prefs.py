@@ -11,16 +11,18 @@ from stasis.ActiveRecord import ActiveRecord, link
 class Prefs(ActiveRecord):
 	user = link(User, 'id')
 
-	def __init__(self, id, defaultSprintTab, backlogStyles, messages):
+	def __init__(self, id, defaultSprintTab, defaultTasksTab, backlogStyles, messages):
 		ActiveRecord.__init__(self)
 		self.id = id # Same as the parent user's ID
 		self.defaultSprintTab = defaultSprintTab
+		self.defaultTasksTab = defaultTasksTab
 		self.backlogStyles = backlogStyles
 		self.messages = messages
 
 	def getLogString(self):
 		writer = ResponseWriter()
 		print "default sprint tab: %s" % self.defaultSprintTab
+		print "default tasks tab: %s" % self.defaultTasksTab
 		print "backlog styles:"
 		for k, v in self.backlogStyles.iteritems():
 			print "  %s: %s" % (k, v)
@@ -35,4 +37,4 @@ class Prefs(ActiveRecord):
 
 	@staticmethod
 	def getDefaults(user):
-		return Prefs(user.id, 'backlog', {name: 'show' for block in statusMenu for name in block}, {'sprintMembership': False, 'taskAssigned': False, 'noteMention': True, 'noteRelated': True, 'priv': True})
+		return Prefs(user.id, 'backlog', 'single', {name: 'show' for block in statusMenu for name in block}, {'sprintMembership': False, 'taskAssigned': False, 'noteMention': True, 'noteRelated': True, 'priv': True})
