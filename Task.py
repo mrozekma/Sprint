@@ -105,8 +105,11 @@ class Task(ActiveRecord):
 		from Note import Note
 		return Note.loadAll(taskid = self.id, orderby = 'timestamp')
 
+	def effectiveHours(self):
+		return self.hours if self.stillOpen() else 0
+
 	def manHours(self):
-		return self.hours * len(self.assigned)
+		return self.effectiveHours() * len(self.assigned)
 
 	### Data that depends on task status/history
 

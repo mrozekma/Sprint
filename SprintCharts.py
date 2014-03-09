@@ -115,7 +115,7 @@ class HoursChart(Chart):
 					texts = []
 					for t in largeChanges:
 						if t not in hoursYesterday:
-							texts.append("<span style=\"color: #f00\">(New +%d)</span> %s" % (t.hours, t.name))
+							texts.append("<span style=\"color: #f00\">(New +%d)</span> %s" % (t.effectiveHours(), t.name))
 						elif hoursDiff[t] > 0:
 							texts.append("<span style=\"color: #f00\">(+%d)</span> %s" % (hoursDiff[t], t.name))
 						else:
@@ -322,7 +322,7 @@ class HoursByUserChart(Chart):
 			seriesList.append(series)
 
 			for day in days:
-				series['data'].append(sum(t.hours if t and user in t.assigned and not t.deleted else 0 for t in [revisions[t.id, day] for t in allTasks]))
+				series['data'].append(sum(t.effectiveHours() if t and user in t.assigned and not t.deleted else 0 for t in [revisions[t.id, day] for t in allTasks]))
 
 		setupTimeline(self, sprint)
 
@@ -349,9 +349,9 @@ class CommitmentChart(Chart):
 
 		originalTasks = filter(None, (task.getStartRevision(False) for task in tasks))
 		clrGen = cycle(colors)
-		total = sum(t.hours for t in originalTasks)
+		total = sum(t.effectiveHours() for t in originalTasks)
 		for user in sorted(sprint.members):
-			hours = sum(t.hours for t in originalTasks if user in t.assigned)
+			hours = sum(t.effectiveHours() for t in originalTasks if user in t.assigned)
 			series['data'].append({
 				'name': user.username,
 				'x': hours,
@@ -369,9 +369,9 @@ class CommitmentChart(Chart):
 		seriesList.append(series)
 
 		clrGen = cycle(colors)
-		total = sum(t.hours for t in tasks)
+		total = sum(t.effectiveHours() for t in tasks)
 		for user in sorted(sprint.members):
-			hours = sum(t.hours for t in tasks if user in t.assigned)
+			hours = sum(t.effectiveHours() for t in tasks if user in t.assigned)
 			series['data'].append({
 				'name': user.username,
 				'x': hours,
@@ -426,8 +426,8 @@ class TaskChart(Chart):
 				series['events'] = {'click': "function() {window.location = '/tasks/%d';}" % task.id}
 			seriesList.append(series)
 
-			hoursByDay = dict((tsStripHours(rev.timestamp), rev.hours) for rev in revs)
-			hoursByDay[tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))] = task.hours
+			hoursByDay = dict((tsStripHours(rev.timestamp), rev.effectiveHours()) for rev in revs)
+			hoursByDay[tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))] = task.effectiveHours()
 			series['data'] += [(utcToLocal(date) * 1000, hours) for (date, hours) in sorted(hoursByDay.items())]
 
 class GroupGoalsChart(Chart):
@@ -466,7 +466,7 @@ class CommitmentByUserChart:
 	def placeholder(self):
 		avail = Availability(self.sprint)
 		for user in sorted(self.sprint.members):
-			hours = sum(t.hours for t in self.tasks if user in t.assigned)
+			hours = sum(t.effectiveHours() for t in self.tasks if user in t.assigned)
 			total = avail.getAllForward(getNow().date(), user)
 			print ProgressBar("<a style=\"color: #000\" href=\"/sprints/%d?search=assigned:%s\">%s</a>" % (self.sprint.id, user.safe.username, user.safe.username), hours, total, zeroDivZero = True, style = {100.01: 'progress-current-red'})
 
@@ -483,7 +483,7 @@ class GoalsChart:
 		for goal in self.sprint.getGoals() + [None]:
 			if goal and goal.name == '':
 				continue
-			start = sum(t.hours * len(t.assigned) for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
+			start = sum(t.effectiveHours() * len(t.assigned) for t in originalTasks if t.id in taskMap and taskMap[t.id].goalid == (goal.id if goal else 0))
 			now = sum(t.manHours() for t in self.tasks if t.goalid == (goal.id if goal else 0))
 			if not goal and start == now == 0:
 				continue

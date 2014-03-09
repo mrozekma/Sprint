@@ -152,6 +152,10 @@ table.tasks {
 		&[status='canceled'] {.style(@pref_canceled);}
 		&[status='split'] {.style(@pref_split);}
 
+		&[status='deferred'] td.hours input {
+			text-decoration: line-through;
+		}
+
 		td {
 			margin: 1px 0px 1px 0px;
 
