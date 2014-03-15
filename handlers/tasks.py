@@ -288,7 +288,7 @@ $(document).ready(function() {
 	Event.newTask(handler, task)
 
 @get('tasks/new/many', statics = 'tasks-new')
-def newTaskMany(handler, group):
+def newTaskMany(handler, group, assigned = None):
 	handler.title("New Tasks")
 	requirePriv(handler, 'User')
 	id = int(group)
@@ -297,6 +297,8 @@ def newTaskMany(handler, group):
 	if 'many-upload' in handler.session:
 		body = handler.session['many-upload']
 		del handler.session['many-upload']
+	elif assigned:
+		body = "[%s]\n" % stripTags(assigned)
 
 	defaultGroup = Group.load(id)
 	if not defaultGroup:
@@ -326,9 +328,10 @@ def newTaskMany(handler, group):
 	print "<li><b>X...X|X...X[|X...X[|X...X]]</b> &mdash; 2-4 fields are a new task. The fields can appear in any order:<ul>"
 	print "<li><b>name</b> &mdash; The name of the task</li>"
 	print "<li><b>hours</b> &mdash; The number of hours this task will take</li>"
-	print "<li><b>assignee</b> &mdash; The person assigned to this task. If multiple people, separate usernames with spaces. This field is optional as long as <b>status</b> is also omitted; it defaults to the current user if a sprint member, or the scrummaster otherwise</li>"
+	print "<li><b>assignee</b> &mdash; The person assigned to this task. If multiple people, separate usernames with spaces. This field is optional as long as <b>status</b> is also omitted; it defaults to the current user if a sprint member, or the scrummaster otherwise, unless overridden (see below)</li>"
 	print "<li><b>status</b> &mdash; The initial status of the task. This field is optional; it defaults to \"not started\"</li>"
 	print "</ul></li>"
+	print "<li><b>[X...X]</b> &mdash; A username (or space-separated list of usernames) wrapped in brackets makes that user or group the default assignee for all tasks that don't specify an assignee</li>"
 	print "<li><b>#...</b> &mdash; A line starting with a hash character is a comment, and is ignored. You can only comment out entire lines; a hash within a line does not start a comment at that point</li>"
 	print "</ul>"
 	print "You can also use the form above the textarea to upload a text file. The file will be used to fill the textarea, so it should match the syntax described above"
@@ -378,6 +381,7 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 	sep = '|'
 	lines = map(lambda x: x.strip(" \r\n"), p_body.split('\n'))
 	errors = []
+	defaultAssigned = {handler.session['user'] if handler.session['user'] in sprint.members else sprint.owner}
 
 	for line in lines:
 		if line == '':
@@ -386,6 +390,8 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 			continue
 		elif len(line) == 1: # Separator
 			sep = line[0]
+		elif line[0] == '[' and line[-1] == ']' and set(line[1:-1].split(' ')) <= set(u.username for u in sprint.members): # Default assigned
+			defaultAssigned = {User.load(username = username) for username in line[1:-1].split(' ')}
 		elif line[-1] == ':': # Group
 			line = line[:-1]
 			group = Group.load(sprintid = sprint.id, name = line)
@@ -406,7 +412,7 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 			name, assigned, status, hours = None, None, None, None
 			for case in switch(len(parts)):
 				if case(2):
-					assigned = {handler.session['user'] if handler.session['user'] in sprint.members else sprint.owner}
+					assigned = defaultAssigned
 					# Fall-through
 				if case(3):
 					status = 'not started'
@@ -487,7 +493,7 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 				continue
 			print "<b>%s%s</b><br>" % (group.safe.name, ' (NEW)' if group in newGroups else '')
 			for name, assigned, status, hours in tasks[group]:
-				print "%s (assigned to %s, %s, %d %s)<br>" % (stripTags(name), ' '.join(map(str, assigned)), status, hours, 'hour remains' if hours == 1 else 'hours remain')
+				print "%s (assigned to %s, %s, %d %s)<br>" % (stripTags(name), ' '.join(sorted(map(str, assigned))), status, hours, 'hour remains' if hours == 1 else 'hours remain')
 			print "<br>"
 	elif errors:
 		die('There are unparseable lines in the task script. See the preview for more information')
@@ -523,7 +529,8 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 		handler.responseCode = 299
 
 @get('tasks/new/import', statics = 'tasks-import')
-def newTaskImport(handler, group, source = None):
+def newTaskImport(handler, group, source = None, assigned = None):
+	# 'assigned' is ignored, it's just in case the user gets here from a filtered backlog
 	handler.title("New Tasks")
 	requirePriv(handler, 'User')
 	id = int(group)

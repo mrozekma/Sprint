@@ -10,8 +10,16 @@ $(document).ready(function() {
 		});
 	};
 
-	if($('#many-body').length > 0) {
-		$('#many-body').bind('paste', function() {setTimeout(get_preview, 0)}).typing({delay: 400, stop: get_preview});
+	field = $('#many-body');
+	if(field.length > 0) {
+		field.bind('paste', function() {setTimeout(get_preview, 0)}).typing({delay: 400, stop: get_preview});
+
+		// Move the cursor to the end of the input field
+		if(field.val() != '') {
+			val = field.val();
+			field.val('');
+			field.val(val);
+		}
 	}
 
 	$('form#upload-tasks input[type=file]').change(function() {
