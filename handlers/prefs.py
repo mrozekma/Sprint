@@ -14,7 +14,7 @@ from sprints import tabs as sprintTabs
 from tasks import tabs as taskTabs
 from utils import *
 
-backlogStyles = ['show', 'dim', 'hide']
+backlogStyles = ['emphasize', 'show', 'dim', 'hide']
 messageTypes = [('sprintMembership', "Added to a sprint"), ('taskAssigned', "Assigned a task"), ('noteRelated', "Someone added a note on a task you own or have a note on"), ('noteMention', "Mentioned in a note"), ('priv', "Granted a privilege")]
 
 @get('prefs')

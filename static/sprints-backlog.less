@@ -1,6 +1,16 @@
 @import 'sprints.less';
 @import '/prefs/backlog.less';
 
+.style(@type) when (@type = emphasize) {
+	td.flags span.task-index {
+		color: yellow;
+	}
+
+	td.name {
+		font-weight: bold;
+	}
+}
+
 .style(@type) when (@type = dim) {
 	opacity: .4;
 }
