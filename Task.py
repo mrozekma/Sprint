@@ -83,6 +83,7 @@ class Task(ActiveRecord):
 		return self.safe.name
 
 	def getRevision(self, revision):
+		revision -= 1 # revision is 1-indexed
 		data = db()['tasks'][self.id]
 		return Task(**data[revision]) if revision < len(data) else None
 
