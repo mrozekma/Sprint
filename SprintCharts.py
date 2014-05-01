@@ -394,10 +394,10 @@ class TaskChart(Chart):
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
 		self.title.text = ''
-		self.tooltip.formatter = "function() {idx = this.series.name.indexOf(':'); return '<small>' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</small><br><span style=\"color: ' + this.series.color + '\">' + this.series.name.slice(idx + 1) + '</span>: ' + this.y + (this.y == 1 ? ' hour' : ' hours')}"
+		self.tooltip.shared = True
+		self.tooltip.formatter = "function() {var s = '<small>' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</small><br>'; this.points.forEach(function(point) {idx = point.series.name.indexOf(':'); s += '<span style=\"color: ' + point.series.color + '\">' + point.series.name.slice(idx + 1) + '</span>: ' + point.y + (point.y == 1 ? ' hour' : ' hours') + '<br>'; }); return s;}"
 		self.plotOptions.line.dataLabels.enabled = not many
 		self.plotOptions.line.dataLabels.x = -10
-		self.plotOptions.line.step = True
 		self.legend.enabled = False
 		self.credits.enabled = False
 		with self.xAxis as x:
@@ -428,7 +428,22 @@ class TaskChart(Chart):
 
 			hoursByDay = dict((tsStripHours(rev.timestamp), rev.effectiveHours()) for rev in revs)
 			hoursByDay[tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))] = task.effectiveHours()
-			series['data'] += [(utcToLocal(date) * 1000, hours) for (date, hours) in sorted(hoursByDay.items())]
+
+			i = 0
+			sortedHoursByDay = sorted(hoursByDay.items())
+			series['data'] += [(utcToLocal(sortedHoursByDay[i][0]) * 1000, sortedHoursByDay[i][1])]
+			i += 1
+			# If there was no hours revision for a task on a given day, create a data point with the same hours as the previous day
+			# This prevents the graph from displaying hour deltas between two non-adjacent days
+			while i < len(sortedHoursByDay):
+				# MAGIC NUMBER: 8400000 is the length of a day in this time format
+				if (utcToLocal(sortedHoursByDay[i][0]) * 1000) - series['data'][-1][0] > 86400000:
+					series['data'] += [(series['data'][-1][0] + 86400000, series['data'][-1][1])]
+				else:
+					series['data'] += [(utcToLocal(sortedHoursByDay[i][0]) * 1000, sortedHoursByDay[i][1])]
+					i += 1
+
+
 
 class GroupGoalsChart(Chart):
 	def __init__(self, group):
