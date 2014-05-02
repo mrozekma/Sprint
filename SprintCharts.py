@@ -414,7 +414,7 @@ class TaskChart(Chart):
 					var yValue = allSeries[i].yData[xIndex];
 
 					// If there is overlap, add it to the tooltip along with the hovered value
-					if (yValue == yRefValue) {
+					if (allSeries[i].visible && yValue == yRefValue) {
 						// HACK: hiding meta-data (task ID) in the name and slicing it off before displaying.
 						idx = allSeries[i].name.indexOf(':');
 						tooltip += '<span style=\"color: ' + allSeries[i].color + '\">' + allSeries[i].name.slice(idx + 1) + '</span>: ' + yValue + (yValue == 1 ? ' hour' : ' hours') + '<br>';
