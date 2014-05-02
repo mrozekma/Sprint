@@ -394,8 +394,35 @@ class TaskChart(Chart):
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
 		self.title.text = ''
-		self.tooltip.shared = True
-		self.tooltip.formatter = "function() {var s = '<small>' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</small><br>'; this.points.forEach(function(point) {idx = point.series.name.indexOf(':'); s += '<span style=\"color: ' + point.series.color + '\">' + point.series.name.slice(idx + 1) + '</span>: ' + point.y + (point.y == 1 ? ' hour' : ' hours') + '<br>'; }); return s;}"
+		self.tooltip.shared = False
+		
+		# Non-shared tooltip doesn't support overlapping points, which is stupid, so for now
+		# manually format the tooltip to include the hover point and any other overlapping points.
+		self.tooltip.formatter = """function() { 
+				// Date Header
+				var tooltip = '<small>' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</small><br>'; 
+
+				// Index of current X and value of Y at current X in hovered series
+				var xIndex = this.series.xData.indexOf(this.point.x); 
+				var yRefValue = this.point.y; 
+
+				// Grab all series in chart
+				var allSeries = this.series.chart.series; 
+
+				// For each series, check if its Y value at current X index is overlapping with the reference Y value
+				for (var i = 0; i < allSeries.length; i++) {
+					var yValue = allSeries[i].yData[xIndex];
+
+					// If there is overlap, add it to the tooltip along with the hovered value
+					if (yValue == yRefValue) {
+						// HACK: hiding meta-data (task ID) in the name and slicing it off before displaying.
+						idx = allSeries[i].name.indexOf(':');
+						tooltip += '<span style=\"color: ' + allSeries[i].color + '\">' + allSeries[i].name.slice(idx + 1) + '</span>: ' + yValue + (yValue == 1 ? ' hour' : ' hours') + '<br>';
+					}
+				}
+				return tooltip; 
+			}"""
+
 		self.plotOptions.line.dataLabels.enabled = not many
 		self.plotOptions.line.dataLabels.x = -10
 		self.legend.enabled = False
