@@ -158,7 +158,7 @@ def init():
 		exit(1)
 	print
 
-	print "All users are assumed to share a common e-mail domain. This is currently only used for gravatars, but might be used to send e-mails later"
+	print "All users are assumed to share a common e-mail domain. This is currently used for gravatars and sending password reset e-mails"
 	email = raw_input('E-mail domain: ')
 	if email == '':
 		exit(1)
