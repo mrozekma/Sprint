@@ -394,7 +394,35 @@ class TaskChart(Chart):
 		self.chart.defaultSeriesType = 'line'
 		self.chart.zoomType = 'x'
 		self.title.text = ''
-		self.tooltip.formatter = "function() {idx = this.series.name.indexOf(':'); return '<small>' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</small><br><span style=\"color: ' + this.series.color + '\">' + this.series.name.slice(idx + 1) + '</span>: ' + this.y + (this.y == 1 ? ' hour' : ' hours')}"
+		self.tooltip.shared = False
+		
+		# Non-shared tooltip doesn't support overlapping points, which is stupid, so for now
+		# manually format the tooltip to include the hover point and any other overlapping points.
+		self.tooltip.formatter = """function() { 
+				// Date Header
+				var tooltip = '<small>' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</small><br>'; 
+
+				// Index of current X and value of Y at current X in hovered series
+				var xIndex = this.series.xData.indexOf(this.point.x); 
+				var yRefValue = this.point.y; 
+
+				// Grab all series in chart
+				var allSeries = this.series.chart.series; 
+
+				// For each series, check if its Y value at current X index is overlapping with the reference Y value
+				for (var i = 0; i < allSeries.length; i++) {
+					var yValue = allSeries[i].yData[xIndex];
+
+					// If there is overlap, add it to the tooltip along with the hovered value
+					if (allSeries[i].visible && yValue == yRefValue) {
+						// HACK: hiding meta-data (task ID) in the name and slicing it off before displaying.
+						idx = allSeries[i].name.indexOf(':');
+						tooltip += '<span style=\"color: ' + allSeries[i].color + '\">' + allSeries[i].name.slice(idx + 1) + '</span>: ' + yValue + (yValue == 1 ? ' hour' : ' hours') + '<br>';
+					}
+				}
+				return tooltip; 
+			}"""
+
 		self.plotOptions.line.dataLabels.enabled = not many
 		self.plotOptions.line.dataLabels.x = -10
 		self.plotOptions.line.step = True
@@ -429,6 +457,7 @@ class TaskChart(Chart):
 			hoursByDay = dict((tsStripHours(rev.timestamp), rev.effectiveHours()) for rev in revs)
 			hoursByDay[tsStripHours(min(dateToTs(getNow()), task.historyEndsOn()))] = task.effectiveHours()
 			series['data'] += [(utcToLocal(date) * 1000, hours) for (date, hours) in sorted(hoursByDay.items())]
+
 
 class GroupGoalsChart(Chart):
 	def __init__(self, group):
