@@ -170,6 +170,7 @@ def init():
 	try:
 		settings.dbVersion = LAST_SQLITE_VERSION
 		settings.emailDomain = email
+		settings.autolink = ([], [], [])
 	except Exception, e:
 		rmtree(dbFilename)
 		die("Unable to set default settings: %s" % e)
@@ -250,3 +251,16 @@ def v22():
 	for id in table:
 		with table.change(id) as data:
 			data['defaultTasksTab'] = 'single'
+
+@update
+def v23():
+	"""Convert bugzillaURL to autolinkPatterns"""
+	table = db()['settings']
+	table['autolink'] = ([], [], [])
+	if 'bugzillaURL' in table:
+		with table.change('autolink') as data:
+			icons, patterns, urls = data
+			icons.append('bugzilla')
+			patterns.append('(?:bug |bz)(?P<id>[0-9]+)')
+			urls.append("%s/show_bug.cgi?id=$id" % table['bugzillaURL'])
+		del table['bugzillaURL']

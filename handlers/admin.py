@@ -42,6 +42,8 @@ def admin(url, name, icon, **kw):
 		return get(url, **kw)(f)
 	return wrap
 
+AUTOLINK_ICONS = ['tick', 'warn', 'cross', 'star', 'lock', 'bugzilla', 'key', 'save', 'user-offline', 'user-online', 'asterisk', 'star_bronze', 'star_silver', 'star_gold', 'bell', 'brick', 'coins', 'plugin']
+
 @get('admin', statics = 'admin')
 def adminIndex(handler):
 	handler.title('Admin')
@@ -121,7 +123,7 @@ def adminInfo(handler):
 
 	print "</div><br><br>"
 
-@post('admin/restart', statics = ['admin', 'admin-restart'])
+@post('admin/restart', statics = 'admin-restart')
 def adminRestart(handler, now = False):
 	handler.title('Restart')
 	requirePriv(handler, 'Admin')
@@ -134,35 +136,46 @@ def adminRestart(handler, now = False):
 	else:
 		print "<img src=\"/static/images/loading.gif\">&nbsp;Restarting..."
 
-@admin('admin/settings', 'Settings', 'settings')
+@admin('admin/settings', 'Settings', 'settings', statics = 'admin-settings')
 def adminSettings(handler):
 	handler.title('Settings')
 	requirePriv(handler, 'Admin')
 	undelay(handler)
 
-	print "<style type=\"text/css\">"
-	print "table.list td.right > * {width: 400px;}"
-	print "table.list td.right button {width: 200px;}" # Half of the above value
-	print "table.list tr td:first-of-type {font-weight: bold;}"
-	print "</style>"
+	print "<ul id=\"autolink_icons\" class=\"contextMenu\">"
+	for seek in AUTOLINK_ICONS:
+		print "<li><a href=\"#%s\"><img src=\"/static/images/%s.png\"></a></li>" % (seek, seek)
+	print "</ul>"
 
 	def quot(str): return str.replace('"', '&quot;')
 
 	print "<h3>Mutable settings</h3>"
 	print "<form method=\"post\" action=\"/admin/settings\">"
-	print "<table class=\"list\">"
+	print "<table class=\"list\"><tbody>"
 	print "<tr><td class=\"left\">E-mail domain:</td><td class=\"right\"><input type=\"text\" name=\"emailDomain\" value=\"%s\"></td></tr>" % quot(settings.emailDomain)
 	print "<tr><td class=\"left\">System message:</td><td class=\"right\"><input type=\"text\" name=\"systemMessage\" value=\"%s\"></td></tr>" % quot(settings.systemMessage or '')
-	print "<tr><td class=\"left\">Bugzilla URL:</td><td class=\"right\"><input type=\"text\" name=\"bugzillaURL\" value=\"%s\"></td></tr>" % quot(settings.bugzillaURL or '')
 	print "<tr><td class=\"left\">Redis host:</td><td class=\"right\"><input type=\"text\" name=\"redis\" value=\"%s\"></td></tr>" % quot(settings.redis or '')
 	print "<tr><td class=\"left\">Kerberos realm:</td><td class=\"right\"><input type=\"text\" name=\"kerberosRealm\" value=\"%s\"></td></tr>" % quot(settings.kerberosRealm or '')
 	print "<tr><td class=\"left\">SMTP server:</td><td class=\"right\"><input type=\"text\" name=\"smtpServer\" value=\"%s\"></td></tr>" % quot(settings.smtpServer or '')
 	print "<tr><td class=\"left\">SMTP from address:</td><td class=\"right\"><input type=\"text\" name=\"smtpFrom\" value=\"%s\"></td></tr>" % quot(settings.smtpFrom or '')
+	print "<tr><td class=\"left\">Autolinks:</td><td class=\"right\">"
+	print "<table class=\"autolinks\" width=\"100%\" cellspacing=\"5\">"
+	print "<tr><td>Icon</td><td>Pattern</td><td>URL</td></tr>"
+	links = zip(*settings.autolink)
+	for i in range(5):
+		icon, pattern, url = links.pop(0) if links else ('star', '', '')
+		print "<tr>"
+		print "<td><img class=\"autolink_icon\" src=\"/static/images/%s.png\"><input type=\"hidden\" name=\"autolink_icons[]\" value=\"%s\"></td>" % (icon, icon)
+		print "<td><input type=\"text\" name=\"autolink_patterns[]\" value=\"%s\"></td>" % stripTags(pattern)
+		print "<td><input type=\"text\" name=\"autolink_urls[]\" value=\"%s\"></td>" % stripTags(url)
+		print "</tr>\n";
+	print "</table>"
+	print "</td></tr>"
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
 	print Button('Save', id = 'save-button', type = 'submit').positive()
 	print Button('Cancel', type = 'button', url = '/admin').negative()
 	print "</td></tr>"
-	print "</table>"
+	print "</tbody></table>"
 	print "</form>"
 	print "<br>"
 
@@ -172,9 +185,22 @@ def adminSettings(handler):
 	print "</table>"
 
 @post('admin/settings')
-def adminSettingsPost(handler, p_emailDomain, p_systemMessage, p_bugzillaURL, p_redis, p_kerberosRealm, p_smtpServer, p_smtpFrom):
+def adminSettingsPost(handler, p_emailDomain, p_systemMessage, p_redis, p_kerberosRealm, p_smtpServer, p_smtpFrom, p_autolink_icons, p_autolink_urls, p_autolink_patterns):
 	handler.title('Settings')
 	requirePriv(handler, 'Admin')
+
+	if len({len(p_autolink_icons), len(p_autolink_patterns), len(p_autolink_urls)}) != 1:
+		ErrorBox.die('Bad autolink arguments')
+	if not set(p_autolink_icons) <= set(AUTOLINK_ICONS):
+		ErrorBox.die('Bad autolink icons')
+	# Strip out entries where any field is blank
+	autolinks = filter(all, zip(p_autolink_icons, p_autolink_patterns, p_autolink_urls))
+	# Sanity checking
+	for icon, pattern, url in autolinks:
+		try:
+			re.compile(pattern)
+		except Exception, e:
+			ErrorBox.die("Bad pattern %s: %s" % (stripTags(pattern), e))
 
 	settings.emailDomain = p_emailDomain
 
@@ -183,10 +209,6 @@ def adminSettingsPost(handler, p_emailDomain, p_systemMessage, p_bugzillaURL, p_
 			del settings['systemMessage']
 	else:
 		settings.systemMessage = p_systemMessage
-
-	if p_bugzillaURL != '' and p_bugzillaURL[-1] == '/':
-		p_bugzillaURL = p_bugzillaURL[:-1]
-	settings.bugzillaURL = p_bugzillaURL
 
 	if p_redis == '':
 		if settings.redis:
@@ -218,6 +240,8 @@ def adminSettingsPost(handler, p_emailDomain, p_systemMessage, p_bugzillaURL, p_
 	else:
 		settings.smtpServer = p_smtpServer
 		settings.smtpFrom = p_smtpFrom or "sprint@%s" % p_smtpServer
+
+	settings.autolink = zip(*autolinks)
 
 	delay(handler, SuccessBox("Updated settings", close = True))
 	Event.adminSettings(handler, settings)

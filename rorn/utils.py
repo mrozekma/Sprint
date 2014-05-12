@@ -1,13 +1,11 @@
+import cgi
 import hashlib
 from os.path import dirname
 import sys
 import traceback
 
-# http://smitbones.blogspot.com/2008/01/python-strip-html-tags-function.html
 def stripTags(value):
-    # "Return the given HTML with all tags stripped."
-    # return re.sub(r'<[^>]*?>', '', value)
-	return str(value).replace("<", "&lt;")
+	return cgi.escape(value, True)
 
 class DoneRendering(Exception): pass
 def done():

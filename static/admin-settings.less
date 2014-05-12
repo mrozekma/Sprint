@@ -1,0 +1,42 @@
+@rowWidth: 400px;
+
+table.list > tbody > tr {
+	td.right > * {
+		width: @rowWidth;
+	}
+
+	td.right button {
+		width: @rowWidth / 2;
+	}
+
+	td:first-of-type {
+		font-weight: bold;
+	}
+
+	table.autolinks {
+		tr:first-of-type td {
+			font-weight: bold;
+		}
+
+		td:first-of-type {
+			text-align: center;
+
+			img {
+				cursor: pointer;
+			}
+		}
+	}
+}
+
+.contextMenu {
+	width: 40px;
+	text-align: center;
+
+	a {
+		padding-left: 0px;
+	}
+}
+
+input {
+	width: 100%;
+}

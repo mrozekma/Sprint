@@ -3,6 +3,7 @@ from datetime import datetime, date, timedelta
 from json import dumps as toJS
 from collections import OrderedDict
 from itertools import product
+from string import Template
 
 from rorn.Session import delay, undelay
 from rorn.ResponseWriter import ResponseWriter
@@ -27,6 +28,7 @@ from LoadValues import isDevMode
 from Search import Search
 from Event import Event
 from Retrospective import Retrospective, Category as RetroCategory, Entry as RetroEntry
+from Settings import settings
 from Markdown import Markdown
 from utils import *
 
@@ -368,7 +370,9 @@ def printTask(handler, task, days, group = None, highlight = False, editable = T
 	print "<a href=\"/tasks/%d\" target=\"_blank\"><img src=\"/static/images/task-history.png\" title=\"History\"></a>" % task.id
 	if editable:
 		print "<a href=\"javascript:delete_task(%d);\"><img src=\"/static/images/task-delete.png\" title=\"Delete Task\"></a>" % task.id
-	print "<a href=\"#\" class=\"bugzilla\" target=\"_blank\"><img src=\"/static/images/bugzilla.png\" title=\"Link to bug\"></a>"
+	for icon, pattern, url in zip(*settings.autolink):
+		for match in re.finditer(pattern, task.name, re.IGNORECASE):
+			print "<a href=\"%s\" target=\"_blank\"><img src=\"/static/images/%s.png\"></a>" % (Template(url).safe_substitute(match.groupdict()), icon)
 	print "<img class=\"saving\" src=\"/static/images/loading.gif\">"
 	print "</td>"
 	print "</tr>"

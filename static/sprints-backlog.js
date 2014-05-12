@@ -6,7 +6,6 @@ $(document).ready(function() {
 	setup_search();
 	setup_filter_buttons();
 	setup_group_arrows();
-	setup_bugzilla($('tr.task'));
 	setup_indexes();
 	setup_warnings();
 
@@ -136,35 +135,6 @@ function setup_group_arrows() {
 			$('tr.task[groupid=' + groupid + ']').show();
 			apply_filters();
 			break;
-		}
-	});
-}
-
-function setup_bugzilla(tasks) {
-	if(bugzilla_url == undefined || bugzilla_url == "") {
-		$('td.actions a.bugzilla', tasks).hide();
-		return;
-	}
-
-	tasks.each(function() {
-		name = $('td.name span', $(this)).text();
-		link = $('td.actions a.bugzilla', $(this));
-
-		//TODO Support multiple bugs in one task
-		/*
-		re = /(?:bug |bz)([0-9]+)/gi;
-		while(match = re.exec(name)) {
-			id = parseInt(match[1], 10);
-		}
-		*/
-
-		//TODO Make the domain a setting
-		if(match = name.match(/(?:bug |bz)([0-9]+)/i)) {
-			id = parseInt(match[1], 10);
-			link.attr('href', bugzilla_url + '/show_bug.cgi?id=' + id);
-			link.show();
-		} else {
-			link.hide();
 		}
 	});
 }
