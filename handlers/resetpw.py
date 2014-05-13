@@ -78,11 +78,15 @@ def sendResetEmail(handler):
 
 	print "A reset link will be send to your e-mail address. You can also contact an administrator to reset your password.<br><br>"
 	print "<form method=\"post\" action=\"/resetpw/:mail\">"
-	print "Username: <select name=\"username\">"
+	print "<table class=\"list\">"
+	print "<tr><td class=\"left\">Username:</td><td><select name=\"username\">"
 	for user in User.loadAll(orderby = 'username'):
 		print "<option value=\"%s\">%s</option>" % (user.safe.username, user.safe.username)
-	print "</select><br>"
+	print "</select></td></tr>"
+	print "<tr><td>&nbsp;</td><td>"
 	print Button('Send e-mail', type = 'submit').positive()
+	print "</td></tr>"
+	print "</table>"
 
 @post('resetpw/:mail')
 def sendResetEmailPost(handler, p_username):

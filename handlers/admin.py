@@ -7,6 +7,7 @@ from pprint import pformat
 from json import loads as fromJS, dumps as toJS
 from cgi import escape
 from datetime import datetime, time
+from socket import gethostname
 import sys
 from threading import enumerate as threads
 from time import sleep
@@ -28,7 +29,7 @@ from Table import LRTable
 from Cron import Cron
 from LoadValues import getLoadtime, setDevMode, brick
 from Log import LogEntry, log
-from Settings import settings
+from Settings import settings, PORT
 from Event import Event
 from event_handlers.ErrorCounter import errorCounter
 from relativeDates import timesince
@@ -267,6 +268,8 @@ def adminUsers(handler):
 	for name, desc in privList.iteritems():
 		print "<input type=\"checkbox\" name=\"privileges[]\" id=\"priv_%s\" value=\"%s\"%s><label for=\"priv_%s\">%s &mdash; %s</label><br>" % (name, name, ' checked' if name in privDefaults else '', name, name, desc)
 	print "</div></td></tr>"
+	if settings.smtpServer:
+		print "<tr><td class=\"left\">Contact:</td><td class=\"right\"><div><input type=\"checkbox\" name=\"send_welcome\" id=\"send_welcome\" checked><label for=\"send_welcome\">Send welcome e-mail</label></div></td></tr>"
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
 	print Button('Save', id = 'save-button', type = 'submit').positive()
 	print Button('Cancel', type = 'button', url = '/admin').negative()
@@ -283,7 +286,7 @@ def adminUsers(handler):
 	print "<div class=\"clear\"></div>"
 
 @post('admin/users')
-def adminUsersPost(handler, p_action, p_username, p_privileges = []):
+def adminUsersPost(handler, p_action, p_username, p_privileges = [], p_send_welcome = False):
 	handler.title('User Management')
 	requirePriv(handler, 'Admin')
 
@@ -333,6 +336,17 @@ def adminUsersPost(handler, p_action, p_username, p_privileges = []):
 			Event.newUser(handler, user)
 			for priv in p_privileges:
 				Event.grantPrivilege(handler, user, priv, True)
+
+			if p_send_welcome:
+				user.resetkey = "%x" % random.randint(0x10000000, 0xffffffff)
+				msg = "A Sprint account has been created for you with the username `%s'. " % user.username
+				if settings.kerberosRealm:
+					msg += "You can use your %s password to login, or set a dedicated Sprint password here: " % settings.kerberosRealm
+				else:
+					msg += "You can set a password here: "
+				msg += "http://%s:%d/resetpw/%s?key=%s" % (gethostname(), PORT, user.safe.username, user.resetkey)
+				sendmail(user.getEmail(), "Sprint - New Account", msg)
+
 			user.save()
 
 			delay(handler, SuccessBox("Added user <b>%s</b>" % stripTags(p_username), close = True))
