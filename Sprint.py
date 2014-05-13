@@ -133,7 +133,7 @@ class Sprint(ActiveRecord):
 			rtn['open-without-hours'] = noHours
 
 		# Closed tasks with >0 hours
-		haveHours = filter(lambda task: not task.stillOpen() and task.hours > 0, tasks)
+		haveHours = filter(lambda task: not task.stillOpen() and task.status != 'deferred' and task.hours > 0, tasks)
 		if haveHours != []:
 			rtn['closed-with-hours'] = haveHours
 

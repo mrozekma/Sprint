@@ -972,7 +972,7 @@ def showSprintChecklist(handler, id):
 		good("All open tasks have hours estimated")
 
 	if 'closed-with-hours' in warnings:
-		bad("There are <a href=\"/sprints/%d?search=status:deferred,split hours:>0\">deferred tasks with hours</a>. These hours are counted as part of the sprint commitment" % sprint.id)
+		bad("There are <a href=\"/sprints/%d?search=status:complete,canceled,split hours:>0\">closed tasks with hours</a>. These hours are counted as part of the sprint commitment" % sprint.id)
 	else:
 		good("All closed tasks have 0 hours")
 
