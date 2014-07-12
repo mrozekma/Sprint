@@ -47,7 +47,7 @@ def run(handler, p_command, p_path, p_mode = ''):
 		return
 
 	# This is already checked in the "su" command, but could be spoofed by the user
-	if p_mode == 'admin' and not handler.session['user'].hasPrivilege('Admin'):
+	if p_mode == 'admin' and not (handler.session['user'].hasPrivilege('Admin') or ('impersonator' in handler.session and handler.session['impersonator'].hasPrivilege('Admin'))):
 		print toJS({'error': "You need the Admin privilege"})
 		return
 
@@ -83,6 +83,9 @@ def run(handler, p_command, p_path, p_mode = ''):
 			rtn['redirect'] = e.target
 			rtn['postdata'] = e.data
 			rtn['success_msg'] = e.successMsg
+		except:
+			w.done()
+			raise
 
 		rtn['output'] = w.done()
 		if mode is not None:
@@ -127,7 +130,6 @@ def help(context):
 @command('help _', mode = '*')
 def helpCommand(context, command):
 	testCommands = filterCommands([command], context['mode'])
-	sys.__stdout__.write("%s\n" % testCommands)
 	if len(testCommands) == 0:
 		fail("Unrecognized command")
 	elif len(testCommands) > 1:
@@ -296,7 +298,7 @@ def finger(context, username):
 
 @command('su')
 def su(context):
-	if not context['handler'].session['user'].hasPrivilege('Admin'):
+	if not (context['handler'].session['user'].hasPrivilege('Admin') or ('impersonator' in context['handler'].session and context['handler'].session['impersonator'].hasPrivilege('Admin'))):
 		fail("You need the Admin privilege")
 	return ('admin', '#')
 
@@ -355,7 +357,7 @@ def impersonate(context, username):
 		fail("No user named %s" % username)
 	redirectPost('/admin/users', {'action': 'impersonate', 'username': username}, "Impersonating %s" % clr(username))
 
-@command('unimpersonate')
+@command('unimpersonate', mode = 'admin')
 def unimpersonate(context):
 	if 'impersonator' not in context['handler'].session:
 		if not context['handler'].session['user'].hasPrivilege('Admin'):

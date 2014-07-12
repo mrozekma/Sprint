@@ -1487,7 +1487,7 @@
                     }).join('');
                 }
 
-                return str.replace(/{{([^}]*)}{([^}]*)}}/, '<a target="_blank" href="$2">$1</a>'). // Terrible hack for embedding URLs
+                return str.replace(/{{([^}]*)}{([^}]*)}}/g, '<a target="_blank" href="$2">$1</a>'). // Terrible hack for embedding URLs
                 /* replace(url_re, function(link) { // Disabled automatic URLs; conflicts with above hack
                         var comma = link.match(/\.$/);
                         link = link.replace(/\.$/, '');

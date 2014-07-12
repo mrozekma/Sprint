@@ -255,14 +255,6 @@ def showBacklog(handler, id, search = None, devEdit = False):
 		print "end: %d (%s)<br>" % (sprint.end, tsToDate(sprint.end))
 		print "</div>"
 
-	#TODO I think this form (and possibly the hidden inputs right after) can be removed
-	print "<form method=\"post\" action=\"/sprints/%d\">" % id
-	# print Button('Save', image = 'tick.png', id = 'save-button').positive()
-
-	for task in tasks:
-		print "<input type=\"hidden\" name=\"status[%d]\" value=\"%s\">" % (task.id, task.status)
-		print "<input type=\"hidden\" name=\"goal[%d]\" value=\"%s\">" % (task.id, task.goal.id if task.goal else 0)
-
 	tblClasses = ['tasks']
 	if editable:
 		tblClasses.append('editable')
@@ -313,7 +305,6 @@ def showBacklog(handler, id, search = None, devEdit = False):
 	print "<tr><td colspan=\"7\">&nbsp;</td></tr>" # Spacer so rows can be dragged to the bottom
 	print "</tbody>"
 	print "</table>"
-	print "</form>"
 
 def printTask(handler, task, days, group = None, highlight = False, editable = True):
 	classes = ['task']
