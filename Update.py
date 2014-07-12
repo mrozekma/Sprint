@@ -216,6 +216,8 @@ def runUpdates(output = True):
 	toApply = updates[settings.dbVersion:]
 	try:
 		for f in toApply:
+			if f.__doc__:
+				print "  v%d: %s" % (settings.dbVersion + 1, f.__doc__)
 			f()
 			settings.dbVersion += 1
 	except:
@@ -264,3 +266,17 @@ def v23():
 			patterns.append('(?:bug |bz)(?P<id>[0-9]+)')
 			urls.append("%s/show_bug.cgi?id=$id" % table['bugzillaURL'])
 		del table['bugzillaURL']
+
+@update
+def v24():
+	"""Fix tasks 'deleted' field type"""
+	table = db()['tasks']
+	for id in table:
+		with table.change(id) as data:
+			for rev in range(len(data)):
+				if data[rev]['deleted'] in [0, '0']:
+					data[rev]['deleted'] = False
+				elif data[rev]['deleted'] in [1, '1']:
+					data[rev]['deleted'] = True
+				else:
+					raise RuntimeError("Unexpected deleted value for task #%d, revision %d: %s" % (id, rev + 1, data['deleted']))

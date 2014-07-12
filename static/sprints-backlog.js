@@ -532,7 +532,7 @@ function save_task(task, field, value, counter) {
 function delete_task(task_id) {
 	row = $('tr.task[taskid=' + task_id + ']');
 	if(row) {
-		save_task(row, 'deleted', 1);
+		save_task(row, 'deleted', true);
 		if(row.hasClass('selected')) {
 			$('.task-index', row).click();
 		}

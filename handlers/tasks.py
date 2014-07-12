@@ -92,7 +92,7 @@ def task(handler, ids):
 				print "<input type=\"hidden\" name=\"id\" value=\"%d\">" % task.id
 				print "<input type=\"hidden\" name=\"rev_id\" value=\"%d\">" % task.revision
 				print "<input type=\"hidden\" name=\"field\" value=\"deleted\">"
-				print "<input type=\"hidden\" name=\"value\"value=\"0\">"
+				print "<input type=\"hidden\" name=\"value\" value=\"false\">"
 				print "Deleted (%s)" % Button('undelete', id = 'undelete').mini().positive()
 				print "</form>"
 			else:

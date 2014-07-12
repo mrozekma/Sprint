@@ -63,7 +63,7 @@ class Task(ActiveRecord):
 	def setStatus(self, stat): self.status = stat.name
 	stat = property(getStatus, setStatus)
 
-	def __init__(self, groupid, sprintid, creatorid, goalid, name, status, hours, assignedids = set(), seq = None, timestamp = None, deleted = 0, revision = 1, id = None):
+	def __init__(self, groupid, sprintid, creatorid, goalid, name, status, hours, assignedids = set(), seq = None, timestamp = None, deleted = False, revision = 1, id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.revision = revision

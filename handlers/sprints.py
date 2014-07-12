@@ -412,7 +412,7 @@ def sprintPost(handler, sprintid, p_id, p_rev_id, p_field, p_value):
 
 	if p_field in ['status', 'name', 'goal', 'assigned', 'hours', 'deleted']:
 		for case in switch(p_field):
-			if case('status') or case('name') or case('deleted'):
+			if case('status') or case('name'):
 				parsedValue = p_value
 				break
 			elif case('goal'):
@@ -431,6 +431,10 @@ def sprintPost(handler, sprintid, p_id, p_rev_id, p_field, p_value):
 				break
 			elif case('hours'):
 				parsedValue = int(p_value)
+				break
+			elif case('deleted'):
+				parsedValue = True if p_value == 'true' else False if p_value == 'false' else die("Bad value for field 'deleted'")
+				break
 
 		if task.__getattribute__(p_field) != parsedValue: # Only save if the field has changed
 			task.__setattr__(p_field, parsedValue)
