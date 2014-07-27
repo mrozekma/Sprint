@@ -79,77 +79,15 @@ ul#goal-menu {
 	height: auto;
 }
 
-table.tasks {
-	tr {
-		&.dateline td {
-			font-weight: bold;
-			text-align: center;
-			vertical-align: bottom;
+table.tasktable {
+	tr.dateline2 {
+		.cancel-search, .save-search {
+			display: none;
+			position: relative;
+			top: 1px;
+			width: 12px;
+			border: 0px;
 		}
-
-		&.dateline2 {
-			td:not(:first-child) {
-				font-size: 70%;
-				text-align: center;
-				white-space: nowrap;
-			}
-
-			.cancel-search, .save-search {
-				display: none;
-				position: relative;
-				top: 1px;
-				width: 12px;
-				border: 0px;
-			}
-		}
-
-		&.group {
-			td {
-				padding-top: 20px;
-			}
-
-			span {
-				font-weight: bold;
-			}
-
-			td > img {
-				position: relative;
-				top: 2px;
-				left: -5px;
-				cursor: pointer;
-			}
-		}
-
-		&.dirty {
-			background-color: rgba(255, 0, 0, .3);
-		}
-
-		td {
-			vertical-align: middle;
-
-			&.ereyesterday {
-				color: #AAA;
-			}
-
-			&.yesterday {
-				color: #777;
-			}
-
-			&.actions {
-				width: 10%;
-				text-align: left !important;
-				white-space: nowrap;
-				cursor: pointer;
-			}
-		}
-
-		input {
-			width: 90%;
-		}
-	}
-
-	td {
-		vertical-align: top;
 	}
 
 	tr.task {
@@ -165,121 +103,5 @@ table.tasks {
 		&[status='deferred'] td.hours input {
 			text-decoration: line-through;
 		}
-
-		td {
-			margin: 1px 0px 1px 0px;
-
-			&.ereyesterday.changed {
-				color: #FAA;
-				font-weight: bold;
-			}
-
-			&.yesterday.changed {
-				color: #F77;
-				font-weight: bold;
-			}
-
-			&.assigned {
-				white-space: nowrap;
-
-				> img {
-					position: relative;
-					top: 2px;
-					left: 2px;
-				}
-
-				span span.username[username*=" "] {
-					font-style: italic;
-				}
-			}
-
-			&.hours {
-				min-width: 80px;
-				text-align: center;
-
-				> * {
-					float: left;
-				}
-
-				img {
-					cursor: pointer;
-					display: block;
-				}
-
-				input {
-					width: 32px;
-					margin-top: 6px;
-				}
-
-				&.changed {
-					color: #F00;
-				}
-			}
-
-			&.flags {
-				text-align: right;
-				white-space: nowrap;
-
-				* {
-					position: relative;
-					top: 2px;
-				}
-
-				span.task-index {
-					position: relative;
-					top: -4px;
-					background-color: #3a87ad;
-				}
-			}
-
-			&.actions a img {
-				border: 0px;
-			}
-		}
-
-		&:hover td {
-			border-color: #bce8f1;
-			background-color: #d9edf7;
-		}
-
-		&:hover td.flags span.task-index {
-			background-color: #2d6987;
-		}
-
-		&.changed-today td.flags span.task-index {
-			background-color: #468847;
-		}
-
-		&.changed-today:hover td.flags span.task-index {
-			background-color: #356635;
-		}
-
-		&.selected td.flags span.task-index {
-			background-color: #b94a48;
-		}
-
-		&.selected:hover td.flags span.task-index {
-			background-color: #953b39;
-		}
-
-		&.highlight {
-			background-color: #9cf;
-		}
 	}
-
-	tr.group {
-		cursor: default;
-	}
-
-	tr.task td.name,
-	tr.group td:first-child,
-	tr.dateline td:first-child {
-		// width: 40%;
-		padding-right: 10px;
-		width: 100%;
-	}
-}
-
-table.tasks.editable tr.task img.status, table.tasks.editable tr.task img.goal, table.tasks.editable tr.task .assigned {
-	cursor: pointer;
 }

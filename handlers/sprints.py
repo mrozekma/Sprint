@@ -3,7 +3,6 @@ from datetime import datetime, date, timedelta
 from json import dumps as toJS
 from collections import OrderedDict
 from itertools import product
-from string import Template
 
 from rorn.Session import delay, undelay
 from rorn.ResponseWriter import ResponseWriter
@@ -28,8 +27,8 @@ from LoadValues import isDevMode
 from Search import Search
 from Event import Event
 from Retrospective import Retrospective, Category as RetroCategory, Entry as RetroEntry
-from Settings import settings
 from Markdown import Markdown
+from TaskTable import TaskTable
 from utils import *
 
 def tabs(sprint = None, where = None):
@@ -99,11 +98,11 @@ def showBacklog(handler, id, search = None, devEdit = False):
 	drawNavArrows(sprint, '')
 
 	tasks = sprint.getTasks()
-	groups = sprint.getGroups()
 	editable = sprint.canEdit(handler.session['user']) or (devEdit and isDevMode(handler))
 	search = Search(sprint, search)
 
 	print "<script src=\"/settings/sprints.js\" type=\"text/javascript\"></script>"
+	TaskTable.include()
 
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
@@ -164,50 +163,7 @@ def showBacklog(handler, id, search = None, devEdit = False):
 	print "<input type=\"text\" id=\"search\" value=\"%s\">" % search.getFullString().replace('"', '&quot;')
 	print "</div>"
 
-	if sprint.isActive() or devEdit:
-		days = [
-			('ereyesterday', Weekday.shift(-2)),
-			('yesterday', Weekday.shift(-1)),
-			('today', Weekday.today())
-		]
-	elif sprint.isPlanning():
-		start = tsToDate(sprint.start)
-		ereyesterday, yesterday, today = Weekday.shift(-2, start), Weekday.shift(-1, start), start
-		days = [
-			('pre-plan', ereyesterday),
-			('pre-plan', yesterday),
-			('planning', today)
-		]
-	else:
-		end = tsToDate(sprint.end)
-		ereyesterday, yesterday, today = Weekday.shift(-2, end), Weekday.shift(-1, end), end
-		days = [
-			(ereyesterday.strftime('%A').lower(), ereyesterday),
-			(yesterday.strftime('%A').lower(), yesterday),
-			(today.strftime('%A').lower(), today)
-		]
-
 	undelay(handler)
-
-	print "<ul id=\"status-menu\" class=\"contextMenu\">"
-	for statusBlock in statusMenu:
-		for statusName in statusBlock:
-			status = statuses[statusName]
-			cls = 'separator' if statusBlock != statusMenu[0] and statusName == statusBlock[0] else ''
-			print "<li class=\"%s\"><a href=\"#%s\" style=\"background-image:url('%s');\">%s</a></li>" % (cls, status.name, status.getIcon(), status.text)
-	print "</ul>"
-
-	print "<ul id=\"goal-menu\" class=\"contextMenu\">"
-	print "<li><a href=\"#0\" style=\"background-image:url('/static/images/tag-none.png');\">None</a></li>"
-	for goal in sprint.getGoals():
-		if goal.name != '':
-			print "<li><a href=\"#%s\" style=\"background-image:url('/static/images/tag-%s.png');\">%s</a></li>" % (goal.id, goal.color, goal.safe.name if len(goal.safe.name) <= 40 else "%s..." % goal.safe.name[:37])
-	print "</ul>"
-
-	print "<ul id=\"assigned-menu\" class=\"contextMenu\">"
-	for user in sorted(sprint.members):
-		print "<li><a href=\"#%s\" style=\"background-image:url('%s');\">%s</a></li>" % (user.username, user.getAvatar(16), user.username)
-	print "</ul>"
 
 	print InfoBox('Loading...', id = 'post-status', close = True)
 
@@ -255,118 +211,13 @@ def showBacklog(handler, id, search = None, devEdit = False):
 		print "end: %d (%s)<br>" % (sprint.end, tsToDate(sprint.end))
 		print "</div>"
 
-	tblClasses = ['tasks']
-	if editable:
-		tblClasses.append('editable')
-	sprintDays = [day.date() for day in sprint.getDays()]
-	print "<table border=0 cellspacing=0 cellpadding=2 id=\"all-tasks\" class=\"%s\">" % ' '.join(tblClasses)
-	print "<thead>"
-	print "<tr class=\"dateline nodrop nodrag\">"
-	print "<td colspan=\"3\">&nbsp;</td>"
-	for (x, y) in days:
-		print "<td class=\"%s\">%s</td>" % (x, x)
-	print "<td>&nbsp;</td>"
-	print "</tr>"
-	print "<tr class=\"dateline2 nodrop nodrag\">"
-	print "<td colspan=\"3\">"
+	showing = ResponseWriter()
 	print "<span id=\"task-count\"></span>"
 	print "<a href=\"/search/saved/new?sprintid=%d&query=%s\"><img class=\"save-search\" src=\"/static/images/save.png\" title=\"Save search\"></a>" % (id, search.getFullString().replace('"', '&quot;'))
 	print "<a href=\"/sprints/%d\"><img class=\"cancel-search\" src=\"/static/images/cross.png\" title=\"Clear search\"></a>" % id
-	print "</td>"
-	for (x, y) in days:
-		print "<td class=\"%s\">%s<br>Day %s of %s</td>" % (x, formatDate(y), sprintDays.index(y.date())+1 if y.date() in sprintDays else 0, len(sprintDays))
-	print "<td>&nbsp;</td>"
-	print "</tr>"
-	print "</thead>"
+	showing = showing.done()
 
-	print "<tbody>"
-	for group in groups:
-		cls = ['group']
-		if not group.deletable:
-			cls.append('fixed')
-		print "<tr class=\"%s\" id=\"group%d\" groupid=\"%d\">" % (' '.join(cls), group.id, group.id)
-		print "<td colspan=\"6\">"
-		if isDevMode(handler):
-			print "<small class=\"debugtext\">(%d, %d)</small>&nbsp;" % (group.id, group.seq)
-		print "<img src=\"/static/images/collapse.png\">&nbsp;<span>%s</span>" % group.name
-		print "</td>"
-		print "<td class=\"actions\">"
-		if editable:
-			print "<a href=\"/groups/new?after=%d\"><img src=\"/static/images/group-new.png\" title=\"New Group\"></a>" % group.id
-			print "<a href=\"/groups/%d\"><img src=\"/static/images/group-edit.png\" title=\"Edit Group\"></a>" % group.id
-			print "<a href=\"/tasks/new?group=%d\"><img src=\"/static/images/task-new.png\" title=\"New Task\"></a>" % group.id
-		print "</td>"
-		print "</tr>"
-
-		groupTasks = filter(lambda task: task.group == group, tasks)
-		for task in groupTasks:
-			printTask(handler, task, days, group = task.group, highlight = (search.has('highlight') and task in search.get('highlight').tasks), editable = editable)
-
-	print "<tr><td colspan=\"7\">&nbsp;</td></tr>" # Spacer so rows can be dragged to the bottom
-	print "</tbody>"
-	print "</table>"
-
-def printTask(handler, task, days, group = None, highlight = False, editable = True):
-	classes = ['task']
-	if highlight:
-		classes.append('highlight')
-	if getNow() - tsToDate(task.timestamp) < timedelta(hours = 23):
-		classes.append('changed-today')
-
-	print "<tr class=\"%s\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" goalid=\"%d\" status=\"%s\" assigned=\"%s\">" % (' '.join(classes), task.id, task.id, task.revision, group.id if group else 0, task.goal.id if task.goal else 0, task.stat.name, ' '.join(sorted(user.username for user in task.assigned)))
-
-	print "<td class=\"flags\">"
-	if isDevMode(handler):
-		print "<small class=\"debugtext\">(%d, %d, %d)</small>&nbsp;" % (task.id, task.seq, task.revision)
-	# print "<img src=\"/static/images/star.png\">&nbsp;"
-	print "<span class=\"task-index badge\"></span>&nbsp;"
-	print "<img id=\"goal_%d\" class=\"goal\" src=\"/static/images/tag-%s.png\" title=\"%s\">&nbsp;" % ((task.goal.id, task.goal.color, task.goal.safe.name) if task.goal else (0, 'none', 'None'))
-	print "<img id=\"status_%d\" class=\"status\" src=\"%s\" title=\"%s\">" % (task.id, task.stat.icon, task.stat.text)
-	print "</td>"
-
-	print "<td class=\"name\"><span id=\"name_span_%d\">%s</span></td>" % (task.id, task.safe.name)
-	print "<td class=\"assigned\"><span>"
-	if len(task.assigned) == 1:
-		print list(task.assigned)[0].str('member', False, "assigned_span_%d" % task.id)
-	else:
-		assignedStr = ' '.join(sorted(user.username for user in task.assigned))
-		print "<img src=\"/static/images/team.png\" class=\"user\">"
-		print "<span id=\"assigned_span_%d\" class=\"username\" username=\"%s\" title=\"%s\">team (%d)</span>" % (task.id, assignedStr, assignedStr, len(task.assigned))
-	print "</span></td>"
-	for lbl, day in days:
-		dayTask = task.getRevisionAt(day)
-		previousTask = task.getRevisionAt(Weekday.shift(-1, day))
-		classes = ['hours', lbl]
-		if dayTask and previousTask and dayTask.hours != previousTask.hours:
-			classes.append('changed')
-
-		if not dayTask:
-			print "<td class=\"%s\">&ndash;</td>" % ' '.join(classes)
-		elif editable and (lbl == 'today' or lbl == 'planning'):
-			print "<td class=\"%s\" nowrap>" % ' '.join(classes)
-			print "<div>"
-			print "<img amt=\"4\" src=\"/static/images/arrow-up.png\">"
-			print "<img amt=\"-4\" src=\"/static/images/arrow-down.png\">"
-			print "</div>"
-			print "<input type=\"text\" name=\"hours[%d]\" value=\"%d\">" % (task.id, task.hours)
-			print "<div>"
-			print "<img amt=\"8\" src=\"/static/images/arrow-top.png\">"
-			print "<img amt=\"-8\" src=\"/static/images/arrow-bottom.png\">"
-			print "</div>"
-			print "</td>"
-			print "</td>"
-		else:
-			print "<td class=\"%s\">%s</td>" % (' '.join(classes), dayTask.hours)
-	print "<td class=\"actions\">"
-	print "<a href=\"/tasks/%d\" target=\"_blank\"><img src=\"/static/images/task-history.png\" title=\"History\"></a>" % task.id
-	if editable:
-		print "<a href=\"javascript:delete_task(%d);\"><img src=\"/static/images/task-delete.png\" title=\"Delete Task\"></a>" % task.id
-	for icon, pattern, url in zip(*settings.autolink):
-		for match in re.finditer(pattern, task.name, re.IGNORECASE):
-			print "<a href=\"%s\" target=\"_blank\"><img src=\"/static/images/%s.png\"></a>" % (Template(url).safe_substitute(match.groupdict()), icon)
-	print "<img class=\"saving\" src=\"/static/images/loading.gif\">"
-	print "</td>"
-	print "</tr>"
+	print TaskTable(sprint, editable, 'all-tasks', dateline = showing, taskClasses = {task: ['highlight'] for task in (search.get('highlight').tasks if search.has('highlight') else [])}, debug = isDevMode(handler), groupActions = True, taskModActions = True, index = True, goal = True, status = True, name = True, assigned = True, historicalHours = True, hours = True, devEdit = devEdit)
 
 @post('sprints/(?P<sprintid>[0-9]+)')
 def sprintPost(handler, sprintid, p_id, p_rev_id, p_field, p_value):
