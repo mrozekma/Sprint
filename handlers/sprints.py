@@ -133,21 +133,6 @@ def showBacklog(handler, id, search = None, devEdit = False):
 		print "    $('%s').addClass('selected');" % ', '.join("#filter-status a[status=\"%s\"]" % status.name for status in search.get('status').statuses)
 	print "    apply_filters();"
 	print "});"
-
-	print "usernames = Array(%s);" % ', '.join("'%s'" % user.username for user in sorted(sprint.members))
-	print "status_texts = Array();"
-	for statusBlock in statusMenu:
-		for statusName in statusBlock:
-			status = statuses[statusName]
-			print "status_texts['%s'] = '%s';" % (status.name, status.text)
-	print "goal_imgs = Array();"
-	print "goal_imgs[0] = '/static/images/tag-none.png';"
-	for goal in sprint.getGoals():
-		print "goal_imgs[%d] = '/static/images/tag-%s.png';" % (goal.id, goal.color)
-	print "goal_texts = Array();"
-	print "goal_texts[0] = \"None\";"
-	for goal in sprint.getGoals():
-		print "goal_texts[%d] = %s;" % (goal.id, toJS(goal.name))
 	print "</script>"
 
 	print "<div id=\"selected-task-box\">"
@@ -217,7 +202,7 @@ def showBacklog(handler, id, search = None, devEdit = False):
 	print "<a href=\"/sprints/%d\"><img class=\"cancel-search\" src=\"/static/images/cross.png\" title=\"Clear search\"></a>" % id
 	showing = showing.done()
 
-	print TaskTable(sprint, editable, 'all-tasks', dateline = showing, taskClasses = {task: ['highlight'] for task in (search.get('highlight').tasks if search.has('highlight') else [])}, debug = isDevMode(handler), groupActions = True, taskModActions = True, index = True, goal = True, status = True, name = True, assigned = True, historicalHours = True, hours = True, devEdit = devEdit)
+	print TaskTable(sprint, editable = editable, tasks = tasks, tableID = 'all-tasks', dateline = showing, taskClasses = {task: ['highlight'] for task in (search.get('highlight').tasks if search.has('highlight') else [])}, debug = isDevMode(handler), groupActions = True, taskModActions = True, index = True, goal = True, status = True, name = True, assigned = True, historicalHours = True, hours = True, devEdit = devEdit)
 
 @post('sprints/(?P<sprintid>[0-9]+)')
 def sprintPost(handler, sprintid, p_id, p_rev_id, p_field, p_value):

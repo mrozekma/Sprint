@@ -2,13 +2,9 @@ $(document).ready(function() {
 	fancy_cells('.tasktable.editable');
 
 	setup_hours_events();
-	setup_search();
-	setup_filter_buttons();
 	setup_group_arrows();
-	setup_indexes();
-	setup_warnings();
+	setup_checkboxes();
 
-	$('#post-status').hide();
 	$('.saving').css('visibility', 'hidden');
 });
 
@@ -102,11 +98,30 @@ function setup_group_arrows() {
 			$(this).attr('src', '/static/images/collapse.png');
 			groupid=$(this).parents('tr').attr('groupid');
 			$('tr.task[groupid=' + groupid + ']').show();
-			if(tasktable_visibility_hook !== undefined) {
+			if(typeof(tasktable_visibility_hook) == 'function') {
 				tasktable_visibility_hook();
 			}
 			break;
 		}
+	});
+}
+
+function setup_checkboxes() {
+	// When the group checkbox is clicked, toggle all task checkboxes in the group
+	$('tr.group input[type="checkbox"]').change(function(e) {
+		group = $(this).parents('tr.group');
+		groupid = group.attr('groupid');
+		$('tr.task[groupid="' + groupid + '"] input[type="checkbox"]').prop('checked', $(this).prop('checked'));
+	});
+
+	// When a task checkbox is clicked, possibly update the group checkbox state
+	$('tr.task input[type="checkbox"]').change(function(e) {
+		task = $(this).parents('tr.task');
+		groupid = task.attr('groupid');
+		groupbox = $('tr.group[groupid="' + groupid + '"] input[type="checkbox"]');
+		taskboxes = $('tr.task[groupid="' + groupid + '"] input[type="checkbox"]');
+
+		groupbox.prop('checked', (taskboxes.not(':checked').length == 0));
 	});
 }
 
@@ -327,4 +342,10 @@ function delete_task(task_id) {
 
 function unimplemented(what) {
 	noty({type: 'error', text: '<b>Unimplemented</b>: ' + what})
+}
+
+function save_task(task, field, value, counter) {
+	if(typeof(tasktable_change_hook) == 'function') {
+		tasktable_change_hook(task, field, value, counter);
+	}
 }

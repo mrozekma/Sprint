@@ -1,3 +1,4 @@
+from json import dumps as toJS
 from string import Template
 
 from rorn.ResponseWriter import ResponseWriter
@@ -6,15 +7,17 @@ from Settings import settings
 from Task import statuses, statusMenu
 from utils import *
 
-# Possible cells: [debugtext index goal status] [name] [assigned] [hours -2] [hours -1] [hours 0] [actions]
+# Possible cells: [debug index goal status] [name] [assigned] [hours -2] [hours -1] [hours 0] [actions]
 # The first and last will always exist; the others might not
 
 class TaskTable:
-	def __init__(self, sprint, editable, tableID = None, dateline = None, taskClasses = {}, **show):
+	def __init__(self, sprint, editable, tasks = None, tableID = None, dateline = None, assignedList = None, taskClasses = {}, **show):
 		self.sprint = sprint
 		self.editable = editable
+		self.tasks = tasks or self.sprint.getTasks()
 		self.tableID = tableID
 		self.dateline = dateline
+		self.assignedList = assignedList or self.sprint.members
 		self.taskClasses = taskClasses
 		self.show = show # groupActions, taskModActions, index, goal, status, name, assigned, historicalHours, hours, debug, devEdit
 
@@ -36,8 +39,16 @@ class TaskTable:
 
 	def out(self):
 		groups = self.sprint.getGroups()
-		tasks = self.sprint.getTasks()
+		tasks = self.tasks
 		sprintDays = [day.date() for day in self.sprint.getDays()]
+
+		# Make sure only people in assignedList are assigned to tasks
+		# If everyone assigned to the task is missing from assignedList, assign it to the first person in the list
+		# (this should probably be the scrummaster)
+		for task in tasks:
+			task.assigned &= set(self.assignedList)
+			if len(task.assigned) == 0:
+				task.assigned = {self.assignedList[0]}
 
 		if self.check('historicalHours'):
 			if self.sprint.isActive() or self.check('devEdit'):
@@ -63,9 +74,25 @@ class TaskTable:
 					(today.strftime('%A').lower(), today)
 				]
 		elif self.check('hours'):
-			days = [('hours', None)]
+			days = [(None, None)]
 		else:
 			days = []
+
+		print "<script type=\"text/javascript\">"
+		print "status_texts = Array();"
+		for statusBlock in statusMenu:
+			for statusName in statusBlock:
+				status = statuses[statusName]
+				print "status_texts['%s'] = '%s';" % (status.name, status.text)
+		print "goal_imgs = Array();"
+		print "goal_imgs[0] = '/static/images/tag-none.png';"
+		for goal in self.sprint.getGoals():
+			print "goal_imgs[%d] = '/static/images/tag-%s.png';" % (goal.id, goal.color)
+		print "goal_texts = Array();"
+		print "goal_texts[0] = \"None\";"
+		for goal in self.sprint.getGoals():
+			print "goal_texts[%d] = %s;" % (goal.id, toJS(goal.name))
+		print "</script>"
 
 		print "<ul id=\"status-menu\" class=\"contextMenu\">"
 		for statusBlock in statusMenu:
@@ -83,7 +110,7 @@ class TaskTable:
 		print "</ul>"
 
 		print "<ul id=\"assigned-menu\" class=\"contextMenu\">"
-		for user in sorted(self.sprint.members):
+		for user in sorted(self.assignedList):
 			print "<li><a href=\"#%s\" style=\"background-image:url('%s');\">%s</a></li>" % (user.username, user.getAvatar(16), user.username)
 		print "</ul>"
 
@@ -92,21 +119,27 @@ class TaskTable:
 			tblClasses.append('editable')
 		print "<table border=0 cellspacing=0 cellpadding=2 %sclass=\"%s\">" % (('id="%s" ' % self.tableID) if self.tableID else '', ' '.join(tblClasses))
 		print "<thead>"
-		print "<tr class=\"dateline nodrop nodrag\">"
-		print "<td colspan=\"%d\">&nbsp;</td>" % (1 + self.check('name') + self.check('assigned'))
-		for (x, y) in days:
-			print "<td class=\"%s\">%s</td>" % (x, x)
-		print "<td>&nbsp;</td>"
-		print "</tr>"
-		print "<tr class=\"dateline2 nodrop nodrag\">"
-		print "<td colspan=\"%d\">" % (1 + self.check('name') + self.check('assigned'))
-		if self.dateline is not None:
-			print self.dateline
-		print "</td>"
-		for (x, y) in days:
-			print "<td class=\"%s\">%s<br>Day %s of %s</td>" % (x, formatDate(y), sprintDays.index(y.date())+1 if y.date() in sprintDays else 0, len(sprintDays))
-		print "<td>&nbsp;</td>"
-		print "</tr>"
+		if any(x for x, y in days):
+			print "<tr class=\"dateline nodrop nodrag\">"
+			print "<td colspan=\"%d\">&nbsp;</td>" % (1 + self.check('name') + self.check('assigned'))
+			for (x, y) in days:
+				if x is not None:
+					print "<td class=\"%s\">%s</td>" % (x, x)
+			print "<td>&nbsp;</td>"
+			print "</tr>"
+		if any(y for x, y in days) or self.dateline is not None:
+			print "<tr class=\"dateline2 nodrop nodrag\">"
+			print "<td colspan=\"%d\">" % (1 + self.check('name') + self.check('assigned'))
+			if self.dateline is not None:
+				print self.dateline
+			print "</td>"
+			for (x, y) in days:
+				if y is None:
+					print "<td>&nbsp;</td>"
+				else:
+					print "<td class=\"%s\">%s<br>Day %s of %s</td>" % (x, formatDate(y), sprintDays.index(y.date())+1 if y.date() in sprintDays else 0, len(sprintDays))
+			print "<td>&nbsp;</td>"
+			print "</tr>"
 		print "</thead>"
 
 		print "<tbody>"
@@ -118,7 +151,10 @@ class TaskTable:
 			print "<td colspan=\"%d\">" % (1 + self.check('name') + self.check('assigned') + len(days))
 			if self.check('debug'):
 				print "<small class=\"debugtext\">(%d, %d)</small>&nbsp;" % (group.id, group.seq)
-			print "<img src=\"/static/images/collapse.png\">&nbsp;<span>%s</span>" % group.name
+			if self.check('checkbox'):
+				print "<input type=\"checkbox\"></input>"
+			print "<img src=\"/static/images/collapse.png\">"
+			print "<span>%s</span>" % group.name
 			print "</td>"
 			print "<td class=\"actions\">"
 			if self.editable and self.check('groupActions'):
@@ -141,6 +177,8 @@ class TaskTable:
 				print "<td class=\"flags\">"
 				if self.check('debug'):
 					print "<small class=\"debugtext\">(%d, %d, %d)</small>&nbsp;" % (task.id, task.seq, task.revision)
+				if self.check('checkbox'):
+					print "<input type=\"checkbox\"></input>"
 				if self.check('index'):
 					print "<span class=\"task-index badge\"></span>&nbsp;"
 				if self.check('goal'):
@@ -162,15 +200,17 @@ class TaskTable:
 					print "</span></td>"
 
 				for lbl, day in days:
-					dayTask = task.getRevisionAt(day)
-					previousTask = task.getRevisionAt(Weekday.shift(-1, day))
-					classes = ['hours', lbl]
+					dayTask = task.getRevisionAt(day) if day else task
+					previousTask = task.getRevisionAt(Weekday.shift(-1, day)) if day else None
+					classes = ['hours']
+					if lbl is not None:
+						classes.append(lbl)
 					if dayTask and previousTask and dayTask.hours != previousTask.hours:
 						classes.append('changed')
 
 					if not dayTask:
 						print "<td class=\"%s\">&ndash;</td>" % ' '.join(classes)
-					elif self.editable and (lbl == 'today' or lbl == 'planning'):
+					elif self.editable and lbl in ('today', 'planning', None):
 						print "<td class=\"%s\" nowrap>" % ' '.join(classes)
 						print "<div>"
 						print "<img amt=\"4\" src=\"/static/images/arrow-up.png\">"

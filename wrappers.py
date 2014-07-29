@@ -69,6 +69,7 @@ def header(handler, includes):
 	print "    dumpLineNumbers: 'comments'"
 	print "};"
 	print "</script>"
+	print "<script src=\"/static/less.js\" type=\"text/javascript\"></script>"
 
 	changes = list(getChanges(handler, handler.path))
 	if changes:
@@ -153,6 +154,6 @@ def footer(handler):
 		print "(<span title=\"%s\">%s</span>)<br>" % (revisionDate, revisionRelative)
 	print "</div>"
 
-	print "<script src=\"/static/less.js\" type=\"text/javascript\"></script>" # Needs to be after any <link>s that point to less scripts, so put it at the very end
+	print "<script src=\"/static/less.js\" type=\"text/javascript\"></script>" # In case any less <link>s were in the body
 	print "</body>"
 	print "</html>"

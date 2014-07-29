@@ -60,6 +60,7 @@ changelog = [
 	ChangeLog("You can upload your list of new tasks as a text file using the form above the textarea", ['/tasks/new/many']),
 	ChangeLog("Deferred tasks now retain their hours, but aren't counted in the metrics", ['/sprints/[0-9]+']),
 	ChangeLog("The default tab when adding a new task is now <a href=\"/prefs#default-tasks-tab\">customizable</a>", ['/tasks/new/.*']),
+	ChangeLog("Importing tasks was rewritten to be less terrible. The interface is now similar to the backlog view"),
 ]
 
 def getChanges(handler, url, markSeen = True):

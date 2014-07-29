@@ -1,5 +1,5 @@
 from __future__ import with_statement
-from json import dumps as toJS
+from json import loads as fromJS, dumps as toJS
 
 from rorn.Session import delay, undelay
 from rorn.Box import ErrorBox, CollapsibleBox, InfoBox, SuccessBox, WarningBox
@@ -23,6 +23,8 @@ from Note import Note
 from relativeDates import timesince
 from Event import Event
 from Markdown import Markdown
+from TaskTable import TaskTable
+from LoadValues import isDevMode
 from utils import *
 
 from handlers.sprints import tabs as sprintTabs
@@ -570,38 +572,28 @@ def newTaskImport(handler, group, source = None, assigned = None):
 		source = Sprint.load(id)
 		if not source:
 			ErrorBox.die('Invalid Sprint', "No sprint with ID <b>%d</b>" % id)
+
+		print "<script type=\"text/javascript\">"
+		nextURL = "/sprints/%d" % sprint.id
+		if assigned:
+			nextURL += "?search=assigned:%s" % stripTags(assigned.replace(' ', ','))
+		print "next_url = %s;" % toJS(nextURL)
+		print "post_url = \"/tasks/new/import?group=%d&source=%d\";" % (group.id, source.id)
+		print "scrummaster = %s;" % toJS(sprint.owner.username)
+		print "isPlanning = true;" # Don't link hours and status
+		print "</script>"
+		TaskTable.include()
+
 		print "<b>Source sprint</b>: <a href=\"/sprints/%d\">%s</a><br>" % (source.id, source.name)
 		print "<b>Target sprint</b>: <a href=\"/sprints/%d\">%s</a><br><br>" % (sprint.id, sprint.name)
-		print "All incomplete tasks are listed here, with their current values from the source sprint. You can change any of the fields before importing. Unassigned tasks will be assigned to the scrummaster<br><br>"
+		print "All incomplete tasks are listed here, with their current values from the source sprint. You can change any of the fields before importing. Only checked tasks will be imported<br><br>"
 
-		groups = source.getGroups()
-		names = [g.name for g in groups]
-		groups += [g for g in sprint.getGroups() if g.name not in names]
-		existingNames = [g.name for g in sprint.getGroups()]
+		assignedList = [sprint.owner] + list(sprint.members - {sprint.owner})
+		print TaskTable(source, editable = True, assignedList = assignedList, checkbox = True, status = True, name = True, assigned = True, hours = True, debug = isDevMode(handler))
 
-		print "<form method=\"post\" action=\"/tasks/new/import?group=%d&source=%d\">" % (group.id, source.id)
-		print "<input type=\"hidden\" name=\"included\" value=\"\">"
-		print "<table class=\"task-import\" border=0>"
-		print "<tr><th><input type=\"checkbox\" id=\"include_all\"></th><th>Task</th><th>Group</th><th>Assigned</th><th>Hours</th></tr>"
-		for task in source.getTasks():
-			if not task.shouldImport():
-				continue
-			print "<tr>"
-			print "<td><input type=\"checkbox\" data-id=\"%d\"></td>" % task.id
-			print "<td class=\"name\"><input type=\"text\" name=\"name[%d]\" value=\"%s\"></td>" % (task.id, task.name.replace('"', '&quot;'))
-			print "<td class=\"group\"><select name=\"group[%d]\">" % task.id
-			for g in groups:
-				print "<option value=\"%d\"%s>%s</option>" % (g.id, ' selected' if g == task.group else '', g.name + ('' if g.name in existingNames else ' (NEW)'))
-			print "</select></td>"
-			print "<td class=\"assigned\"><select name=\"assigned[%d][]\" data-placeholder=\"Previously %s\" multiple>" % (task.id, ' '.join(user.username for user in task.assigned))
-			assigned = filter(lambda user: user in sprint.members, task.assigned)
-			for member in sprint.members:
-				print "<option value=\"%s\"%s>%s</option>" % (member.id, ' selected' if member in assigned else '', member.username)
-			print "</select></td>"
-			print "<td class=\"hours\"><input type=\"text\" name=\"hours[%d]\" value=\"%d\"></td>" % (task.id, task.hours)
-			print "</tr>"
-		print "</table>"
-		print Button('Import').positive().post()
+		print InfoBox('Loading...', id = 'post-status', close = True)
+		print Button('Import', id = 'save-button', type = 'button').positive()
+		print Button('Cancel', id = 'cancel-button', type = 'button').negative()
 		print "</form><br><br>"
 
 @post('tasks/new/many/upload')
@@ -618,57 +610,64 @@ def newTaskManyUpload(handler, group, p_data):
 	redirect("/tasks/new/many?group=%s" % group)
 
 @post('tasks/new/import')
-def newTaskImportPost(handler, group, source, p_group, p_name, p_hours, p_assigned, p_included = ''):
+def newTaskImportPost(handler, group, source, p_data):
+	def die(msg):
+		print msg
+		done()
+
 	handler.title("Import Tasks")
 	requirePriv(handler, 'User')
+	handler.wrappers = False
 
 	id = int(group)
 	group = Group.load(id)
 	if not group:
-		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
+		die("No group with ID <b>%d</b>" % id)
 
 	sprint = group.sprint
 	if not (sprint.isActive() or sprint.isPlanning()):
-		ErrorBox.die("Sprint Closed", "Unable to modify inactive sprint")
+		die("Unable to modify inactive sprint")
 	elif not sprint.canEdit(handler.session['user']):
-		ErrorBox.die("Permission Denied", "You don't have permission to modify this sprint")
+		die("You don't have permission to modify this sprint")
 
 	id = int(source)
 	source = Sprint.load(id)
 	if not source:
-		ErrorBox.die('Invalid Sprint', "No sprint with ID <b>%d</b>" % id)
+		die("No sprint with ID <b>%d</b>" % id)
 
-	ids = p_included.split(',') if p_included != '' else []
-	if not all(map(lambda id: id in p_group and id in p_name and id in p_hours, ids)):
-		ErrorBox.die('Malformed Request', 'Incomplete form data')
+	try:
+		data = fromJS(p_data)
+	except ValueError:
+		die("Improperly encoded data")
+	if not isinstance(data, list) or not all(set(task.keys()) == {'name', 'assigned', 'status', 'groupid', 'hours'} for task in data):
+		die("Improperly encoded data")
+	usernames = {user.username for user in sprint.members}
+	if not all(set(task['assigned'].split(' ')) <= usernames and task['status'] in statuses and isinstance(task['groupid'], int) and Group.load(task['groupid']) is not None and isinstance(task['hours'], int) and task['hours'] >= 0 for task in data):
+		die("Invalid data")
 
-	groups, numGroups = {}, 0
-	for id in ids:
-		groupID, name, hours = int(p_group[id]), p_name[id], int(p_hours[id])
-		if not groupID in groups:
-			groups[groupID] = Group.load(groupID)
-			if not groups[groupID]:
-				ErrorBox.die('Malformed Request', "Invalid group ID %d" % groupID)
-			if groups[groupID].sprint != sprint:
-				search = Group.loadAll(sprintid = sprint.id, name = groups[groupID].name) # Try to find a group with the same name
-				if len(search) > 0:
-					groups[groupID] = search[0]
-				else: # Duplicate the group
-					numGroups += 1
-					groups[groupID] = Group(sprint.id, groups[groupID].name)
-					groups[groupID].save()
-		group = groups[groupID]
+	dataByGroup = {}
+	for task in data:
+		if task['groupid'] not in dataByGroup:
+			dataByGroup[task['groupid']] = []
+		dataByGroup[task['groupid']].append(task)
 
-		assigned = {User.load(int(assignedID)) for assignedID in p_assigned[id]} if id in p_assigned else set(sprint.owner)
-		if not all(assigned):
-			ErrorBox.die('Malformed Request', "Invalid user ID(s): %s" % ', '.join(map(stripTags, assignedID)))
+	newGroups = {} # old sprint's group ID -> new sprint's new Group object
+	for groupid in dataByGroup:
+		oldGroup = Group.load(groupid)
+		group = Group.load(sprintid = sprint.id, name = oldGroup.name)
+		if not group: # No group in this sprint with the right name
+			if groupid in newGroups: # Already made a new group
+				group = newGroups[groupid]
+			else: # Need a new group
+				group = newGroups[groupid] = Group(sprint.id, oldGroup.name)
+				group.save()
 
-		task = Task(group.id, group.sprint.id, handler.session['user'].id, 0, name, 'not started', hours)
-		task.assigned |= assigned
-		task.save()
-		Event.newTask(handler, task)
+		for taskData in dataByGroup[groupid]:
+			task = Task(group.id, sprint.id, handler.session['user'].id, 0, taskData['name'], taskData['status'], taskData['hours'], {User.load(username = username).id for username in taskData['assigned'].split(' ')})
+			task.save()
+			Event.newTask(handler, task)
 
-	numTasks = len(ids)
+	numGroups, numTasks = len(newGroups), len(data)
 	if numGroups > 0 and numGroups > 0:
 		delay(handler, SuccessBox("Added %d %s, %d %s" % (numGroups, 'group' if numGroups == 1 else 'groups', numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3, fixed = True))
 	elif numGroups > 0:
@@ -677,7 +676,7 @@ def newTaskImportPost(handler, group, source, p_group, p_name, p_hours, p_assign
 		delay(handler, SuccessBox("Added %d %s" % (numTasks, 'task' if numTasks == 1 else 'tasks'), close = 3, fixed = True))
 	else:
 		delay(handler, WarningBox("No changes", close = 3, fixed = True))
-	redirect("/sprints/%d" % sprint.id)
+	handler.responseCode = 299
 
 @get('tasks/distribute', statics = 'tasks-distribute')
 def distribute(handler, sprint):

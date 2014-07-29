@@ -1,3 +1,11 @@
+$(document).ready(function() {
+	setup_search();
+	setup_filter_buttons();
+	setup_indexes();
+	setup_warnings();
+	$('#post-status').hide();
+});
+
 function setup_search() {
 	$('input#search').keydown(function(e) {
 		if(e.keyCode == 13) {
@@ -186,7 +194,7 @@ function save_error(text, fatal) {
 }
 
 savingMutex = false;
-function save_task(task, field, value, counter) {
+function tasktable_change_hook(task, field, value, counter) {
 	console.log("Saving change to " + task.attr('taskid') + "(" + task.attr('revid') + "): " + field + " <- " + value + " (attempt " + (counter == undefined ? 0 : counter) + ")");
 	$('.saving', task).css('visibility', 'visible');
 
@@ -195,7 +203,7 @@ function save_task(task, field, value, counter) {
 			save_error("Timed out trying to set task " + task.attr('taskid') + " " + field + " to " + value);
 			$('.saving', task).css('visibility', 'hidden');
 		} else {
-			setTimeout(function() {save_task(task, field, value, (counter == undefined ? 0 : counter) + 1);}, 200);
+			setTimeout(function() {tasktable_change_hook(task, field, value, (counter == undefined ? 0 : counter) + 1);}, 200);
 		}
 		return;
 	}
