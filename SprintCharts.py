@@ -435,7 +435,7 @@ class TaskChart(Chart):
 			x.maxZoom = 24 * 3600 * 1000
 			if sprint:
 				x.min = (sprint.start - 24*3600) * 1000
-				x.max = sprint.end * 1000
+				x.max = (sprint.end - 24*3600) * 1000
 			x.title.text = 'Day'
 		with self.yAxis as y:
 			y.min = 0

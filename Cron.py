@@ -12,6 +12,8 @@ from stasis.DiskMap import DiskMap
 from stasis.Singleton import get as db
 
 from HTTPServer import server
+from Sprint import Sprint
+from Task import Task
 from User import User
 from utils import *
 
@@ -171,3 +173,21 @@ def logArchive():
 	logDB['log'].merge(db()['log'])
 	print "Archived %s; %d total" % (pluralize(len(db()['log']), 'log entry', 'log entries'), len(logDB['log']))
 	db()['log'].truncate(resetID = False)
+
+@job('Sprint cleanup', DAILY)
+def sprintCleanup():
+	for sprint in Sprint.loadAll():
+		if (not sprint.isOver()) or 'cleaned-up' in sprint.flags:
+			continue
+		tasks = Task.loadAll(sprintid = sprint.id, deleted = False)
+		tasks = filter(lambda task: task.stillOpen(), tasks)
+
+		for task in tasks:
+			task.status = 'deferred'
+			task.creator = sprint.owner
+			task.timestamp = sprint.end
+			task.revise()
+
+		sprint.flags.add('cleaned-up')
+		sprint.save()
+		print "Cleaned up sprint %d (%s: %s): %s deferred<br>" % (sprint.id, sprint.project.safe.name, sprint.safe.name, pluralize(len(tasks), 'task', 'tasks'))

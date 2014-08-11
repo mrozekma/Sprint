@@ -176,7 +176,7 @@ def showBacklog(handler, id, search = None, devEdit = False):
 			daysTillPlanning = (tsToDate(sprint.start) - getNow()).days + 1
 			print InfoBox("The sprint has <b>not begun</b> &mdash; planning is %s. All changes are considered to have been made midnight of plan day" % ('tomorrow' if daysTillPlanning == 1 else "in %d days" % daysTillPlanning))
 	elif sprint.isReview():
-		print InfoBox("Today is <b>sprint review</b> &mdash; this is the last day to make changes to the backlog")
+		print InfoBox("Today is <b>sprint review</b> &mdash; this is the last day to make changes to the backlog. All open tasks will be deferred at the end of the day")
 	elif not sprint.isOver():
 		noHours = filter(lambda task: task.stillOpen() and task.hours == 0, tasks)
 		if noHours != []:

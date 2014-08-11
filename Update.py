@@ -280,3 +280,11 @@ def v24():
 					data[rev]['deleted'] = True
 				else:
 					raise RuntimeError("Unexpected deleted value for task #%d, revision %d: %s" % (id, rev + 1, data['deleted']))
+
+@update
+def v25():
+	"""Add 'flags' field to sprints"""
+	table = db()['sprints']
+	for id in table:
+		with table.change(id) as data:
+			data['flags'] = set()

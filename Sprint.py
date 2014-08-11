@@ -12,7 +12,7 @@ class Sprint(ActiveRecord):
 	owner = link(User, 'ownerid')
 	members = link(User, 'memberids')
 
-	def __init__(self, projectid, name, ownerid, start, end, memberids = set(), id = None):
+	def __init__(self, projectid, name, ownerid, start, end, memberids = set(), flags = set(), id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.projectid = projectid
@@ -21,6 +21,7 @@ class Sprint(ActiveRecord):
 		self.start = start
 		self.end = end
 		self.memberids = memberids
+		self.flags = flags
 
 	@classmethod
 	def loadAllActive(cls, member = None, project = None):
