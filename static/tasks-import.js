@@ -12,6 +12,11 @@ $(document).ready(function() {
 		}
 	});
 
+	// Undefer all deferred tasks
+	$('tr.task[status="deferred"]').each(function() {
+		set_status($(this), 'not started');
+	});
+
 	$('#save-button').click(function(e) {
 		e.preventDefault();
 		e.stopImmediatePropagation();
