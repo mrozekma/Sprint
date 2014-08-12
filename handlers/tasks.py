@@ -460,11 +460,11 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 	if dryrun:
 		handler.log = False
 		numTasks = sum(len(taskSet) for taskSet in tasks.values())
-		taskHours = sum(hours for taskSet in tasks.values() for name, assigned, status, hours in taskSet)
-		ownTaskHours = sum(hours for taskSet in tasks.values() for name, assigned, status, hours in taskSet if handler.session['user'] in assigned)
+		taskHours = sum(hours for taskSet in tasks.values() for name, assigned, status, hours in taskSet if status != 'deferred')
+		ownTaskHours = sum(hours for taskSet in tasks.values() for name, assigned, status, hours in taskSet if status != 'deferred' and handler.session['user'] in assigned)
 		avail = Availability(sprint)
 		availHours = avail.getAllForward(getNow().date(), handler.session['user'])
-		usedHours = sum(task.hours for task in sprint.getTasks() if handler.session['user'] in task.assigned)
+		usedHours = sum(task.effectiveHours() for task in sprint.getTasks() if handler.session['user'] in task.assigned)
 		availHours -= usedHours
 		if errors:
 			print ErrorBox("<br>".join(errors))

@@ -107,7 +107,7 @@ class Sprint(ActiveRecord):
 			rtn['no-availability'] = zeroes
 
 		# Users with >100% commitment
-		overcommitted = filter(lambda user: userAvails[user] < sum(task.hours for task in tasks if user in task.assigned), self.members)
+		overcommitted = filter(lambda user: userAvails[user] < sum(task.effectiveHours() for task in tasks if user in task.assigned), self.members)
 		if overcommitted != []:
 			rtn['overcommitted'] = overcommitted
 
