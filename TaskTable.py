@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from json import dumps as toJS
 from string import Template
 
@@ -21,6 +22,14 @@ class TaskTable:
 		self.taskClasses = taskClasses
 		self.show = show # groupActions, taskModActions, index, goal, status, name, assigned, historicalHours, hours, debug, devEdit
 
+		if not isinstance(self.tasks, dict):
+			groupedTasks = OrderedDict()
+			for group in self.sprint.getGroups():
+				groupedTasks[group] = []
+			for task in self.tasks:
+				groupedTasks[task.group].append(task)
+			self.tasks = groupedTasks
+
 	@staticmethod
 	def include():
 		print "<script type=\"text/javascript\" src=\"/static/tasktable.js\"></script>"
@@ -38,17 +47,16 @@ class TaskTable:
 		return rtn
 
 	def out(self):
-		groups = self.sprint.getGroups()
-		tasks = self.tasks
 		sprintDays = [day.date() for day in self.sprint.getDays()]
 
 		# Make sure only people in assignedList are assigned to tasks
 		# If everyone assigned to the task is missing from assignedList, assign it to the first person in the list
 		# (this should probably be the scrummaster)
-		for task in tasks:
-			task.assigned &= set(self.assignedList)
-			if len(task.assigned) == 0:
-				task.assigned = {self.assignedList[0]}
+		for tasks in self.tasks.values():
+			for task in tasks:
+				task.assigned &= set(self.assignedList)
+				if len(task.assigned) == 0:
+					task.assigned = {self.assignedList[0]}
 
 		if self.check('historicalHours'):
 			if self.sprint.isActive() or self.check('devEdit'):
@@ -143,7 +151,7 @@ class TaskTable:
 		print "</thead>"
 
 		print "<tbody>"
-		for group in groups:
+		for (group, groupTasks) in self.tasks.iteritems():
 			cls = ['group']
 			if not group.deletable:
 				cls.append('fixed')
@@ -164,7 +172,6 @@ class TaskTable:
 			print "</td>"
 			print "</tr>"
 
-			groupTasks = filter(lambda task: task.group == group, tasks)
 			for task in groupTasks:
 				classes = ['task']
 				if task in self.taskClasses:
@@ -172,7 +179,7 @@ class TaskTable:
 				if getNow() - tsToDate(task.timestamp) < timedelta(hours = 23):
 					classes.append('changed-today')
 
-				print "<tr class=\"%s\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" goalid=\"%d\" status=\"%s\" assigned=\"%s\">" % (' '.join(classes), task.id, task.id, task.revision, task.group.id if task.group else 0, task.goal.id if task.goal else 0, task.stat.name, ' '.join(sorted(user.username for user in task.assigned)))
+				print "<tr class=\"%s\" id=\"task%d\" taskid=\"%d\" revid=\"%d\" groupid=\"%d\" goalid=\"%d\" status=\"%s\" assigned=\"%s\">" % (' '.join(classes), task.id, task.id, task.revision, task.groupid or 0, task.goal.id if task.goal else 0, task.stat.name, ' '.join(sorted(user.username for user in task.assigned)))
 
 				print "<td class=\"flags\">"
 				if self.check('debug'):
@@ -227,7 +234,8 @@ class TaskTable:
 						print "<td class=\"%s\">%s</td>" % (' '.join(classes), dayTask.hours)
 
 				print "<td class=\"actions\">"
-				print "<a href=\"/tasks/%d\" target=\"_blank\"><img src=\"/static/images/task-history.png\" title=\"History\"></a>" % task.id
+				if task.id:
+					print "<a href=\"/tasks/%d\" target=\"_blank\"><img src=\"/static/images/task-history.png\" title=\"History\"></a>" % task.id
 				if self.check('taskModActions') and self.editable:
 					print "<a href=\"javascript:delete_task(%d);\"><img src=\"/static/images/task-delete.png\" title=\"Delete Task\"></a>" % task.id
 				for icon, pattern, url in zip(*settings.autolink):

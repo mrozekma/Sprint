@@ -7,6 +7,7 @@ $(document).ready(function() {
 		$.post($('form#write-tasks').attr('action') + '&dryrun=true', $('form#write-tasks').serialize(), function(data, text, request) {
 			$('#post-status').hide();
 			$('#preview').html(data);
+			tasktable_init();
 		});
 	};
 

@@ -1,4 +1,5 @@
 from __future__ import with_statement
+from collections import OrderedDict
 from json import loads as fromJS, dumps as toJS
 
 from rorn.Session import delay, undelay
@@ -295,6 +296,8 @@ def newTaskMany(handler, group, assigned = None):
 	requirePriv(handler, 'User')
 	id = int(group)
 
+	TaskTable.include()
+
 	body = ''
 	if 'many-upload' in handler.session:
 		body = handler.session['many-upload']
@@ -490,13 +493,9 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 		elif not errors:
 			print InfoBox("Waiting for tasks. Click \"Help\" above if needed")
 
-		for group in groups:
-			if len(tasks[group]) == 0:
-				continue
-			print "<b>%s%s</b><br>" % (group.safe.name, ' (NEW)' if group in newGroups else '')
-			for name, assigned, status, hours in tasks[group]:
-				print "%s (assigned to %s, %s, %d %s)<br>" % (stripTags(name), ' '.join(sorted(map(str, assigned))), status, hours, 'hour remains' if hours == 1 else 'hours remain')
-			print "<br>"
+		groupedTasks = OrderedDict((group, [Task(group.id, sprint.id, handler.session['user'].id, 0, name, status, hours, {user.id for user in assigned}, 1, id = 0) for name, assigned, status, hours in tasks[group]]) for group in groups)
+		print TaskTable(sprint, False, tasks = groupedTasks, status = True, name = True, assigned = True, hours = True)
+
 	elif errors:
 		die('There are unparseable lines in the task script. See the preview for more information')
 	else:

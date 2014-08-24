@@ -1,4 +1,8 @@
 $(document).ready(function() {
+	tasktable_init();
+});
+
+function tasktable_init() {
 	fancy_cells('.tasktable.editable');
 
 	setup_hours_events();
@@ -6,7 +10,7 @@ $(document).ready(function() {
 	setup_checkboxes();
 
 	$('.saving').css('visibility', 'hidden');
-});
+}
 
 hours_cache = -1;
 hours_timer = null;
