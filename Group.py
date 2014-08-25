@@ -38,7 +38,7 @@ class Group(ActiveRecord):
 		if newSeq:
 			self.seq = newSeq
 			for id, group in db()['groups'].iteritems():
-				if group['sprintid'] == self.sprintid and group['seq'] > self.seq:
+				if group['sprintid'] == self.sprintid and group['seq'] >= self.seq:
 					with db()['groups'].change(id) as data:
 						data['seq'] += 1
 

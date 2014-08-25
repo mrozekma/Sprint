@@ -150,7 +150,6 @@ function fancy_cells(table_selector) {
 		stop: function(event, ui) {
 			row = $(ui.item[0]);
 			$('tr.task.hide-temp').removeClass('hide-temp');
-			// row.addClass('dirty');
 			if(row.hasClass('group')) {
 				// Move all the group's tasks under the group header row
 				$('tr.group').each(function() {
@@ -158,24 +157,19 @@ function fancy_cells(table_selector) {
 					$('tr.task[groupid=' + groupid + ']').insertAfter($(this));
 				});
 
-				//TODO Save new group position
-				unimplemented('Group move');
+				new_seq = row.prevUntil('table', 'tr.group').length + 1;
+				save_rev(row.attr('groupid'), 'groupmove', new_seq);
 			} else if(row.hasClass('task')) {
 				new_group = row.prevAll('tr.group');
-				new_group_id = new_group.length ? new_group.attr('groupid') : 0;
-				row.attr('groupid', new_group_id);
-
-				pred = row.prev();
-				if(!pred.length) { // First row in the table
-					save_task(row, 'taskmove', ':0');
-				} else if(pred.hasClass('task')) { // Inserted after a task
-					save_task(row, 'taskmove', pred.attr('taskid'));
-				} else if(pred.hasClass('group')) { // Inserted after a group header (top of the group)
-					//TODO Save
-					save_task(row, 'taskmove', ':' + new_group_id);
-				} else {
-					//FAIL
+				if(new_group.length == 0) { // Dragged above the first group
+					console.log('Bad drag target');
+					$(this).sortable('cancel');
+					return;
 				}
+				new_group_id = new_group.attr('groupid');
+				new_seq = row.prevUntil('tr.group', 'tr.task').length + 1;
+				row.attr('groupid', new_group_id);
+				save_task(row, 'taskmove', new_group_id + ':' + new_seq);
 			}
 			update_indexes();
 		},
@@ -348,8 +342,12 @@ function unimplemented(what) {
 	noty({type: 'error', text: '<b>Unimplemented</b>: ' + what})
 }
 
-function save_task(task, field, value, counter) {
+function save_task(task, field, value) {
+	save_rev(task.attr('taskid'), field, value);
+}
+
+function save_rev(id, field, value) {
 	if(typeof(tasktable_change_hook) == 'function') {
-		tasktable_change_hook(task, field, value, counter);
+		tasktable_change_hook(id, field, value, 0);
 	}
 }

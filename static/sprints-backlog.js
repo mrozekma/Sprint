@@ -194,22 +194,26 @@ function save_error(text, fatal) {
 }
 
 savingMutex = false;
-function tasktable_change_hook(task, field, value, counter) {
-	console.log("Saving change to " + task.attr('taskid') + "(" + task.attr('revid') + "): " + field + " <- " + value + " (attempt " + (counter == undefined ? 0 : counter) + ")");
-	$('.saving', task).css('visibility', 'visible');
+function tasktable_change_hook(id, field, value, counter) {
+	task = (field == 'groupmove') ? $() : $('tr.task[taskid=' + id + ']');
+	icon = $('.saving', task);
+	revid = task.attr('revid') || 0;
+
+	console.log("Saving change to " + id + "(" + revid + "): " + field + " <- " + value + " (attempt " + counter + ")");
+	icon.css('visibility', 'visible');
 
 	if(savingMutex) {
 		if(counter == 10) {
-			save_error("Timed out trying to set task " + task.attr('taskid') + " " + field + " to " + value);
-			$('.saving', task).css('visibility', 'hidden');
+			save_error("Timed out trying to set task " + id + " " + field + " to " + value);
+			icon.css('visibility', 'hidden');
 		} else {
-			setTimeout(function() {tasktable_change_hook(task, field, value, (counter == undefined ? 0 : counter) + 1);}, 200);
+			setTimeout(function() {tasktable_change_hook(id, field, value, counter + 1);}, 200);
 		}
 		return;
 	}
 
 	savingMutex = true;
-	$.post("/sprints/" + sprintid, {'id': task.attr('taskid'), 'rev_id': task.attr('revid'), 'field': field, 'value': value}, function(data, text, request) {
+	$.post("/sprints/" + sprintid, {'id': id, 'rev_id': revid, 'field': field, 'value': value}, function(data, text, request) {
 		switch(request.status) {
 		case 200:
 			save_error(data)
@@ -218,16 +222,18 @@ function tasktable_change_hook(task, field, value, counter) {
 			save_error(data, false);
 			break;
 		case 299:
-			rev = parseInt(data, 10);
-			$('tr.task[taskid=' + task.attr('taskid') + ']').attr('revid', rev).addClass('changed-today');
-			console.log("Changed saved; new revision is " + rev);
+			if(field != 'groupmove') {
+				rev = parseInt(data, 10);
+				task.attr('revid', rev).addClass('changed-today');
+				console.log("Changed saved; new revision is " + rev);
+			}
 			break;
 		default:
 			save_error("Unexpected response code " + request.status)
 			break;
 		}
 
-		$('.saving', task).css('visibility', 'hidden');
+		icon.css('visibility', 'hidden');
 		savingMutex = false;
 	});
 }

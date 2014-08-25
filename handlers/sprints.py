@@ -211,9 +211,9 @@ def sprintPost(handler, sprintid, p_id, p_rev_id, p_field, p_value):
 		done()
 
 	handler.wrappers = False
-	sprintid = int(sprintid)
-	p_id = int(p_id)
-	p_rev_id = int(p_rev_id)
+	sprintid = to_int(sprintid, 'sprintid', die)
+	p_id = to_int(p_id, 'id', die)
+	p_rev_id = to_int(p_rev_id, 'rev_id', die)
 
 	if not handler.session['user']:
 		die("You must be logged in to modify tasks")
@@ -226,16 +226,19 @@ def sprintPost(handler, sprintid, p_id, p_rev_id, p_field, p_value):
 	elif not sprint.canEdit(handler.session['user']):
 		die("You don't have permission to modify this sprint")
 
-	task = Task.load(p_id)
-	if task.sprint != sprint:
-		die("Attempting to modify task outside the specified sprint")
-
-	# hours, taskmove, name, assigned, status
-	if task.revision != p_rev_id: #TODO Implement collision support
-		die("Collision with %s detected. Changes not saved" % task.creator)
+	# Special case group moves; p_id is the group ID, not task
+	task = None
+	if p_field != 'groupmove':
+		task = Task.load(p_id)
+		if not task:
+			die("Task %d does not exist" % p_id)
+		if task.sprint != sprint:
+			die("Attempting to modify task outside the specified sprint")
+		if task.revision != p_rev_id: #TODO Implement collision support
+			die("Collision with %s detected. Changes not saved" % task.creator)
 
 	if p_value.strip() == '':
-		die("Task name cannot be empty")
+		die("Value cannot be empty")
 
 	if p_field in ['status', 'name', 'goal', 'assigned', 'hours', 'deleted']:
 		for case in switch(p_field):
@@ -276,28 +279,39 @@ def sprintPost(handler, sprintid, p_id, p_rev_id, p_field, p_value):
 			Event.taskUpdate(handler, task, p_field, parsedValue)
 
 	elif p_field == 'taskmove':
-		if p_value[0] == ':': # Beginning of the group
-			predTask = None
-			predGroupID = int(p_value[1:])
-			predGroup = Group.load(predGroupID)
-			if not predGroup:
-				die("No group with ID %d" % predGroupID)
-		else:
-			predTask = Task.load(int(p_value))
-			predGroup = predTask.group
+		if ':' not in p_value:
+			die("Malformed value")
+		newGroupID, newSeq = map(lambda i: to_int(i, 'value', die), p_value.split(':', 1))
+		newGroup = Group.load(newGroupID)
+		if not newGroup:
+			die("No group with ID %d" % newGroupID)
+		maxSeq = len(Task.loadAll(groupid = newGroup.id))
+		if task.group != newGroup:
+			maxSeq += 1
+		if not 1 <= newSeq <= maxSeq:
+			die("Bad sequence number")
 
-		if predGroup.sprint != sprint:
-			die("Group/task sprint mismatch")
+		task.move(newSeq, newGroup)
 
-		task.move(predTask, predGroup)
+	elif p_field == 'groupmove':
+		group = Group.load(p_id)
+		if not group:
+			die("Group %d does not exist" % p_id)
+		if group.sprint != sprint:
+			die("Attempting to modify group outside the specified sprint")
+
+		newSeq = to_int(p_value, 'value', die)
+		if not 1 <= newSeq <= len(sprint.getGroups()):
+			die("Bad sequence number")
+
+		group.move(newSeq)
+
 	else:
 		die("Unexpected field name: %s" % stripTags(p_field))
 
-	# 299 - good
-	# 298 - warning
-	# 200 - error
 	handler.responseCode = 299
-	print task.revision
+	if task is not None:
+		print task.revision
 
 @get('sprints/active')
 def findActiveSprint(handler, project = None, search = None):

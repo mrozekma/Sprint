@@ -173,16 +173,9 @@ class Task(ActiveRecord):
 						data[-1]['seq'] += 1
 		return ActiveRecord.save(self)
 
-	def move(self, newPred, newGroup):
-		# newPred = None means move to the top of newGroup
-		# newGroup = None means the group is newPred's group
-		if newPred:
-			if not newGroup:
-				newGroup = newPred.group
-			elif newGroup and newPred.group != newGroup:
-				raise ValueError("Incompatible predecessor and group")
-		elif not newGroup:
-			raise ValueError("Neither predecessor nor group specified")
+	def move(self, newSeq, newGroup):
+		# newSeq is the new sequence number this task should have
+		# newGroup is the group to move to, or None to stay in the same group
 
 		# Remove from current group (shift all later tasks up)
 		for id, task in db()['tasks'].iteritems():
@@ -193,15 +186,14 @@ class Task(ActiveRecord):
 						rev['seq'] -= 1
 
 		# Switch group (for all revisions)
-		if(self.group != newGroup):
+		if self.group != newGroup:
 			self.group = newGroup
 			with db()['tasks'].change(self.id) as data:
 				for rev in data:
 					rev['groupid'] = self.groupid
 
 		# Add to new group (shift all later tasks down)
-		# Reload newPred in case its sequence has changed
-		self.seq = Task.load(newPred.id).seq + 1 if newPred else 1
+		self.seq = newSeq
 		for id, task in db()['tasks'].iteritems():
 			rev = task[-1]
 			if rev['groupid'] == self.groupid and rev['seq'] >= self.seq:

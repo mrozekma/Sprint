@@ -224,7 +224,10 @@ def deleteGroupPost(handler, id, p_newGroup = None):
 	requirePriv(handler, 'User')
 	handler.wrappers = False
 
-	id = int(id)
+	id = to_int(id, 'id', die)
+	if p_newGroup is not None:
+		p_newGroup = to_int(p_newGroup, 'newGroup', die)
+
 	group = Group.load(id)
 	if not group:
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
@@ -235,21 +238,20 @@ def deleteGroupPost(handler, id, p_newGroup = None):
 
 	tasks = group.getTasks()
 	newGroup = None
-	if p_newGroup == '0': # Delete tasks
+	if p_newGroup == 0: # Delete tasks
 		for task in tasks:
 			task.deleted = True
 			task.revise()
-	elif p_newGroup: # Move tasks
+	elif p_newGroup is not None: # Move tasks
 		newGroup = Group.load(p_newGroup)
 		if not newGroup:
-			ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % int(p_newGroup))
+			ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % p_newGroup)
 
 		# Move all the tasks to the end of the new group
-		pred = newGroup.getTasks()
-		pred = pred[-1] if pred else None
+		seq = len(newGroup.getTasks())
 		for task in tasks:
-			task.move(pred, newGroup)
-			pred = task
+			seq += 1
+			task.move(seq, newGroup)
 	elif len(tasks):
 		ErrorBox.die('Invalid Request', "Missing new group request argument")
 
