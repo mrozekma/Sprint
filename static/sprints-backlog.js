@@ -6,6 +6,41 @@ $(document).ready(function() {
 	$('#post-status').hide();
 });
 
+function update_task_count() {
+    var vis = $('#all-tasks .task:visible');
+    var assigned = $.makeArray($('#filter-assigned .selected').map(function() {return $(this).attr('assigned');}));
+    var status = $.makeArray($('#filter-status .selected').map(function() {return $(this).attr('status');}));
+
+	// Update search field
+	idx = searchTokens.indexOf(true);
+	tokens = searchTokens.slice(0, idx);
+	if(status.length > 0) {tokens.push('status:' + status.map(function(val) {return val.replace(' ', '-');}).join(','));}
+	if(assigned.length > 0) {tokens.push('assigned:' + assigned.join(','));}
+	tokens = tokens.concat(searchTokens.slice(idx + 1));
+	$('#search').val(tokens.join(' '));
+
+	// Update search description
+	idx = searchDescriptions.indexOf(true);
+	descriptions = searchDescriptions.slice(0, idx);
+    if(status.length > 0) {descriptions.push(status.join(' or '));}
+    if(assigned.length > 0) {descriptions.push('assigned to ' + assigned.join(' or '));}
+	descriptions = descriptions.concat(searchDescriptions.slice(idx + 1));
+
+    txt = 'Showing ' + vis.length + ' of ' + totalTasks + (totalTasks == 1 ? ' task' : ' tasks');
+	url = '/sprints/' + sprintid;
+	if(descriptions.length > 0) {
+		$('.save-search').attr('href', '/search/saved/new?sprintid=' + sprintid + '&query=' + encodeURIComponent(tokens.join(' ')));
+		$('.save-search, .cancel-search').css('display', 'inline');
+		txt += ' ' + descriptions.join(', ');
+		url += '?search=' + encodeURIComponent(tokens.join(' '));
+	} else {
+		$('.save-search, .cancel-search').css('display', 'none');
+	}
+    $('#task-count').text(txt);
+
+	history.replaceState(null, null, url);
+}
+
 function setup_search() {
 	$('input#search').keydown(function(e) {
 		if(e.keyCode == 13) {

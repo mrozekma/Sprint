@@ -39,22 +39,26 @@ class Filter(object):
 				return cls(search, term[len(key)+1:])
 		return None
 
-# These are handled specially in the sprints handler, so they doesn't need any implementations
+# These are handled specially in the sprints handler, so they don't need any implementations
 class Assigned(Filter):
 	def __init__(self, search, value):
+		Filter.__init__(self, search, value)
 		usernames = value.split(',')
 		self.users = filter(None, (User.load(username = username) for username in usernames))
 		self.currentUser = ('me' in usernames) and (not User.load(username = 'me'))
 class Status(Filter):
 	def __init__(self, search ,value):
+		Filter.__init__(self, search, value)
 		value = value.replace('-', ' ').replace('_', ' ')
 		self.statuses = [statuses[status] for status in value.split(',') if status in statuses]
 class Highlight(Filter):
 	def __init__(self, search, value):
+		Filter.__init__(self, search, value)
 		self.tasks = filter(None, (Task.load(int(id)) for id in value.split(',')))
 
 class Hours(Filter):
 	def __init__(self, search, value):
+		Filter.__init__(self, search, value)
 		try:
 			if len(value) > 2 and value[0:2] == '<=':
 				self.min, self.max = None, int(value[2:])
@@ -99,6 +103,7 @@ class Hours(Filter):
 
 class GoalFilter(Filter):
 	def __init__(self, search, value):
+		Filter.__init__(self, search, value)
 		values = value.split(',')
 		self.goals = filter(lambda goal: goal and goal.name != '', (Goal.load(sprintid = search.sprint.id, color = clr) for clr in values))
 		if 'none' in values:
@@ -119,6 +124,7 @@ class GoalFilter(Filter):
 
 class TimeRange(Filter):
 	def __init__(self, search, value, taskHandler):
+		Filter.__init__(self, search, value)
 		self.taskHandler = taskHandler
 		try:
 			if '-' in value:

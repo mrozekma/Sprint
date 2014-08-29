@@ -108,24 +108,11 @@ def showBacklog(handler, id, search = None, devEdit = False):
 	print "var sprintid = %d;" % id
 	print "var isPlanning = %s;" % ('true' if sprint.isPlanning() else 'false')
 	print "var totalTasks = %d;" % len(tasks)
-	print "function update_task_count() {"
-	print "    var vis = $('#all-tasks .task:visible');"
-	print "    var assigned = $.makeArray($('#filter-assigned .selected').map(function() {return $(this).attr('assigned');}));"
-	print "    var status = $.makeArray($('#filter-status .selected').map(function() {return $(this).attr('status');}));";
-	print "    txt = 'Showing ' + vis.length + ' of ' + totalTasks + (totalTasks == 1 ? ' task' : ' tasks');"
-	print
-	print "    search = Array();"
-	if search.hasBaseString(): print "    search.push('matching \"%s\"');" % search.getBaseString().replace("'", "\\'").replace('"', '\\"')
-	print "    if(status.length > 0) {search.push(status.join(' or '));}"
-	print "    if(assigned.length > 0) {search.push('assigned to ' + assigned.join(' or '));}"
-	for filt in search.getAll():
-		if filt.description():
-			print "    search.push('%s');" % filt.description().replace("'", "\\'").replace('"', '\\"')
-	print
-	print "    $('.save-search, .cancel-search').css('display', search.length > 0 ? 'inline' : 'none');"
-	print "    if(search.length > 0) {txt += ' ' + search.join(', ');}"
-	print "    $('#task-count').text(txt);"
-	print "}"
+
+	# True is a placeholder for the dynamic tokens (status, assigned)
+	print "var searchTokens = %s;" % toJS(filter(None, [search.getBaseString() if search.hasBaseString() else None] + [True] + ["%s:%s" % (filt.getKey(), filt.value) for filt in search.getAll() if filt.getKey() not in ('status', 'assigned')]))
+	print "var searchDescriptions = %s;" % toJS(filter(None, ["matching %s" % search.getBaseString() if search.hasBaseString() else None] + [True] + [filt.description() for filt in search.getAll()]))
+
 	print "$('document').ready(function() {"
 	if search.has('assigned'):
 		print "    $('%s').addClass('selected');" % ', '.join("#filter-assigned a[assigned=\"%s\"]" % user.username for user in search.get('assigned').users + ([handler.session['user']] if search.get('assigned').currentUser else []))
@@ -198,8 +185,9 @@ def showBacklog(handler, id, search = None, devEdit = False):
 
 	showing = ResponseWriter()
 	print "<span id=\"task-count\"></span>"
-	print "<a href=\"/search/saved/new?sprintid=%d&query=%s\"><img class=\"save-search\" src=\"/static/images/save.png\" title=\"Save search\"></a>" % (id, search.getFullString().replace('"', '&quot;'))
-	print "<a href=\"/sprints/%d\"><img class=\"cancel-search\" src=\"/static/images/cross.png\" title=\"Clear search\"></a>" % id
+	# save-search href set by update_task_count()
+	print "<a class=\"save-search\"><img src=\"/static/images/save.png\" title=\"Save search\"></a>"
+	print "<a class=\"cancel-search\" href=\"/sprints/%d\"><img src=\"/static/images/cross.png\" title=\"Clear search\"></a>" % id
 	showing = showing.done()
 
 	print TaskTable(sprint, editable = editable, tasks = tasks, tableID = 'all-tasks', dateline = showing, taskClasses = {task: ['highlight'] for task in (search.get('highlight').tasks if search.has('highlight') else [])}, debug = isDevMode(handler), groupActions = True, taskModActions = True, index = True, goal = True, status = True, name = True, assigned = True, historicalHours = True, hours = True, devEdit = devEdit)
