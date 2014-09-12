@@ -290,13 +290,11 @@ $(document).ready(function() {
 	delay(handler, SuccessBox("Added task <b>%s</b>" % task.safe.name, close = 3, fixed = True))
 	Event.newTask(handler, task)
 
-@get('tasks/new/many', statics = 'tasks-new')
+@get('tasks/new/many', statics = ['tasktable', 'tasks-new'])
 def newTaskMany(handler, group, assigned = None):
 	handler.title("New Tasks")
 	requirePriv(handler, 'User')
 	id = int(group)
-
-	TaskTable.include()
 
 	body = ''
 	if 'many-upload' in handler.session:
@@ -316,6 +314,7 @@ def newTaskMany(handler, group, assigned = None):
 	if assigned:
 		nextURL += "?search=assigned:%s" % stripTags(assigned.replace(' ', ','))
 	print "next_url = %s;" % toJS(nextURL)
+	print "TaskTable.init();"
 	print "</script>"
 
 	print tabs.format(id).where('many')
@@ -529,7 +528,7 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 			delay(handler, WarningBox("No changes", close = 3, fixed = True))
 		handler.responseCode = 299
 
-@get('tasks/new/import', statics = 'tasks-import')
+@get('tasks/new/import', statics = ['tasktable', 'tasks-import'])
 def newTaskImport(handler, group, source = None, assigned = None):
 	# 'assigned' is ignored, it's just in case the user gets here from a filtered backlog
 	handler.title("New Tasks")
@@ -579,9 +578,8 @@ def newTaskImport(handler, group, source = None, assigned = None):
 		print "next_url = %s;" % toJS(nextURL)
 		print "post_url = \"/tasks/new/import?group=%d&source=%d\";" % (group.id, source.id)
 		print "scrummaster = %s;" % toJS(sprint.owner.username)
-		print "isPlanning = true;" # Don't link hours and status
+		print "TaskTable.init();"
 		print "</script>"
-		TaskTable.include()
 
 		print "<b>Source sprint</b>: <a href=\"/sprints/%d\">%s</a><br>" % (source.id, source.name)
 		print "<b>Target sprint</b>: <a href=\"/sprints/%d\">%s</a><br><br>" % (sprint.id, sprint.name)

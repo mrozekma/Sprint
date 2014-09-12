@@ -82,7 +82,7 @@ def drawNavArrows(sprint, tab):
 def sprint(handler):
 	redirect('/projects')
 
-@get('sprints/(?P<id>[0-9]+)', statics = 'sprints-backlog')
+@get('sprints/(?P<id>[0-9]+)', statics = ['tasktable', 'sprints-backlog'])
 def showBacklog(handler, id, search = None, devEdit = False):
 	requirePriv(handler, 'User')
 	id = int(id)
@@ -102,17 +102,16 @@ def showBacklog(handler, id, search = None, devEdit = False):
 	search = Search(sprint, search)
 
 	print "<script src=\"/settings/sprints.js\" type=\"text/javascript\"></script>"
-	TaskTable.include()
 
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
-	print "var isPlanning = %s;" % ('true' if sprint.isPlanning() else 'false')
 	print "var totalTasks = %d;" % len(tasks)
 
 	# True is a placeholder for the dynamic tokens (status, assigned)
 	print "var searchTokens = %s;" % toJS(filter(None, [search.getBaseString() if search.hasBaseString() else None] + [True] + ["%s:%s" % (filt.getKey(), filt.value) for filt in search.getAll() if filt.getKey() not in ('status', 'assigned')]))
 	print "var searchDescriptions = %s;" % toJS(filter(None, ["matching %s" % search.getBaseString() if search.hasBaseString() else None] + [True] + [filt.description() for filt in search.getAll()]))
 
+	print "TaskTable.init({link_hours_status: %s});" % toJS(not sprint.isPlanning())
 	print "$('document').ready(function() {"
 	if search.has('assigned'):
 		print "    $('%s').addClass('selected');" % ', '.join("#filter-assigned a[assigned=\"%s\"]" % user.username for user in search.get('assigned').users + ([handler.session['user']] if search.get('assigned').currentUser else []))

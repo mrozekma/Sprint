@@ -30,11 +30,6 @@ class TaskTable:
 				groupedTasks[task.group].append(task)
 			self.tasks = groupedTasks
 
-	@staticmethod
-	def include():
-		print "<script type=\"text/javascript\" src=\"/static/tasktable.js\"></script>"
-		print "<link rel=\"stylesheet/less\" type=\"text/css\" href=\"/static/tasktable.less\">"
-
 	def check(self, name):
 		return self.show.get(name, False)
 
@@ -237,7 +232,7 @@ class TaskTable:
 				if task.id:
 					print "<a href=\"/tasks/%d\" target=\"_blank\"><img src=\"/static/images/task-history.png\" title=\"History\"></a>" % task.id
 				if self.check('taskModActions') and self.editable:
-					print "<a href=\"javascript:delete_task(%d);\"><img src=\"/static/images/task-delete.png\" title=\"Delete Task\"></a>" % task.id
+					print "<a href=\"javascript:TaskTable.delete_task(%d);\"><img src=\"/static/images/task-delete.png\" title=\"Delete Task\"></a>" % task.id
 				for icon, pattern, url in zip(*settings.autolink):
 					for match in re.finditer(pattern, task.name, re.IGNORECASE):
 						print "<a href=\"%s\" target=\"_blank\"><img src=\"/static/images/%s.png\"></a>" % (Template(url).safe_substitute(match.groupdict()), icon)

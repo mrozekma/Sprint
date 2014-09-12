@@ -1,4 +1,14 @@
 $(document).ready(function() {
+	TaskTable.on_task_change(function(e, task, field, value) {
+		save_task(task.attr('taskid'), field, value, 0);
+	});
+	TaskTable.on_list_change(function(e) {
+		apply_filters();
+	});
+	TaskTable.on_group_move(function(e, group, new_seq) {
+		save_task(group.attr('groupid'), 'groupmove', new_seq, 0);
+	});
+
 	setup_search();
 	setup_filter_buttons();
 	setup_indexes();
@@ -134,7 +144,7 @@ function setup_indexes() {
 		$('tr.task.selected .task-index').click();
 	});
 
-	update_indexes();
+	TaskTable.update_indexes();
 }
 
 function setup_warnings() {
@@ -149,10 +159,6 @@ function setup_warnings() {
 			$('ul', box).hide();
 		}
 	});
-}
-
-function tasktable_visibility_hook() {
-	apply_filters();
 }
 
 function apply_filters() {
@@ -220,7 +226,7 @@ function apply_filters() {
 	});
 
 	update_task_count();
-	update_indexes();
+	TaskTable.update_indexes();
 }
 
 function save_error(text, fatal) {
@@ -229,7 +235,7 @@ function save_error(text, fatal) {
 }
 
 savingMutex = false;
-function tasktable_change_hook(id, field, value, counter) {
+function save_task(id, field, value, counter) {
 	task = (field == 'groupmove') ? $() : $('tr.task[taskid=' + id + ']');
 	icon = $('.saving', task);
 	revid = task.attr('revid') || 0;
@@ -242,7 +248,7 @@ function tasktable_change_hook(id, field, value, counter) {
 			save_error("Timed out trying to set task " + id + " " + field + " to " + value);
 			icon.css('visibility', 'hidden');
 		} else {
-			setTimeout(function() {tasktable_change_hook(id, field, value, counter + 1);}, 200);
+			setTimeout(function() {save_task(id, field, value, counter + 1);}, 200);
 		}
 		return;
 	}
