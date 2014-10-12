@@ -42,6 +42,7 @@ from Log import console
 from Cron import Cron
 from HTTPServer import server as getServer, ServerError
 from Settings import PORT, settings
+from WebSocket import WebSocket
 from Event import addEventHandler
 from event_handlers import *
 
@@ -52,6 +53,7 @@ setSerializer(SessionSerializer())
 currentThread().name = 'main'
 
 Cron.start()
+WebSocket.start()
 
 # addEventHandler(DebugLogger.DebugLogger())
 addEventHandler(DBLogger.DBLogger())

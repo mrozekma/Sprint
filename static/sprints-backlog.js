@@ -278,3 +278,76 @@ function save_task(id, field, value, counter) {
 		savingMutex = false;
 	});
 }
+
+SprintWS.on_open(function() {
+	SprintWS.send({subscribe: ['backlog#' + sprintid]});
+});
+
+SprintWS.on_message(asdf = function(e, data) {
+	console.log(data);
+	switch(data['channel']) {
+	case 'backlog#' + sprintid:
+		switch(data['type']) {
+		case 'new':
+			//TODO
+			break;
+		case 'update':
+			task = $('tr.task[taskid=' + data['id'] + ']');
+			if(task.length == 0) {
+				return;
+			}
+			task.attr('revid', data['revision']);
+
+			popup_anchor = null;
+			switch(data['field']) {
+			case 'status':
+				TaskTable.set_status(task, data['value'], false);
+				popup_anchor = $('.status', task);
+				break;
+			case 'name':
+				TaskTable.set_name(task, data['value'], false);
+				popup_anchor = $('.name', task);
+				break;
+			case 'goal':
+				TaskTable.set_goal(task, data['value'], false);
+				popup_anchor = $('.goal', task);
+				break;
+			case 'assigned':
+				TaskTable.set_assigned(task, data['value'], false);
+				popup_anchor = $('.assigned', task);
+				break;
+			case 'hours':
+				TaskTable.set_hours(task, data['value'], false);
+				popup_anchor = $('.hours:last input', task);
+				break;
+			case 'deleted':
+				//TODO
+				break;
+			case 'taskmove':
+				//TODO
+				break;
+			case 'groupmove':
+				//TODO
+				break;
+			}
+
+			if(popup_anchor != null && data['description'] != null && data['creator'] != currentUser) {
+				// off = popup_anchor.offset();
+				offLeft = popup_anchor.offset().left;
+				offTop = ((popup_anchor.prop('tagName') == 'TD') ? popup_anchor : popup_anchor.parents('td')).offset().top;
+				popup = $('<div>').html(data['description']).addClass('task-update-alert');
+				$('body').append(popup);
+				popup.offset({top: offTop - popup.height() - 25, left: offLeft - 22});
+				task.append(popup);
+				setTimeout((function() {
+					var popup_copy = popup; // closure
+					return function() {
+						popup_copy.fadeOut();
+					}
+				})(), 3000);
+			}
+		}
+		apply_filters();
+		break;
+	}
+});

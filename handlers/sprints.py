@@ -105,6 +105,7 @@ def showBacklog(handler, id, search = None, devEdit = False):
 
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
+	print "var currentUser = %s;" % toJS(handler.session['user'].username if handler.session['user'] else None)
 	print "var totalTasks = %d;" % len(tasks)
 
 	# True is a placeholder for the dynamic tokens (status, assigned)

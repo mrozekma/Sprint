@@ -43,6 +43,7 @@ def header(handler, includes):
 	print "<script src=\"/static/noty/themes/default.js\"></script>"
 	print "<script src=\"/static/noty/themes/sprint.js\"></script>"
 
+	print "<script src=\"/dyn.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/script.js\" type=\"text/javascript\"></script>"
 	print "<script src=\"/static/shell.js\" type=\"text/javascript\"></script>"
 

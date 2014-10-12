@@ -50,6 +50,26 @@
 	}
 }
 
+.task-update-alert {
+	position: absolute;
+	padding: 10px;
+	background: #ccc;
+	border-radius: 10px;
+	white-space: nowrap;
+
+	&:after {
+		content: "";
+		position: absolute;
+		bottom: -15px;
+		left: 15px;
+		border-width: 15px 15px 0;
+		border-style: solid;
+		border-color: #ccc transparent;
+		display: block;
+		width: 0;
+	}
+}
+
 #filter-status .fancy {
 	#filter-assigned .fancy;
 }

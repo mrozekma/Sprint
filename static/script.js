@@ -2,6 +2,63 @@ $.noty.defaults.theme = 'sprint';
 $.noty.defaults.layout = 'bottomCenter';
 $.noty.defaults.timeout = 0;
 
+SprintWS = (function() {
+	event_anchor = {};
+	socket = null;
+	port = get_websocket_port();
+
+	if(!port) {
+		function nop() {}
+		return {
+			init: nop,
+			send: nop,
+			on_open: nop,
+			on_message: nop,
+			on_close: nop,
+		};
+	}
+
+	function init() {
+		socket = new WebSocket('ws://' + window.location.hostname + ':' + port);
+		socket.onopen = function() {
+			$(event_anchor).trigger('open.sprintws');
+		}
+		socket.onmessage = function(e) {
+			$(event_anchor).trigger('message.sprintws', [JSON.parse(e.data)]);
+		}
+		socket.onclose = function() {
+			$(event_anchor).trigger('close.sprintws');
+		}
+		$(window).unload(function() {
+			socket.close();
+		});
+	}
+
+	function send(data) {
+		socket.send(JSON.stringify(data));
+	}
+
+	function on_open(handler) {
+		$(event_anchor).on('open.sprintws', handler);
+	}
+
+	function on_message(handler) {
+		$(event_anchor).on('message.sprintws', handler);
+	}
+
+	function on_close(handler) {
+		$(event_anchor).on('close.sprintws', handler);
+	}
+
+	return {
+		init: init,
+		send: send,
+		on_open: on_open,
+		on_message: on_message,
+		on_close: on_close,
+	};
+})();
+
 $(document).ready(function () {
 	$('.defaultfocus').focus();
 
@@ -70,6 +127,8 @@ $(document).ready(function () {
 			$(document).click(closeSearchBox);
 		}
 	});
+
+	SprintWS.init();
 });
 
 $.expr[":"].econtains = function(obj, index, meta, stack) {

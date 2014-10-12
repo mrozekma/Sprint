@@ -250,9 +250,6 @@ TaskTable = (function() {
 		}, function(action, el, pos) {
 			task = $(el).parents('tr.task');
 			set_status(task, action, true);
-			if(link_hours_status && ['canceled', 'split', 'complete'].indexOf(action) >= 0) {
-				set_hours(task, 0, true);
-			}
 		});
 
 		$('tr.task img.goal', $(table_selector)).contextMenu({
@@ -279,44 +276,47 @@ TaskTable = (function() {
 		}
 	}
 
-	function set_hours(task, hours, trigger) {
+	function set_hours(task, hours, trigger, follow_link) {
+		follow_link = typeof follow_link !== 'undefined' ? follow_link : true; // Obey status linkage unless specifically disabled
 		field = $('.hours input', task);
 		field.val('' + hours);
 		if(trigger) {
-			trigger_task_change(task, 'hours', val);
-		}
-		if(link_hours_status) {
-			set_status(task, val == 0 ? 'complete' : 'in progress', trigger);
+			trigger_task_change(task, 'hours', hours);
+			if(follow_link && link_hours_status) {
+				set_status(task, hours == 0 ? 'complete' : 'in progress', true, false);
+			}
 		}
 	}
 
 	// assigned is a list
 	function set_assigned(task, assigned, trigger) {
-			assigned.sort();
-			assigned_str = assigned.join(' ');
-			if(task.attr('assigned') == assigned_str) {
-				return;
-			}
+		assigned.sort();
+		assigned_str = assigned.join(' ');
+		console.log('setting assigned to ' + assigned_str);
+		if(task.attr('assigned') == assigned_str) {
+			return;
+		}
 
-			task.attr('assigned', assigned_str);
-			if(assigned.length > 1) {
-				$('td.assigned span img', task).attr('src', '/static/images/team.png');
-				$('td.assigned span span.username', task)
-					.attr('username', assigned_str)
-					.attr('title', assigned_str)
-					.text("team (" + assigned.length + ")");
-			} else {
-				$('td.assigned span img', task).attr('src', '/static/images/member.png');
-				$('td.assigned span span.username', task)
-					.attr('username', assigned[0])
-					.attr('title', '')
-					.text(assigned[0]);
-			}
+		task.attr('assigned', assigned_str);
+		if(assigned.length > 1) {
+			$('td.assigned span img', task).attr('src', '/static/images/team.png');
+			$('td.assigned span span.username', task)
+				.attr('username', assigned_str)
+				.attr('title', assigned_str)
+				.text("team (" + assigned.length + ")");
+		} else {
+			$('td.assigned span img', task).attr('src', '/static/images/member.png');
+			$('td.assigned span span.username', task)
+				.attr('username', assigned[0])
+				.attr('title', '')
+				.text(assigned[0]);
+		}
 
-			trigger_task_change(task, 'assigned', assigned_str);
+		trigger_task_change(task, 'assigned', assigned_str);
 	}
 
-	function set_status(task, status_name, trigger) {
+	function set_status(task, status_name, trigger, follow_link) {
+		follow_link = typeof follow_link !== 'undefined' ? follow_link : true; // Obey hour linkage unless specifically disabled
 		node = $('img.status', task);
 		id = node.attr('id').replace('status_', '');
 		field = $('[name="status[' + id + ']"]');
@@ -327,6 +327,9 @@ TaskTable = (function() {
 			node.attr('title', status_texts[status_name]);
 			if(trigger) {
 				trigger_task_change(task, 'status', status_name);
+				if(follow_link && link_hours_status && ['canceled', 'split', 'complete'].indexOf(status_name) >= 0) {
+					set_hours(task, 0, true, false);
+				}
 			}
 		}
 	}
@@ -336,7 +339,7 @@ TaskTable = (function() {
 		id = node.attr('id').replace('goal_', '');
 		field = $('[name="goal[' + id + ']"]');
 		if(field.val() != goal_name) {
-			task.attr('goal', goal_name);
+			task.attr('goalid', goal_name);
 			field.val(goal_name);
 			node.attr('src', goal_imgs[goal_name]);
 			node.attr('title', goal_texts[goal_name]);
