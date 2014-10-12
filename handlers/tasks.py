@@ -414,48 +414,45 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 		else:
 			parts = line.split(sep)
 			name, assigned, status, hours = None, None, None, None
-			for case in switch(len(parts)):
-				if case(2):
-					assigned = defaultAssigned
-					# Fall-through
-				if case(3):
-					status = 'not started'
-					# Fall-through
-				if case(4):
-					for part in parts:
-						part = part.strip()
-						# Hours
-						if hours is None:
-							try:
-								hours = int(part)
-								continue
-							except ValueError: pass
+			if not 2 <= len(parts) <= 4:
+				errors.append("Unable to parse (field count mismatch): %s" % stripTags(line))
+				continue
+			for part in parts:
+				part = part.strip()
+				if part == '':
+					errors.append("Unable to parse (empty field): %s" % stripTags(line))
+					continue
 
-						# Status
-						if status is None and part.lower() in statuses:
-							status = part.lower()
-							continue
+				# Hours
+				if hours is None:
+					try:
+						hours = int(part)
+						continue
+					except ValueError: pass
 
-						# Assigned
-						if assigned is None and set(part.split(' ')) <= set(u.username for u in sprint.members):
-							assigned = set(User.load(username = username) for username in part.split(' '))
-							continue
+				# Status
+				if status is None and part.lower() in statuses:
+					status = part.lower()
+					continue
 
-						# Name
-						if name is None:
-							name = part
-							continue
+				# Assigned
+				if assigned is None and set(part.split(' ')) <= set(u.username for u in sprint.members):
+					assigned = set(User.load(username = username) for username in part.split(' '))
+					continue
 
-						errors.append("Unable to parse (no field match on '%s'): %s" % (stripTags(part), stripTags(line)))
-					if name == '':
-						name = None
-						errors.append("Unable to parse (empty name): %s" % stripTags(line))
-					break
-				if case():
-					errors.append("Unable to parse (field count mismatch): %s" % stripTags(line))
-					break
-				break
+				# Name
+				if name is None:
+					name = part
+					continue
 
+				errors.append("Unable to parse (no field match on '%s'): %s" % (stripTags(part), stripTags(line)))
+
+			if assigned is None:
+				assigned = defaultAssigned
+			if status is None:
+				status = 'not started'
+			if name is None or hours is None:
+				errors.append("Unable to parse (missing required fields): %s" % stripTags(line))
 			if not any(v is None for v in (name, assigned, status, hours)):
 				tasks[group].append((name, assigned, status, hours))
 
