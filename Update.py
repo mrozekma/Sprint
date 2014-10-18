@@ -1,5 +1,6 @@
 # This is the first module loaded by main, and the first thing we do is check dependencies, before anything else has a chance to try importing them
 def depcheck():
+	from os.path import isfile
 	failures = []
 	def fail(msg):
 		failures.append(msg)
@@ -24,6 +25,8 @@ def depcheck():
 	imp('SilverCity', 'SilverCity - https://pypi.python.org/pypi/SilverCity')
 	imp('rorn', 'Rorn') # Also bundled
 	imp('stasis', 'Stasis - https://github.com/mrozekma/Stasis')
+	if isfile('db'):
+		imp('sqlite3', 'SQLite - Rebuild python without disabling the _sqlite3 module')
 
 	if failures:
 		print "Unresolved environment problems:"
@@ -43,7 +46,6 @@ from getpass import getpass
 from socket import gethostname
 from shutil import copy, rmtree
 from time import sleep
-import sqlite3
 
 from ChangeLog import ChangeRecord, changelog
 from LoadValues import dbFilename
@@ -72,6 +74,7 @@ def check():
 		exit(0)
 
 	if isfile('db'):
+		import sqlite3
 		conn = sqlite3.connect(dbFilename)
 		cur = conn.cursor()
 		try:

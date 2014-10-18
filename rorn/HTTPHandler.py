@@ -5,7 +5,6 @@ import re
 import cgi
 import sys
 from urllib import unquote
-from sqlite3 import OperationalError
 import traceback
 
 from Session import Session, timestamp
@@ -13,6 +12,7 @@ from Box import Box, ErrorBox
 from code import showCode
 from ResponseWriter import ResponseWriter
 from FrameworkException import FrameworkException
+from stasis import StasisError
 from utils import *
 
 handlers = {'get': {}, 'post': {}}
@@ -108,7 +108,7 @@ class HTTPHandler(BaseHTTPRequestHandler, object):
 
 			self.invokeHandler(self.handler, query)
 		except DoneRendering: pass
-		except OperationalError, e:
+		except StasisError, e:
 			writer.clear()
 			self.title('Database Error')
 			self.error('Database Error', e.message, False)
