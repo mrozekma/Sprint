@@ -21,6 +21,7 @@ def depcheck():
 
 	# Libraries
 	imp('fuzzywuzzy', 'FuzzyWuzzy - https://github.com/seatgeek/fuzzywuzzy') # This is currently bundled, so it shouldn't ever fail. Might pull it out at some point
+	imp('jsonpickle', 'JSONPickle - http://jsonpickle.github.io/') # Used by stasis
 	imp('PIL', 'Python Imaging Library (PIL) - http://www.pythonware.com/products/pil/')
 	imp('SilverCity', 'SilverCity - https://pypi.python.org/pypi/SilverCity')
 	imp('rorn', 'Rorn') # Also bundled
