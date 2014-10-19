@@ -1,7 +1,9 @@
 from Log import console
 from Options import option
+from relativeDates import timesince
 from utils import *
 
+import git
 import sys
 import os
 from datetime import datetime
@@ -12,11 +14,13 @@ loadTime = datetime.now()
 devMode = None # Also checked in wrappers
 brickMessage = False
 
+repo = git.Repo()
+
 def getRevisionInfo():
 	# These are recomputed each time because revisionRelative changes
-	revisionHash, revisionDate, revisionRelative = os.popen('git log -n 1 --format=format:"%H %ct %cr"').read().split(' ', 2)
-	revisionDate = tsToDate(int(revisionDate)).strftime('%d %b %Y %H:%M:%S')
-	return revisionHash, revisionDate, revisionRelative
+	revisionHash = repo.head.object.hexsha
+	revisionDate = tsToDate(repo.head.object.committed_date)
+	return revisionHash, revisionDate.strftime('%d %b %Y %H:%M:%S'), timesince(revisionDate) + ' ago'
 
 def getLoadtime():
 	return loadTime

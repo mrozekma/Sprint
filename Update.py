@@ -1,15 +1,30 @@
 # This is the first module loaded by main, and the first thing we do is check dependencies, before anything else has a chance to try importing them
 def depcheck():
-	from os.path import isfile
+	from os.path import dirname, isdir, isfile
+
 	failures = []
 	def fail(msg):
 		failures.append(msg)
 
-	def imp(name, desc):
+	def imp(name, desc, rev = None):
 		try:
-			return __import__(name)
+			lib = __import__(name)
 		except ImportError:
 			fail("Missing dependency: %s" % desc)
+			return None
+
+		if rev and git:
+			try:
+				repo = git.Repo(dirname(lib.__file__))
+				repo.commit(rev)
+			except git.exc.BadObject:
+				fail("%s is out of date, and needs to be pulled from origin manually" % name)
+			except git.exc.InvalidGitRepositoryError:
+				fail("Unable to find git repository for %s at %s" % (name, dirname(lib.__file__)))
+			except Exception, e:
+				fail("Unable to query git repository for %s: %s" % (name, e))
+
+		return lib
 
 	# Python
 	import sys
@@ -20,12 +35,15 @@ def depcheck():
 		fail("Sprint requires Python 2.7+ (you are running %d.%d.%d)" % (pyver.major, pyver.minor, pyver.micro))
 
 	# Libraries
+	git = imp('git', 'GitPython - https://pythonhosted.org/GitPython/') # Needs to be first, imp() uses it for rev checking
 	imp('fuzzywuzzy', 'FuzzyWuzzy - https://github.com/seatgeek/fuzzywuzzy') # This is currently bundled, so it shouldn't ever fail. Might pull it out at some point
 	imp('jsonpickle', 'JSONPickle - http://jsonpickle.github.io/') # Used by stasis
 	imp('PIL', 'Python Imaging Library (PIL) - http://www.pythonware.com/products/pil/')
 	imp('SilverCity', 'SilverCity - https://pypi.python.org/pypi/SilverCity')
-	imp('rorn', 'Rorn') # Also bundled
-	imp('stasis', 'Stasis - https://github.com/mrozekma/Stasis')
+	imp('rorn', 'Rorn - https://github.com/mrozekma/Rorn', 'f280454c9d172b27969f15cc92ad44a0f951ac18')
+	imp('stasis', 'Stasis - https://github.com/mrozekma/Stasis', '24084210134daca42d6407939d018f3ec4dbdc0e')
+
+	# Need sqlite3 if converting from an old database
 	if isfile('db'):
 		imp('sqlite3', 'SQLite - Rebuild python without disabling the _sqlite3 module')
 

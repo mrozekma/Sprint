@@ -1,3 +1,4 @@
+import git
 import os
 from os.path import basename
 import re
@@ -74,7 +75,7 @@ def getChanges(handler, url, markSeen = True):
 			if change.isRecent():
 				yield change
 
-blame = os.popen("git blame --line-porcelain -L %d,%d ChangeLog.py" % (min(change.line for change in changelog), max(change.line for change in changelog))).read()
+blame = git.Repo().git.blame('--line-porcelain', '-L', "%d,%d" % (min(change.line for change in changelog), max(change.line for change in changelog)), 'ChangeLog.py')
 for hash, startLine, endLine in re.findall("([0-9a-fA-F]{40}) ([0-9]+) ([0-9]+)(?: [0-9]+)?", blame):
 	for change in changelog:
 		if int(startLine) <= change.line <= int(endLine):
