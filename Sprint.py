@@ -59,8 +59,21 @@ class Sprint(ActiveRecord):
 	def isOver(self):
 		return getNow() > tsToDate(self.end)
 
+	def canView(self, user):
+		if not user:
+			return False
+		elif user.hasPrivilege('Admin'):
+			return True
+		elif self.flags & {'private', 'hidden'}:
+			return user in self.members
+		else:
+			return True
+
+	def isHidden(self, user):
+		return 'hidden' in self.flags and not self.canView(user)
+
 	def canEdit(self, user):
-		return (self.isActive() or self.isPlanning()) and user and user.hasPrivilege('Write')
+		return (self.isActive() or self.isPlanning()) and self.canView(user) and user.hasPrivilege('Write')
 
 	def getTasks(self, orderby = 'seq', includeDeleted = False):
 		from Task import Task
@@ -82,12 +95,19 @@ class Sprint(ActiveRecord):
 		cls = 'sprint-name active' if self.isActive() else 'sprint-name'
 		return "<span class=\"%s\">%s</span>" % (cls, self.safe.name)
 
-	def link(self, currentUser, icon = 'sprint'):
+	def link(self, currentUser, large = False):
 		from handlers.sprints import tabs as sprintTabs
 		from Prefs import Prefs
 		page = currentUser.getPrefs().defaultSprintTab if currentUser else 'backlog'
+		img = 'sprint'
+		if 'hidden' in self.flags:
+			img += '-hidden'
+		elif 'private' in self.flags:
+			img += '-private'
+		if large:
+			img += '-large'
 
-		return "<img src=\"/static/images/%s.png\" class=\"sprint\"><a href=\"%s\">%s</a>" % (icon, sprintTabs()[page].getPath(self.id), self.getFormattedName())
+		return "<img src=\"/static/images/%s.png\" class=\"sprint\"><a href=\"%s\">%s</a>" % (img, sprintTabs()[page].getPath(self.id), self.getFormattedName())
 
 	def __str__(self):
 		return self.getFormattedName()

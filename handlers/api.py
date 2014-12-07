@@ -24,7 +24,7 @@ def apiProjectActive(handler, id, action):
 	if not project:
 		die("No project with ID %d" % id)
 
-	sprints = sorted(filter(lambda sprint: sprint.isActive(), project.getSprints()), lambda x, y: cmp(x.start, y.start))
+	sprints = sorted(filter(lambda sprint: sprint.isActive() and not sprint.isHidden(handler.session['user']), project.getSprints()), lambda x, y: cmp(x.start, y.start))
 	if len(sprints):
 		redirect("/api/sprints/%d/%s" % (sprints[-1].id, action))
 	else:
@@ -40,7 +40,7 @@ def apiSprintInfo(handler, id):
 	handler.wrappers = False
 
 	sprint = Sprint.load(id)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		die("No sprint with ID %d" % id)
 
 	abbrName = sprint.name.strip()
@@ -65,7 +65,7 @@ def apiSprintsList(handler, calendar = False, start = None, end = None, _ = None
 	start = int(start) if start else None
 	end = int(end) if end else None
 
-	sprints = Sprint.loadAll()
+	sprints = filter(lambda sprint: not sprint.isHidden(handler.session['user']), Sprint.loadAll())
 	if start and end:
 		sprints = filter(lambda sprint: (start <= sprint.start <= end) or (start <= sprint.end <= end), sprints)
 
@@ -80,4 +80,3 @@ def apiSprintsList(handler, calendar = False, start = None, end = None, _ = None
 		for entry in rtn:
 			entry.update({'color': 'green' if entry['member'] and entry['active'] else '#36c;'})
 	print toJS(rtn)
-

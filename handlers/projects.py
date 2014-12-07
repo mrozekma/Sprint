@@ -23,7 +23,7 @@ def projectsList(handler):
 	print Button('Calendar', '/projects/calendar')
 	print "</div>"
 	for project in Project.getAllSorted(handler.session['user']):
-		sprints = project.getSprints()
+		sprints = filter(lambda sprint: not sprint.isHidden(handler.session['user']), project.getSprints())
 		active, inactive = partition(lambda sprint: sprint.isActive() or sprint.isPlanning(), reversed(sprints))
 		activeMembers = set()
 		for sprint in active:

@@ -74,8 +74,10 @@ def task(handler, ids):
 
 	for id in ids:
 		task = tasks[id]
-		if not task:
+		if not task or task.sprint.isHidden(handler.session['user']):
 			ErrorBox.die('Tasks', "No task with ID <b>%d</b>" % id)
+		elif not task.sprint.canView(handler.session['user']):
+			ErrorBox.die('Private', "You must be a sprint member to view this sprint's tasks")
 		revs = task.getRevisions()
 		startRev = task.getStartRevision()
 
@@ -177,7 +179,7 @@ def newTaskSingle(handler, group, assigned = ''):
 	print tabs.format(id).where('single')
 
 	group = Group.load(id)
-	if not group:
+	if not group or group.sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
 
 	sprint = group.sprint
@@ -247,7 +249,7 @@ def newTaskPost(handler, p_group, p_name, p_goal, p_status, p_hours, p_assigned 
 
 	groupid = to_int(p_group, 'group', die)
 	group = Group.load(groupid)
-	if not group:
+	if not group or group.sprint.isHidden(handler.session['user']):
 		die("No group with ID <b>%d</b>" % groupid)
 
 	sprint = group.sprint
@@ -304,7 +306,7 @@ def newTaskMany(handler, group, assigned = None):
 		body = "[%s]\n" % stripTags(assigned)
 
 	defaultGroup = Group.load(id)
-	if not defaultGroup:
+	if not defaultGroup or defaultGroup.sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
 	sprint = defaultGroup.sprint
 
@@ -369,7 +371,7 @@ def newTaskMany(handler, group, p_body, dryrun = False):
 	id = int(group)
 
 	defaultGroup = Group.load(id)
-	if not defaultGroup:
+	if not defaultGroup or defaultGroup.sprint.isHidden(handler.session['user']):
 		die("No group with ID <b>%d</b>" % id)
 
 	sprint = defaultGroup.sprint
@@ -535,7 +537,7 @@ def newTaskImport(handler, group, source = None, assigned = None):
 	print tabs.format(id).where('import')
 
 	group = Group.load(id)
-	if not group:
+	if not group or group.sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Invalid Group', "No group with ID <b>%d</b>" % id)
 
 	sprint = group.sprint
@@ -615,7 +617,7 @@ def newTaskImportPost(handler, group, source, p_data):
 
 	id = int(group)
 	group = Group.load(id)
-	if not group:
+	if not group or group.sprint.isHidden(handler.session['user']):
 		die("No group with ID <b>%d</b>" % id)
 
 	sprint = group.sprint
@@ -677,7 +679,7 @@ def distribute(handler, sprint):
 	handler.title('Distribute Tasks')
 	sprintid = int(sprint)
 	sprint = Sprint.load(sprintid)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Invalid Sprint', "No sprint with ID <b>%d</b>" % id)
 
 	handler.title(sprint.safe.name)
@@ -739,7 +741,7 @@ def distributeUpdate(handler, p_sprint, p_targetUser = None, p_task = None):
 
 	sprintid = int(p_sprint)
 	sprint = Sprint.load(sprintid)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		die("No sprint with ID %d" % sprintid)
 	if not sprint.canEdit(handler.session['user']):
 		die("Unable to edit sprint")
@@ -821,7 +823,7 @@ def newNotePost(handler, taskid, p_body, dryrun = False):
 
 	taskid = int(taskid)
 	task = Task.load(taskid)
-	if not task:
+	if not task or task.sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Invalid Task', "No task with ID <b>%d</b>" % taskid)
 
 	note = Note(task.id, handler.session['user'].id, p_body)
@@ -845,7 +847,7 @@ def newNoteModify(handler, taskid, id, p_action):
 
 	taskid = int(taskid)
 	task = Task.load(taskid)
-	if not task:
+	if not task or task.sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Invalid Task', "No task with ID <b>%d</b>" % taskid)
 
 	id = int(id)
@@ -882,6 +884,8 @@ def taskEdit(handler, ids):
 	if len(set(task.sprint for task in tasks)) > 1:
 		ErrorBox.die("All tasks must be in the same sprint")
 	sprint = tasks[0].sprint
+	if sprint.isHidden(handler.session['user']):
+		ErrorBox.die("No %s with %s %s" % ('task' if len(ids) == 1 else 'tasks', 'ID' if len(ids) == 1 else 'IDs', ', '.join(ids)))
 	if not (sprint.isActive() or sprint.isPlanning()):
 		ErrorBox.die("You can't mass-edit tasks from an inactive sprint")
 	elif not sprint.canEdit(handler.session['user']):
@@ -947,6 +951,8 @@ def taskEditPost(handler, ids, p_hours, p_status, p_goal, p_assigned = [], p_inc
 	if len(set(task.sprint for task in tasks)) > 1:
 		ErrorBox.die("All tasks must be in the same sprint")
 	sprint = (tasks[0] if len(tasks) > 0 else Task.load(allIDs[0])).sprint
+	if sprint.isHidden(handler.session['user']):
+		ErrorBox.die("No %s with %s %s" % ('task' if len(ids) == 1 else 'tasks', 'ID' if len(ids) == 1 else 'IDs', ', '.join(ids)))
 	if not sprint.canEdit(handler.session['user']):
 		ErrorBox.die("You don't have permission to modify this sprint")
 

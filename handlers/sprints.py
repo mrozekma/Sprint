@@ -68,9 +68,9 @@ def tabs(sprint = None, where = None):
 
 	return tabs
 
-def drawNavArrows(sprint, tab):
+def drawNavArrows(sprint, user, tab):
 	print "<div id=\"sprint-nav\"><div>"
-	sprints = sprint.project.getSprints()
+	sprints = filter(lambda sprint: not sprint.isHidden(user), sprint.project.getSprints())
 	thisIdx = sprints.index(sprint)
 	if thisIdx > 0:
 		print "<a href=\"/sprints/%d/%s\"><img src=\"/static/images/prev.png\" title=\"%s\"></a>" % (sprints[thisIdx - 1].id, tab, sprints[thisIdx - 1].safe.name.replace('"', '&quot;'))
@@ -87,15 +87,17 @@ def showBacklog(handler, id, search = None, devEdit = False):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	elif not sprint.canView(handler.session['user']):
+		ErrorBox.die('Private', "You must be a sprint member to view this sprint")
 
 	# Redirect to search help page if searched for empty string
 	if search == '':
 		redirect('/help/search')
 
 	handler.title(sprint.safe.name)
-	drawNavArrows(sprint, '')
+	drawNavArrows(sprint, handler.session['user'], '')
 
 	tasks = sprint.getTasks()
 	editable = sprint.canEdit(handler.session['user']) or (devEdit and isDevMode(handler))
@@ -207,7 +209,7 @@ def sprintPost(handler, sprintid, p_id, p_rev_id, p_field, p_value):
 		die("You must be logged in to modify tasks")
 
 	sprint = Sprint.load(sprintid)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		die("There is no sprint with ID %d" % sprintid)
 	elif not (sprint.isActive() or sprint.isPlanning()):
 		die("Unable to modify inactive sprint")
@@ -316,6 +318,7 @@ def findActiveSprint(handler, project = None, search = None):
 		url += "?search=%s" % search
 
 	sprints = Sprint.loadAllActive(handler.session['user'], project)
+	sprints = filter(lambda sprint: sprint.canView(handler.session['user']), sprints)
 	for case in switch(len(sprints)):
 		if case(0):
 			ErrorBox.die('Active sprint', 'No active sprints found')
@@ -334,13 +337,15 @@ def showInfo(handler, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	elif not sprint.canView(handler.session['user']):
+		ErrorBox.die('Private', "You must be a sprint member to view this sprint")
 	tasks = sprint.getTasks()
 	editable = sprint.owner == handler.session['user'] # Info can be edited even after the sprint closes
 
 	handler.title(sprint.safe.name)
-	drawNavArrows(sprint, 'info')
+	drawNavArrows(sprint, handler.session['user'], 'info')
 
 	print "<script type=\"text/javascript\">"
 	print "var sprintid = %d;" % id
@@ -389,6 +394,16 @@ def showInfo(handler, id):
 		print "</select>"
 	else:
 		print ', '.join(member.str('scrummaster' if member == sprint.owner else 'member') for member in sorted(sprint.members))
+	print "<br><br>"
+	print "<b>Options</b><br>"
+	if editable:
+		print "<div><input type=\"checkbox\" name=\"private\" id=\"flag-private\"%s%s><label for=\"flag-private\">Private &ndash; Only sprint members can view tasks</label></div>" % (' checked' if 'private' in sprint.flags else '', ' disabled' if 'hidden' in sprint.flags else '')
+		print "<div><input type=\"checkbox\" name=\"hidden\" id=\"flag-hidden\"%s><label for=\"flag-hidden\">Hidden &ndash; Only sprint members can see the sprint</label></div>" % (' checked' if 'hidden' in sprint.flags else '')
+	else:
+		if 'hidden' in sprint.flags:
+			print "<img src=\"/static/images/shield.png\" class=\"option\">&nbsp;Hidden"
+		elif 'private' in sprint.flags:
+			print "<img src=\"/static/images/lock.png\" class=\"option\">&nbsp;Private"
 	print "<br>"
 
 	if editable:
@@ -396,7 +411,7 @@ def showInfo(handler, id):
 	print "</form>"
 
 @post('sprints/info')
-def sprintInfoPost(handler, id, p_name, p_start, p_end, p_goals, p_members = None, p_clear = []):
+def sprintInfoPost(handler, id, p_name, p_start, p_end, p_goals, p_members = None, p_clear = [], p_private = False, p_hidden = False):
 	def die(msg):
 		print msg
 		done()
@@ -409,9 +424,8 @@ def sprintInfoPost(handler, id, p_name, p_start, p_end, p_goals, p_members = Non
 	id = to_int(id, 'id', die)
 	p_members = to_int(p_members, 'members', die)
 	sprint = Sprint.load(id)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		die("There is no sprint with ID %d" % id)
-
 	if sprint.owner != handler.session['user']:
 		die("You must be the scrummaster to modify sprint information")
 
@@ -478,6 +492,12 @@ def sprintInfoPost(handler, id, p_name, p_start, p_end, p_goals, p_members = Non
 
 	sprint.members |= addMembers
 	sprint.name = p_name
+	p_private = (p_private or p_hidden) # Hidden implies Private
+	for flagName, flagValue in (('private', p_private), ('hidden', p_hidden)):
+		if flagValue and flagName not in sprint.flags:
+			sprint.flags.add(flagName)
+		elif not flagValue and flagName in sprint.flags:
+			sprint.flags.remove(flagName)
 
 	if dateToTs(start) != sprint.start or dateToTs(end) != sprint.end:
 		sprint.start = dateToTs(start)
@@ -530,8 +550,10 @@ def showMetrics(handler, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	elif not sprint.canView(handler.session['user']):
+		ErrorBox.die('Private', "You must be a sprint member to view this sprint")
 
 	context = {}
 	context['sprint'] = sprint
@@ -540,7 +562,7 @@ def showMetrics(handler, id):
 	context['revisions'] = {(task.id, day): task.getRevisionAt(day) for task, day in product(context['allTasks'], sprint.getDays())}
 
 	handler.title(sprint.safe.name)
-	drawNavArrows(sprint, 'metrics')
+	drawNavArrows(sprint, handler.session['user'], 'metrics')
 
 	print "<style type=\"text/css\">"
 	print "h2 a {color: #000;}"
@@ -577,12 +599,14 @@ def showSprintHistory(handler, id, assigned = None):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	elif not sprint.canView(handler.session['user']):
+		ErrorBox.die('Private', "You must be a sprint member to view this sprint")
 	tasks = sprint.getTasks(includeDeleted = True)
 
 	handler.title(sprint.safe.name)
-	drawNavArrows(sprint, 'history')
+	drawNavArrows(sprint, handler.session['user'], 'history')
 
 	Chart.include()
 	chart = TaskChart('chart', sprint.getTasks())
@@ -619,12 +643,14 @@ def showAvailability(handler, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	elif not sprint.canView(handler.session['user']):
+		ErrorBox.die('Private', "You must be a sprint member to view this sprint")
 	tasks = sprint.getTasks()
 
 	handler.title(sprint.safe.name)
-	drawNavArrows(sprint, 'availability')
+	drawNavArrows(sprint, handler.session['user'], 'availability')
 	print tabs(sprint, 'availability')
 
 	print "<script type=\"text/javascript\">"
@@ -700,7 +726,7 @@ def sprintAvailabilityPost(handler, id, p_hours):
 		die("You must be logged in to modify sprint info")
 
 	sprint = Sprint.load(id)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		die("There is no sprint with ID %d" % id)
 
 	if not (sprint.isActive() or sprint.isPlanning()):
@@ -731,12 +757,14 @@ def showSprintChecklist(handler, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	elif not sprint.canView(handler.session['user']):
+		ErrorBox.die('Private', "You must be a sprint member to view this sprint")
 	tasks = sprint.getTasks()
 
 	handler.title(sprint.safe.name)
-	drawNavArrows(sprint, 'checklist')
+	drawNavArrows(sprint, handler.session['user'], 'checklist')
 	print tabs(sprint, ('planning', 'checklist'))
 
 	warnings = sprint.getWarnings()
@@ -821,8 +849,10 @@ def showSprintResults(handler, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	elif not sprint.canView(handler.session['user']):
+		ErrorBox.die('Private', "You must be a sprint member to view this sprint")
 
 	tasksNow = sprint.getTasks()
 	tasksStart = filter(None, (task.getRevisionAt(tsToDate(sprint.start)) for task in tasksNow))
@@ -830,7 +860,7 @@ def showSprintResults(handler, id):
 	tasksStart = {task.id: task for task in tasksStart}
 
 	handler.title(sprint.safe.name)
-	drawNavArrows(sprint, 'results')
+	drawNavArrows(sprint, handler.session['user'], 'results')
 	print tabs(sprint, ('wrapup', 'results'))
 
 	if not sprint.isOver():
@@ -854,12 +884,14 @@ def showSprintRetrospective(handler, id):
 	requirePriv(handler, 'User')
 	id = int(id)
 	sprint = Sprint.load(id)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Sprints', "No sprint with ID <b>%d</b>" % id)
+	elif not sprint.canView(handler.session['user']):
+		ErrorBox.die('Private', "You must be a sprint member to view this sprint")
 	editing = (sprint.owner == handler.session['user'])
 
 	handler.title(sprint.safe.name)
-	drawNavArrows(sprint, 'retrospective')
+	drawNavArrows(sprint, handler.session['user'], 'retrospective')
 	print tabs(sprint, ('wrapup', 'retrospective'))
 
 	Markdown.head()
@@ -907,7 +939,7 @@ def sprintRetrospectiveStart(handler, id):
 
 	id = int(id)
 	sprint = Sprint.load(id)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		ErrorBox.die('Sprints', "There is no sprint with ID %d" % id)
 	elif sprint.owner != handler.session['user']:
 		ErrorBox.die('Forbidden', "Only the scrummaster can edit the retrospective")
@@ -934,7 +966,7 @@ def sprintRetrospectiveRender(handler, sprintid, p_id, p_catid, p_body = None, p
 
 	sprintid = int(sprintid)
 	sprint = Sprint.load(sprintid)
-	if not sprint:
+	if not sprint or sprint.isHidden(handler.session['user']):
 		die("There is no sprint with ID %d" % sprintid)
 	elif sprint.owner != handler.session['user'] and (p_body is not None or p_good is not None):
 		die("Only the scrummaster can edit the retrospective")
@@ -993,7 +1025,7 @@ def newSprint(handler, project):
 	print "<tr><td class=\"left\">Name:</td><td class=\"right\"><input type=\"text\" name=\"name\" class=\"defaultfocus\"></td></tr>"
 	print "<tr><td class=\"left\">Planning:</td><td class=\"right\"><input type=\"text\" name=\"start\" class=\"date\" value=\"%s\"></td></tr>" % Weekday.today().strftime('%m/%d/%Y')
 	print "<tr><td class=\"left\">Wrapup:</td><td class=\"right\"><input type=\"text\" name=\"end\" class=\"date\"></td></tr>"
-	print "<tr><td class=\"left\">Members:</td><td class=\"right\">"
+	print "<tr><td class=\"left no-bump\">Members:</td><td class=\"right\">"
 	print "<select name=\"members[]\" id=\"select-members\" multiple>"
 	# Default to last sprint's members
 	members = {handler.session['user']}
@@ -1004,6 +1036,10 @@ def newSprint(handler, project):
 			print "<option value=\"%d\"%s>%s</option>" % (user.id, ' selected' if user in members else '', user.safe.username)
 	print "</select>"
 	print "</td></tr>"
+	print "<tr><td class=\"left no-bump\">Options:</td><td class=\"right\">"
+	print "<div><input type=\"checkbox\" name=\"private\" id=\"flag-private\"><label for=\"flag-private\">Private &ndash; Only sprint members can view tasks</label></div>"
+	print "<div><input type=\"checkbox\" name=\"hidden\" id=\"flag-hidden\"><label for=\"flag-hidden\">Hidden &ndash; Only sprint members can see the sprint</label></div>"
+	print "</td></tr>"
 	print "<tr><td class=\"left\">&nbsp;</td><td class=\"right\">"
 	print Button('Save', id = 'save-button', type = 'button').positive()
 	print Button('Cancel', id = 'cancel-button', type = 'button').negative()
@@ -1012,13 +1048,15 @@ def newSprint(handler, project):
 	print "</form>"
 
 @post('sprints/new')
-def newSprintPost(handler, p_project, p_name, p_start, p_end, p_members = None):
+def newSprintPost(handler, p_project, p_name, p_start, p_end, p_members = None, p_private = False, p_hidden = False):
 	def die(msg):
 		print msg
 		done()
 
 	handler.wrappers = False
 	p_project = int(p_project)
+	if not handler.session['user']:
+		die("You must be logged in to create a new sprint")
 
 	project = Project.load(p_project)
 	if not project:
@@ -1057,6 +1095,10 @@ def newSprintPost(handler, p_project, p_name, p_start, p_end, p_members = None):
 
 	sprint = Sprint(project.id, p_name, handler.session['user'].id, dateToTs(start), dateToTs(end))
 	sprint.members |= members
+	if p_private or p_hidden:
+		sprint.flags.add('private')
+	if p_hidden:
+		sprint.flags.add('hidden')
 	sprint.save()
 	# Make a default 'Miscellaneous' group so there's something to add tasks to
 	Group(sprint.id, 'Miscellaneous', 1, False).save()
@@ -1093,7 +1135,8 @@ def exportSprints(handler, project):
 	print "<h2>Sprints</h2>"
 	print "<select name=\"sprints\" multiple>"
 	for sprint in project.getSprints():
-		print "<option value=\"%d\"%s>%s</option>" % (sprint.id, ' selected' if sprint.isActive() else '', sprint.safe.name)
+		if sprint.canView(handler.session['user']):
+			print "<option value=\"%d\"%s>%s</option>" % (sprint.id, ' selected' if sprint.isActive() else '', sprint.safe.name)
 	print "</select>"
 
 	print "<h2>Format</h2>"
@@ -1105,6 +1148,8 @@ def exportSprints(handler, project):
 
 @get('sprints/export/render')
 def exportRender(handler, sprints, format):
+	if not handler.session['user']:
+		ErrorBox.die('Forbidden', "You must be logged in to create a new sprint")
 	ids = map(int, sprints.split(','))
 	sprints = map(Sprint.load, ids)
 
@@ -1114,7 +1159,8 @@ def exportRender(handler, sprints, format):
 		ErrorBox.die('Export format', "No format named <b>%s</b>" % stripTags(format))
 
 	for sprint in sprints:
-		export.process(sprint)
+		if sprint and sprint.canView(handler.session['user']):
+			export.process(sprint)
 
 	handler.wrappers = False
 	handler.forceDownload = "%s.%s" % (sprints[0].name if len(sprints) == 1 else 'sprints', export.getExtension())
