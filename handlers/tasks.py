@@ -264,7 +264,7 @@ def newTaskPost(handler, p_group, p_name, p_goal, p_status, p_hours, p_assigned 
 	assignedids = set(to_int(i, 'assigned', die) for i in p_assigned)
 	assigned = set(User.load(assignedid) for assignedid in assignedids)
 	if assigned == set():
-		assigned.add(handler.session['user'])
+		assigned.add(handler.session['user'] if handler.session['user'] in sprint.members else sprint.owner)
 	if not all(assigned):
 		die("Invalid assignee")
 
