@@ -403,21 +403,30 @@ def adminProjectsManage(handler, id):
 		ErrorBox.die('Invalid Project', "No project with ID <b>%d</b>" % int(id))
 	undelay(handler)
 
+	sprints = project.getSprints()
 	otherProjects = sorted((p for p in Project.loadAll() if p != project), key = lambda p: p.name)
+
+	for sprint in sprints:
+		if 'deleted' in sprint.flags:
+			print "<form method=\"post\" action=\"/admin/projects/%d/cancel-deletion/%d\">" % (project.id, sprint.id)
+			print WarningBox("%s is flagged for deletion during nightly cleanup. %s" % (sprint.link(handler.session['user']), Button('Cancel').mini().post()))
+			print "</form>"
 
 	print "<a name=\"sprints\"></a>"
 	print "<h3>Sprints</h3>"
-	sprints = project.getSprints()
 	if len(sprints) > 0:
-		print "<form method=\"post\" action=\"/admin/projects/%d/move-sprints\">" % project.id
+		print "<form method=\"post\" action=\"/admin/projects/%d/sprints\">" % project.id
 		for sprint in sprints:
-			print "<input type=\"checkbox\" name=\"sprintid[]\" value=\"%d\">&nbsp;<a href=\"/sprints/%d\">%s</a><br>" % (sprint.id, sprint.id, sprint)
+			print "<input type=\"checkbox\" name=\"sprintid[]\" value=\"%d\">&nbsp;%s<br>" % (sprint.id, sprint.link(handler.session['user']))
 		print "<br>"
 		print "Move to project: <select name=\"newproject\">"
 		for p in otherProjects:
 			print "<option value=\"%d\">%s</option>" % (p.id, p.safe.name)
 		print "</select>"
-		print Button('Move', type = 'submit').positive()
+		print Button('Move').post('move').positive()
+		print "<br><br>"
+		print "Delete sprints (irreversible once finalized):"
+		print Button('Delete').post('delete').negative()
 		print "</form>"
 	else:
 		print "No sprints"
@@ -445,7 +454,7 @@ def adminProjectsManage(handler, id):
 		print Button("Delete %s" % project.safe.name, type = 'submit').negative()
 	print "</form><br>"
 
-@post('admin/projects/(?P<id>[0-9]+)/move-sprints')
+@post('admin/projects/(?P<id>[0-9]+)/sprints', 'move')
 def adminProjectsMoveSprintsPost(handler, id, p_newproject, p_sprintid = None):
 	handler.title('Move Sprints')
 	requirePriv(handler, 'Admin')
@@ -470,6 +479,55 @@ def adminProjectsMoveSprintsPost(handler, id, p_newproject, p_sprintid = None):
 		sprint.save()
 
 	delay(handler, SuccessBox("%s moved" % pluralize(len(sprints), 'sprint', 'sprints'), close = True))
+	redirect("/admin/projects/%d" % project.id)
+
+@post('admin/projects/(?P<id>[0-9]+)/sprints', 'delete')
+def adminProjectsDeleteSprintsPost(handler, id, p_newproject = None, p_sprintid = None):
+	# p_newproject is part of the form because of adminProjectsMoveSprintsPost; it's unused here
+	handler.title('Delete Sprints')
+	requirePriv(handler, 'Admin')
+	project = Project.load(int(id))
+	if not project:
+		ErrorBox.die('Invalid Project', "No project with ID <b>%d</b>" % int(id))
+
+	if not p_sprintid:
+		delay(handler, WarningBox("No sprints to delete", close = True))
+		redirect("/admin/projects/%d" % project.id)
+
+	sprintids = [to_int(id, 'sprintid', ErrorBox.die) for id in p_sprintid]
+	sprints = [Sprint.load(id) for id in sprintids]
+	if not all(sprints):
+		ErrorBox.die("Invalid sprint ID(s)")
+
+	for sprint in sprints:
+		sprint.flags.add('deleted')
+		sprint.save()
+		Event.deleteSprint(handler, sprint)
+
+	delay(handler, SuccessBox("%s queued for deletion. To delete now, run the <a href=\"/admin/cron\">Sprint Cleanup cron job</a>" % pluralize(len(sprints), 'sprint', 'sprints'), close = True))
+	redirect("/admin/projects/%d" % project.id)
+
+@post('admin/projects/(?P<projectid>[0-9]+)/cancel-deletion/(?P<id>[0-9]+)')
+def adminProjectsCancelSprintDeletionPost(handler, projectid, id):
+	handler.title('Undelete Sprint')
+	requirePriv(handler, 'Admin')
+	project = Project.load(int(projectid))
+	if not project:
+		ErrorBox.die('Invalid Project', "No project with ID <b>%d</b>" % int(projectid))
+	sprint = Sprint.load(int(id))
+	if not sprint:
+		ErrorBox.die('Invalid Sprint', "No sprint with ID <b>%d</b>" % int(id))
+	if sprint.project != project:
+		# We really don't use the project at all, but it's the principle of the thing
+		ErrorBox.die('Invalid Sprint', "Project/sprint mismatch")
+	if 'deleted' not in sprint.flags:
+		ErrorBox.die('Invalid Sprint', "Sprint is not deleted")
+
+	sprint.flags.remove('deleted')
+	sprint.save()
+	Event.undeleteSprint(handler, sprint)
+
+	delay(handler, SuccessBox("Deletion canceled for %s" % sprint.link(handler.session['user']), close = True))
 	redirect("/admin/projects/%d" % project.id)
 
 @post('admin/projects/(?P<id>[0-9]+)/edit')

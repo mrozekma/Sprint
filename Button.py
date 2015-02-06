@@ -3,6 +3,8 @@ class Button:
 		self.text = text
 		self.url = url
 		self.id = id
+		self.name = None
+		self.value = None
 		self.image = image
 		self.type = type
 
@@ -14,18 +16,22 @@ class Button:
 			body = "<img src=\"/static/images/%s\">&nbsp;%s" % (self.image, body)
 
 		id = "id=\"%s\" " % self.id if self.id else ''
+		name = "name=\"%s\" " % self.name if self.name else ''
+		value = "value=\"%s\" " % self.value if self.value else ''
+		attrs = id + name
 
 		if self.type == 'link':
-			return "<a %shref=\"%s\" class=\"%s\">%s</a>" % (id, self.url, self.clazz, body)
+			return "<a %shref=\"%s\" class=\"%s\">%s</a>" % (attrs, self.url, self.clazz, body)
 		if self.type == 'button':
 			if self.url == '#':
-				return "<button %sclass=\"%s\">%s</button>" % (id, self.clazz, body)
+				return "<button %sclass=\"%s\">%s</button>" % (attrs, self.clazz, body)
 			elif self.url.startswith('javascript:'):
-				return "<button %sclass=\"%s\" onClick=\"%s\">%s</button>" % (id, self.clazz, self.url, body)
+				return "<button %sclass=\"%s\" onClick=\"%s\">%s</button>" % (attrs, self.clazz, self.url, body)
 			else:
-				return "<button %sclass=\"%s\" onClick=\"document.location='%s'; return false;\">%s</button>" % (id, self.clazz, self.url, body)
+				return "<button %sclass=\"%s\" onClick=\"document.location='%s'; return false;\">%s</button>" % (attrs, self.clazz, self.url, body)
 		if self.type == 'submit':
-			return "<button %sclass=\"%s\" onClick=\"this.form.submit();\">%s</button>" % (id, self.clazz, body)
+			attrs += value
+			return "<button %sclass=\"%s\" onClick=\"this.form.submit();\">%s</button>" % (attrs, self.clazz, body)
 		raise ValueError, "Unknown type '%s'" % self.type
 
 	# MODIFIERS
@@ -55,6 +61,9 @@ class Button:
 		self.clazz += ' selected'
 		return self
 
-	def post(self):
+	def post(self, routeAction = None):
 		self.type = 'submit'
+		if routeAction is not None:
+			self.name = 'action'
+			self.value = routeAction
 		return self

@@ -37,6 +37,12 @@ class DBLogger(EventHandler):
 
 		log(handler, 'sprint.new', "\n".join(lines))
 
+	def deleteSprint(self, handler, sprint):
+		log(handler, 'sprint.delete', sprint.link(None))
+
+	def undeleteSprint(self, handler, sprint):
+		log(handler, 'sprint.undelete', sprint.link(None))
+
 	def sprintInfoUpdate(self, handler, sprint, changes):
 		lines = [sprint.link(None)]
 		for k, v in changes.iteritems():

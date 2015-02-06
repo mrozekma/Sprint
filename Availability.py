@@ -45,6 +45,11 @@ class Availability:
 				with table.change(self.sprint.id) as data:
 					del data[user.id]
 
+	def wipe(self):
+		table = db()['availability']
+		if self.sprint.id in table:
+			del table[self.sprint.id]
+
 	def getAllForward(self, timestamp, user = None):
 		rtn = 0
 		ts = dateToTs(timestamp)

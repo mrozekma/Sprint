@@ -177,6 +177,11 @@ def logArchive():
 @job('Sprint cleanup', DAILY)
 def sprintCleanup():
 	for sprint in Sprint.loadAll():
+		if 'deleted' in sprint.flags:
+			sprint.delete(deep = True)
+			print "Deleted sprint %d (%s: %s)<br>" % (sprint.id, sprint.project.safe.name, sprint.safe.name)
+			continue
+
 		if (not sprint.isOver()) or 'cleaned-up' in sprint.flags:
 			continue
 		tasks = Task.loadAll(sprintid = sprint.id, deleted = False)

@@ -1,5 +1,6 @@
 from __future__ import division
 from datetime import timedelta
+from importlib import import_module
 
 from User import User
 from Project import Project
@@ -31,6 +32,15 @@ class Sprint(ActiveRecord):
 		if project:
 			rtn = filter(lambda s: s.project == project, rtn)
 		return rtn
+
+	def delete(self, deep = True):
+		if deep:
+			for name in ['Goal', 'Group', 'Task']:
+				cls = getattr(import_module(name, name), name)
+				cls.deleteAll(sprintid = self.id)
+			from Availability import Availability
+			Availability(self).wipe()
+		return ActiveRecord.delete(self)
 
 	def getStartStr(self):
 		return formatDate(tsToDate(self.start))

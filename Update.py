@@ -40,8 +40,8 @@ def depcheck():
 	imp('jsonpickle', 'JSONPickle - http://jsonpickle.github.io/') # Used by stasis
 	imp('PIL', 'Python Imaging Library (PIL) - http://www.pythonware.com/products/pil/')
 	imp('SilverCity', 'SilverCity - https://pypi.python.org/pypi/SilverCity')
-	imp('rorn', 'Rorn - https://github.com/mrozekma/Rorn', 'f280454c9d172b27969f15cc92ad44a0f951ac18')
-	imp('stasis', 'Stasis - https://github.com/mrozekma/Stasis', '24084210134daca42d6407939d018f3ec4dbdc0e')
+	imp('rorn', 'Rorn - https://github.com/mrozekma/Rorn', 'd45fe2c83e11b4c26f0574f1aaf9345704110c7f')
+	imp('stasis', 'Stasis - https://github.com/mrozekma/Stasis', 'ee09b8fd361fd5b42c326f5198ef68f1321940a8')
 
 	# Need sqlite3 if converting from an old database
 	if isfile('db'):

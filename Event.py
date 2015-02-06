@@ -3,7 +3,7 @@ from utils import *
 TYPES = [
 	'pageHandle', 'error',
 	'login', 'passwordReset', 'tfa', 'prefs',
-	'newSprint', 'sprintInfoUpdate', 'sprintAvailUpdate',
+	'newSprint', 'deleteSprint', 'undeleteSprint', 'sprintInfoUpdate', 'sprintAvailUpdate',
 	'newGroup', 'renameGroup', 'deleteGroup',
 	'newTask', 'taskUpdate',
 	'newNote', 'deleteNote',
@@ -54,6 +54,8 @@ class EventHandlerTemplate(EventHandler):
 	def tfa(self, handler, user):
 	def prefs(self, handler):
 	def newSprint(self, handler, sprint):
+	def deleteSprint(self, handler, sprint):
+	def undeleteSprint(self, handler, sprint):
 	def sprintInfoUpdate(self, handler, sprint, changes):
 	def sprintAvailUpdate(self, handler, sprint):
 	def newGroup(self, handler, group):

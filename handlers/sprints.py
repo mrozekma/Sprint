@@ -158,6 +158,10 @@ def showBacklog(handler, id, search = None, devEdit = False):
 		print "<a class=\"fancy\" status=\"%s\" href=\"/sprints/%d?search=status:%s\"><img src=\"%s\">%s</a>" % (status.name, id, status.name.replace(' ', '-'), status.getIcon(), status.text)
 	print "</div><br>"
 
+	if handler.session['user'].hasPrivilege('Admin') and 'deleted' in sprint.flags:
+		print "<form method=\"post\" action=\"/admin/projects/%d/cancel-deletion/%d\">" % (sprint.project.id, sprint.id)
+		print WarningBox("This sprint is flagged for deletion during nightly cleanup. %s" % Button('Cancel').mini().post())
+		print "</form>"
 	if sprint.isPlanning():
 		if sprint.isActive():
 			print InfoBox("Today is <b>sprint planning</b> &mdash; tasks aren't finalized until the end of the day")
