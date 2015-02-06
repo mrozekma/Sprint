@@ -768,7 +768,10 @@ def adminCron(handler):
 		print "<h2>%s</h2>" % job.name
 		print "<b>Last run: %s</b>&nbsp;&nbsp;&nbsp;%s<br>" % (job.lastrun.strftime('%d %b %Y %H:%M:%S') if job.lastrun else 'Never', Button('run now').mini().post())
 
-		print "<div class=\"cron-log\">%s</div>" % (job.log if job.log else '')
+		if job.log:
+			print "<div class=\"cron-log\">%s</div>" % job.log
+		else:
+			print "<br>"
 		print "</form>"
 	print "<br><br>"
 
@@ -792,7 +795,7 @@ def adminCronRunBG(handler, p_name):
 			bg(job.run)
 			Event.cron(handler, p_name)
 			handler.responseCode = 299
-			print "Job started"
+			print "Job started. Requests are blocked until it finished. The page will reload automatically"
 			return
 
 	print "Unknown job: %s" % stripTags(p_name)
