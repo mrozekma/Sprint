@@ -38,6 +38,9 @@ class Project(ActiveRecord):
 		# Ordering:
 		#   * firstProject (if not None)
 		#   * Active projects this user is in
+		#     - Projects with a planning sprint
+		#     - Projects with a review sprint
+		#     - Projects with any active sprint
 		#   * Other active projects
 		#   * Inactive projects
 		#   * Test projects
@@ -46,15 +49,19 @@ class Project(ActiveRecord):
 			if project == firstProject:
 				return 0
 			sprints = project.getSprints()
-			activeSprints = filter(lambda sprint: sprint.isActive(), sprints)
+			activeSprints = filter(lambda sprint: sprint.isPlanning() or sprint.isActive(), sprints)
 			activeMembers = set()
 			for sprint in activeSprints:
 				activeMembers |= sprint.members
 			if user and user in activeMembers:
-				return 1
+				if filter(lambda sprint: sprint.isPlanning(), activeSprints):
+					return 1
+				elif filter(lambda sprint: sprint.isReview(), activeSprints):
+					return 2
+				return 3
 			if activeSprints:
-				return 2
-			return 3
+				return 4
+			return 5
 
 		projects = Project.loadAll(orderby = 'name') # First, just alphabetize
 		projects = sorted(projects, key = sortKey) # Then use sortKey
