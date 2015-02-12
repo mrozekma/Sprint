@@ -10,7 +10,7 @@ AVATAR_TYPES = ['png', 'gif', 'jpeg']
 AVATAR_MAX_SIZE = 5 * 1024 * 1024 # bytes
 
 class User(ActiveRecord):
-	def __init__(self, username, password, hotpKey = '', lastseen = 0, resetkey = 0, avatar = None, privileges = set(), id = None):
+	def __init__(self, username, password, hotpKey = '', lastseen = 0, resetkey = 0, avatar = None, privileges = None, id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.username = username
@@ -19,7 +19,7 @@ class User(ActiveRecord):
 		self.lastseen = lastseen
 		self.resetkey = resetkey
 		self.avatar = avatar
-		self.privileges = privileges
+		self.privileges = privileges or set()
 
 		if not id:
 			self.password = User.crypt(self.username, self.password)

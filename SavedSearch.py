@@ -7,14 +7,14 @@ class SavedSearch(ActiveRecord):
 	user = link(User, 'userid')
 	followers = link(User, 'followerids')
 
-	def __init__(self, userid, name, query, public, followerids = set(), id = None):
+	def __init__(self, userid, name, query, public, followerids = None, id = None):
 		ActiveRecord.__init__(self)
 		self.id = id
 		self.userid = userid
 		self.name = name
 		self.query = query
 		self.public = public
-		self.followerids = followerids
+		self.followerids = followerids or set()
 
 	#DEBUG #NO
 	def save(self):
