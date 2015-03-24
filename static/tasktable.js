@@ -356,11 +356,12 @@ TaskTable = (function() {
 			if(row.hasClass('selected')) {
 				$('.task-index', row).click();
 			}
-			row.fadeOut();
-			row.hide();
-			totalTasks--;
-			trigger_list_change();
-			update_indexes();
+			row.fadeOut(400, function() {
+				row.detach();
+				totalTasks--;
+				trigger_list_change();
+				update_indexes();
+			});
 		}
 	}
 
