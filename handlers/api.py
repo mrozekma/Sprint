@@ -70,7 +70,7 @@ def apiSprintsList(handler, calendar = False, start = None, end = None, _ = None
 		sprints = filter(lambda sprint: (start <= sprint.start <= end) or (start <= sprint.end <= end), sprints)
 
 	rtn = [{'id': sprint.id,
-	        'title': sprint.name,
+	        'title': "%s - %s" % (sprint.project.name, sprint.name) if calendar else sprint.name,
 	        'start': tsToDate(sprint.start).strftime('%Y-%m-%d'),
 	        'end': tsToDate(sprint.end).strftime('%Y-%m-%d'),
 	        'active': sprint.isActive(),
