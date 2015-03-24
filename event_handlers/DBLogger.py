@@ -47,9 +47,11 @@ class DBLogger(EventHandler):
 		lines = [sprint.link(None)]
 		for k, v in changes.iteritems():
 			if v:
-				if isinstance(v, list):
+				if isinstance(v, (list, set)):
 					v = ', '.join(map(str, v))
-				lines.append("%s: %s" % (k, stripTags(str(v))))
+				if k not in ('addMembers', 'delMembers'):
+					v = stripTags(str(v))
+				lines.append("%s: %s" % (k, str(v)))
 
 		log(handler, 'sprint.info.update', "\n".join(lines))
 

@@ -491,7 +491,9 @@ def sprintInfoPost(handler, id, p_name, p_start, p_end, p_goals, p_members = Non
 
 		# Updated later
 		('addGoals', []),
-		('removeGoals', [])
+		('removeGoals', []),
+		('addFlags', []),
+		('removeFlags', []),
 	])
 
 	sprint.members |= addMembers
@@ -500,8 +502,10 @@ def sprintInfoPost(handler, id, p_name, p_start, p_end, p_goals, p_members = Non
 	for flagName, flagValue in (('private', p_private), ('hidden', p_hidden)):
 		if flagValue and flagName not in sprint.flags:
 			sprint.flags.add(flagName)
+			changes['addFlags'].append(flagName)
 		elif not flagValue and flagName in sprint.flags:
 			sprint.flags.remove(flagName)
+			changes['removeFlags'].append(flagName)
 
 	if dateToTs(start) != sprint.start or dateToTs(end) != sprint.end:
 		sprint.start = dateToTs(start)
