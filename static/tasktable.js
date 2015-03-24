@@ -148,8 +148,8 @@ TaskTable = (function() {
 					new_seq = row.prevUntil('table', 'tr.group').length + 1;
 					trigger_group_move(row, new_seq);
 				} else if(row.hasClass('task')) {
-					new_group = row.prevAll('tr.group');
-					if(new_group.length == 0) { // Dragged above the first group
+					new_group = row.prevAll('tr.group:visible');
+					if(new_group.length == 0) { // Dragged above the first visible group
 						console.log('Bad drag target');
 						$(this).sortable('cancel');
 						return;
