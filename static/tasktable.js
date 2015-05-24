@@ -164,6 +164,11 @@ TaskTable = (function() {
 		});
 
 		editFn = function() {
+			// Hack for a problem where switching directly from one field to another triggers the latter's editFn
+			// before the former's uneditFn, which has some weird effect on the browser and causes the newly focused
+			// text field to not trigger blur events.
+			$(':focus').blur();
+
 			oldValue = $(this).text();
 			field = $('<input>').attr('type', 'text').attr('id', $(this).attr('id')).val(oldValue);
 			$(this).replaceWith(field);
