@@ -52,9 +52,6 @@ setSerializer(SessionSerializer())
 
 currentThread().name = 'main'
 
-Cron.start()
-WebSocket.start()
-
 # addEventHandler(DebugLogger.DebugLogger())
 addEventHandler(DBLogger.DBLogger())
 addEventHandler(ErrorCounter.errorCounter)
@@ -103,6 +100,9 @@ try:
 except ServerError, e:
 	console('server', e.message)
 	exit(1)
+
+Cron.start()
+WebSocket.start()
 
 try:
 	console('rorn', 'Listening for connections')

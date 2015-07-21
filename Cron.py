@@ -42,8 +42,9 @@ class CronThread(Thread):
 	def run(self):
 		self.running = True
 		while self.running:
+			now = getNow().replace(microsecond = 0)
 			for job in cronjobs:
-				job.tick()
+				job.tick(now)
 
 			sleep(30)
 
@@ -56,13 +57,13 @@ class CronJob:
 		self.lastrun = None
 		self.log = None
 
-	def tick(self):
+	def tick(self, now):
 		# Don't run jobs more than once/minute
-		if self.laststart and (getNow() - self.laststart) < timedelta(minutes = 1):
+		if self.laststart and (now - self.laststart) < timedelta(minutes = 1):
 			return
 
-		if self.period.match(str(getNow().replace(microsecond = 0))):
-			self.laststart = getNow()
+		if self.period.match(str(now)):
+			self.laststart = now
 			self.run()
 
 	def run(self):
