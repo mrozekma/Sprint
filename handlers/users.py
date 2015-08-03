@@ -3,7 +3,6 @@ from base64 import b64encode, b64decode
 from datetime import datetime
 from imghdr import what as imgtype
 from itertools import groupby
-from PIL import Image
 from StringIO import StringIO
 
 from rorn.Box import SuccessBox, ErrorBox
@@ -21,6 +20,11 @@ from LoadValues import isDevMode
 from Markdown import Markdown
 from relativeDates import timesince
 from utils import *
+
+try:
+	from PIL import Image
+except ImportError:
+	Image = None
 
 @get('users')
 def users(handler):
@@ -164,7 +168,7 @@ def userAvatarShow(handler, username, size = 80):
 	handler.wrappers = False
 	size = to_int(size, 'size', die)
 	user = User.load(username = username)
-	if not user:
+	if not user or not Image: # If Image is None, PIL is not installed
 		redirect(User.getBlankAvatar())
 	if user.avatar is None:
 		redirect(user.getAvatar())
@@ -186,6 +190,8 @@ def userAvatarSet(handler, username):
 		ErrorBox.die("Set avatar", "No user named <b>%s</b>" % stripTags(username))
 	if user != handler.session['user']: #TODO Allow devs
 		redirect("/users/%s/avatar/set" % handler.session['user'].username)
+	if not Image:
+		ErrorBox.die("Set avatar", "This sprint install does not have the Python Imaging Library (PIL), so local avatars are not supported")
 
 	print "Restrictions on a locally hosted avatar:"
 	print "<ul>"

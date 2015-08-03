@@ -38,7 +38,7 @@ def depcheck():
 	git = imp('git', 'GitPython - https://pythonhosted.org/GitPython/') # Needs to be first, imp() uses it for rev checking
 	imp('fuzzywuzzy', 'FuzzyWuzzy - https://github.com/seatgeek/fuzzywuzzy') # This is currently bundled, so it shouldn't ever fail. Might pull it out at some point
 	imp('jsonpickle', 'JSONPickle - http://jsonpickle.github.io/') # Used by stasis
-	imp('PIL', 'Python Imaging Library (PIL) - http://www.pythonware.com/products/pil/')
+	# imp('PIL', 'Python Imaging Library (PIL) - http://www.pythonware.com/products/pil/') # This is optional (only used for local avatars)
 	imp('SilverCity', 'SilverCity - https://pypi.python.org/pypi/SilverCity')
 	imp('rorn', 'Rorn - https://github.com/mrozekma/Rorn', 'd45fe2c83e11b4c26f0574f1aaf9345704110c7f')
 	imp('stasis', 'Stasis - https://github.com/mrozekma/Stasis', 'ee09b8fd361fd5b42c326f5198ef68f1321940a8')
