@@ -11,7 +11,7 @@ sudo apt-get install python-pip
 
 # (2) Use pip to install other dependencies
 
-pip install gitpython jsonpickle silvercity
+pip install gitpython jsonpickle
 
 # (3) Pull down other dependencies 
 # They must be within the Sprint directory and 
@@ -44,5 +44,19 @@ python ./sprint.py
 # their user page as the administrator and choosing "Reset Password"
 
 
+###########################
+#### Optional Packages ####
+###########################
+
+### To install syntax highlighting
+
+sudo apt-get install python-dev
+# fetch the latest zip from http://sourceforge.net/projects/silvercity/
+unzip ./SilverCity-0.9.7.zip
+cd SilverCity-0.9.7
+sudo python setup.py install
 
 
+### Permit non-gravitar icons
+
+sudo pip install --allow-external PIL --allow-unverified PIL PIL
