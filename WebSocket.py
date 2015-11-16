@@ -56,6 +56,9 @@ class WSHandler(WebSocketHandler):
 		super(WSHandler, self).__init__(*args, **kw)
 		self.channels = set()
 
+	def check_origin(self, origin):
+		return True
+
 	def open(self):
 		handlers.append(self)
 		console('websocket', "Opened")
