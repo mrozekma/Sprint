@@ -8,7 +8,7 @@ RUN pip install gitpython jsonpickle bleach
 RUN mkdir -p /opt/sprint
 WORKDIR /opt/
 
-RUN git clone https://github.com/mrozekma/Sprint sprint
+RUN git clone https://github.com/mrozekma/Sprint.git sprint
 
 RUN git clone https://github.com/mrozekma/Rorn.git sprint/rorn 
 RUN git clone https://github.com/mrozekma/Stasis.git sprint/stasis

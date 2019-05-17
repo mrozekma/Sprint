@@ -60,3 +60,32 @@ sudo python setup.py install
 ### Permit non-gravitar icons
 
 sudo pip install --allow-external PIL --allow-unverified PIL PIL
+
+
+######################
+#### Docker Setup ####
+######################
+
+# The Dockerfile lives in the docker dir
+cd docker
+
+# Build the image
+docker built -t my-sprint-image-name .
+
+# Create the data volume for storing the sprint db
+docker volume create sprint-db-data
+
+# Enter the container manually for initial setup
+docker run --rm -it --entrypoint=/bin/bash --mount source=sprint-db-data,target=/opt/sprint/db my-sprint-image-name
+
+# Run the one-time setup / initialization command
+python2.7 ./sprint.py --init
+
+# Set the admin user and domain for your install
+
+# Exit the container
+exit
+
+# Start the container normally
+docker run -d -p 8081:8081 --mount source=sprint-db-data,target=/opt/sprint/db my-sprint-image-name
+
