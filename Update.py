@@ -1,7 +1,7 @@
 # This is the first module loaded by main, and the first thing we do is check dependencies, before anything else has a chance to try importing them
 def depcheck():
 	from os.path import dirname, isdir, isfile
-
+	
 	failures = []
 	def fail(msg):
 		failures.append(msg)
@@ -92,7 +92,7 @@ def check():
 		init()
 		exit(0)
 
-	if isfile('db'):
+	if isfile(dbFilename):
 		import sqlite3
 		conn = sqlite3.connect(dbFilename)
 		cur = conn.cursor()
@@ -164,11 +164,12 @@ def check():
 		exit(1)
 
 def init():
+	from os import listdir
 	def die(msg):
 		print msg
 		exit(1)
 
-	if exists(dbFilename):
+	if isfile(dbFilename) or (isdir(dbFilename) and (len(listdir(dbFilename)) != 0)):
 		die("The database %s already exists. If you really want to reconfigure, remove it first" % dbFilename)
 
 	print "The database starts with a root user you can use to manage the installation"
